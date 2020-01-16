@@ -1,0 +1,55 @@
+#!/bin/sh
+
+usage () {
+	cat <<EOF>&2
+Usage: ${0##*/} [-m] [-e] [-q] FILES...
+
+Display packages listed in FILES but not installed.
+
+  -e:  Compare FILE to explicitly installed packages.
+  -h:  Display this help.
+  -m:  Compare FILE to foreign installed packages.
+  -q:  Display installed packages not included in FILE.
+EOF
+}
+
+OPTION_EXPLICIT=""
+OPTION_FOREIGN=""
+OPTION_LOCAL="-1"
+
+while getopts ":hmqe" opt; do
+	case $opt in
+	e)
+		OPTION_EXPLICIT="e" ;;
+	h)
+		usage
+		exit 1 ;;
+	m)
+		OPTION_FOREIGN="m" ;;
+	q)
+		OPTION_LOCAL="-2" ;;
+	\?)
+		usage
+		exit 1 ;;
+	esac
+done
+
+shift $((OPTIND - 1))
+
+if [ $# -eq 0 ]; then
+	echo "Missing argument."
+	usage
+	exit 1
+fi
+
+if ! command -v pacman >/dev/null 2>&1; then
+	echo >&2 "'pacman' not found"
+	exit 1
+fi
+
+PKGLIST="$(mktemp)"
+FILE="$(mktemp)"
+pacman -Qq${OPTION_FOREIGN}${OPTION_EXPLICIT} | LC_ALL=C sort > "$PKGLIST"
+LC_ALL=C sort "$@" > "$FILE"
+LC_ALL=C comm -3 ${OPTION_LOCAL} "$PKGLIST" "$FILE"
+rm -f "$PKGLIST" "$FILE"

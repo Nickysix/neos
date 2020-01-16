@@ -1,0 +1,34 @@
+# -*- mode: snippet -*-
+# name: Standalone TikZ template
+# key: hdr
+# --
+\documentclass{standalone}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[francais]{babel}
+\usepackage[babel=true]{microtype}
+
+\usepackage{tikz}
+\usetikzlibrary{arrows}
+\usetikzlibrary{snakes}
+\usetikzlibrary{backgrounds}
+\usetikzlibrary{patterns}
+\usetikzlibrary{matrix}
+\usetikzlibrary{shapes}
+\usetikzlibrary{fit}
+\usetikzlibrary{calc}
+\usetikzlibrary{shadows}
+\usetikzlibrary{plotmarks}
+\usetikzlibrary{positioning}
+
+\begin{document}
+\begin{tikzpicture}
+  $0
+\end{tikzpicture}
+
+\ifstandalone
+% Test area not included by input
+
+\fi
+\end{document}

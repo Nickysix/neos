@@ -1,0 +1,10 @@
+Anonymity is great and all, but a video on censorship resistance would be great too, specifically decentralized networks like IPFS, Freenet, ZeroNet, SafeNetwork, Solid, etc. Some of these have anonymity built in, others have optional anonymity through Tor and I2P and some are still too early in development to focus on that. Of course Tor and I2P can also be used for censorship resistance because they don't know who hosts, but I like the idea of websites and services that can't be shut down even if the government finds the host. ZeroNet+Tor is already being used in China for exactly this purpose.﻿
+ 
+Guys he's right Tor is not safe even the Bitcoin is not safe you guys need to seach for Tor deanonymouse & bitcoin deanonymouse you guys will know how agencies were hacking people and companies and expose their identity for goverments since 
+ 2013. I don't know how the architecture looks now are they fix this issue or maybe not﻿
+ 
+
+Tor and MITM_Attacks? :D You can simply implement HSTS to your system which will kill MITM attacks who e.g. kill the "s" from https ;) so connection wont work. Anyway the MITM "Hacker" needs to be an exit- node or something to get your connection data. How else would he gain access? ;)﻿
+
+Fantastic info "The Hated One"
+but  even TOR is not safe from "man in the middle" attacks to grab packages on the fly and then there is the TOR "exit node" that can be set to track you. So if you use TOR, make sure you change identity and relays on a regular basis.﻿

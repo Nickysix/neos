@@ -1,0 +1,96 @@
+#+STARTUP: showeverything
+#+STARTUP: inlineimages
+#+TAGS: note(n) idea(i) journal(j) research(r) code(c) web(w) emacs(e) question(q)
+#+options: ':nil *:t -:t ::t <:t H:3 \n:nil ^:t arch:headline author:t broken-links:nil c:nil creator:nil d:(not "LOGBOOK") date:t e:t email:nil f:t inline:t num:t p:nil pri:nil prop:nil stat:t
+#+options: tags:t tasks:t tex:t timestamp:t title:t toc:t todo:t |:t
+#+title: todo
+#+date: <2019-11-24 Sun>
+#+author: Nick
+#+email: nick@nick-pc
+#+language: en
+#+select_tags: export
+#+exclude_tags: noexport
+#+creator: Emacs 26.2 (Org mode 9.2.6)
+ 
+
+* Emacs - Setup and configuration
+  :PROPERTIES:
+  :CATEGORY: Setup and configuration
+  :END:
+
+** Emacs-systems and packages list
+   :PROPERTIES:
+   :CATEGORY: Emacs-systems
+   :END:
+
+*** Emacs-system: Package-managment
+*** Emacs-system: Modeline
+*** Emacs-system: Minibuffer
+*** Emacs-system: Echo-area
+*** Emacs-system: Completion
+*** Emacs-system: Frames
+*** Emacs-system: Windows
+*** Emacs-system: Buffers
+*** Emacs-system: File-managment
+*** Emacs-system: Keybindings
+*** Emacs-system: Customization-interface
+*** Emacs-system: Initilization
+
+
+** Emacss Todo-Lists 
+   :PROPERTIES:
+   :CATEGORY: Todo-Lists
+   :END:
+
+
+*** Todo-list: Org-mode 
+
+**** TODO Org package list to be installed and configured
+
+[[https://github.com/rexim/org-cliplink][*GitHub - rexim/org-cliplink: Insert org-mode links from clipboard]]
+
+
+*** Todo-list: Dired-modes
+
+*** Todo-list: Outlining-modes
+- outline-minor-mode
+- outshine-mode
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

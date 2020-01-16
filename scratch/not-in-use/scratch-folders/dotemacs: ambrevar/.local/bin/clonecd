@@ -1,0 +1,49 @@
+#!/bin/sh
+
+usage () {
+	cat <<EOF>&2
+Usage: ${0##*/} [OPTIONS] ISOFILE
+
+Dump optical disc to ISOFILE (without extension).
+
+Options:
+
+  -h:       Show this help.
+  -d DRIVE: Set optical drive to use (e.g. 'sr1').
+
+EOF
+}
+
+DRIVE=/dev/sr0
+while getopts ":hd:" opt; do
+	case $opt in
+	h)
+		usage
+		exit ;;
+	d)
+		DRIVE=/dev/$OPTARG ;;
+	\?)
+		usage
+		exit 1 ;;
+	esac
+done
+
+shift $((OPTIND - 1))
+
+if [ $# -eq 0 ]; then
+	usage
+	exit 1
+fi
+
+if ! command -v readcd >/dev/null 2>&1; then
+	echo >&2 "'readcd' not found"
+	exit 1
+fi
+
+## Fast?
+readcd dev="$DRIVE" f="$1.iso" -v retries=5 timeout=30 -noerror
+
+## Slow
+# readcd f="$1.iso" -v retries=32 timeout=30 -s speed=16 -noerror
+
+# dd if=$DRIVE of='$1.iso' bs=2048 count=$(isosize -d 2048 $DRIVE) conv=sync,notrunc

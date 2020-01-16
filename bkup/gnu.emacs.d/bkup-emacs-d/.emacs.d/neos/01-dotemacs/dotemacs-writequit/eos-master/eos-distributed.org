@@ -1,0 +1,80 @@
+#+TITLE: EOS: Distributed Networking Module
+#+AUTHOR: Lee Hinman
+#+EMAIL: lee@writequit.org
+#+SETUPFILE: ~/eos/setupfiles/eos.setup
+
+#+BEGIN_SRC emacs-lisp
+(provide 'eos-distributed)
+#+END_SRC
+
+This module provides hooks for various distributed services.
+
+* EOS Matrix communication and synchronization module
+:PROPERTIES:
+:CUSTOM_ID: h:52bae8b6-47c4-4a8c-b4c3-7096436dd9fa
+:END:
+
+[[http://matrix.org][Matrix]] is a decentralized way to "join" different communication platforms. Kind
+of like XMPP, but sane.
+
+I recently set up a [[https://github.com/matrix-org/synapse][Synapse]] (Matrix's homeserver) server on writequit so that I
+could join my own things. Thankfully, [[https://twitter.com/rrrrrrrix][@real_rrix]] wrote an elisp client for
+matrix, so I can join from my Emacs instance.
+
+#+BEGIN_SRC emacs-lisp
+(use-package matrix-client
+  :disabled t
+  :init
+  (setq matrix-homeserver-base-url "https://writequit.org"
+        matrix-client-render-html nil)
+  (defun eos/matrix-jack-in ()
+    (interactive)
+    (matrix-client "dakrone")))
+#+END_SRC
+
+Add Matrix sauron support (for notifications)
+
+#+BEGIN_SRC emacs-lisp
+(use-package matrix-client
+  :disabled t
+  :config
+  (require 'matrix-sauron)
+  (add-to-list 'sauron-modules 'matrix-sauron)
+  (when (and sr-running-p (and (boundp 'sauron-matrix-running)
+                               (not sauron-matrix-running)))
+    (matrix-sauron-start)))
+#+END_SRC
+
+* IPFS - Distributed file-system
+:PROPERTIES:
+:CUSTOM_ID: h:f14e0e8e-cd20-49b8-bd70-d0be9c5c2a0a
+:END:
+** Running the IPFS daemon
+:PROPERTIES:
+:CUSTOM_ID: h:05f91eba-02fa-47bf-8ca8-8dd129384517
+:END:
+
+I'd like the run the IPFS daemon as my local user, after installing and
+initializing it. Notice that this requires installing IPFS, and then already
+running =ipfs init= as your user, before running this service
+
+#+BEGIN_SRC conf :tangle out/ipfs.service
+[Unit]
+Description=IPFS Daemon
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/ipfs daemon
+ExecStop=/usr/bin/pkill ipfs
+Restart=always
+
+[Install]
+WantedBy=default.target
+#+END_SRC
+
+#+BEGIN_SRC sh :tangle sh/install-ipfs-service.sh
+cp -fv $PWD/out/ipfs.service ~/.config/systemd/user/ipfs.service
+systemctl --user daemon-reload
+systemctl --user enable ipfs
+systemctl --user start ipfs
+#+END_SRC

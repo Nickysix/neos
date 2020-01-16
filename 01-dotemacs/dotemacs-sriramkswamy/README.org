@@ -1,0 +1,7 @@
+#+TITLE: Emacs Configuration
+
+Emacs configuration.
+
+#+BEGIN_SRC sh
+git clone --recurse-submodules https://github.com/sriramkswamy/dotemacs.git .emacs.d
+#+END_SRC

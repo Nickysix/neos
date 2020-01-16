@@ -1,0 +1,234 @@
+#+TITLE: Refile.org
+
+
+
+
+* Notes
+
+* Linux [0/0]
+
+* Emacs [1/20]
+
+- [X] learn art-mode + ditta
+
+- [ ] setup emmet-mode impatient-mode skewer-mode html-mode web-mode css-mode js2-mode
+
+- [ ] setup nodejs npm to work with emacs
+
+- [ ] setup and learn to use w3m to search web cut paste code
+
+- [ ] make a list of websites for learning emacs
+
+- [ ] make list of pkgs in my configuration
+
+- [ ] make list of people with good configurations
+
+- [ ] setup org-protocol + org-capture
+
+- [ ] put emacs manuals on tablet for study
+
+- [ ] use downloaded github projects for emacs practice
+
+- [ ] use google chrome save webpage as to save webpage for future tutorials
+
+- [ ] use httrack to copy the best sites for learning emacs for offline use
+
+- [ ] use saved images/screenshots for future learning tutorials
+
+- [ ] download organize emacs howto youtube videos
+
+- [ ] practice touchtyping + vim cmds using online programs and vim games
+
+- [ ] setup xampp/mediawiki start emacs/linux knowledge howto and skills building wiki
+
+- [ ] read all emacs documentation
+
+- [ ] learn dired inside out by using instead thunar when can
+
+- [ ] while using spacemacs configure vanilla emacs with orgbabel
+
+- [ ] setup orgmobile/orgzly + syncthing or dropbox
+
+
+
+ * Emacs-Package-List
+
+** org-mode 
+*** org-brain
+*** org-protocol
+*** org-protocol-capture-html
+*** org-download (drag images to org buffer)
+
+** yankpad
+** org-wiki
+** org-journal
+** artist-mode
+
+
+
+
+* Web-Development [0/0]
+
+* Programming [0/2]
+- [ ] setup clojure/emacs environment
+- [ ] learn to use leiningen build tool 
+
+
+
+https://github.com/bbatsov
+https://github.com/bbatsov/emacs.d
+https://github.com/bbatsov/prelude
+
+Living by golden rule + Universal laws balance life?
+
+
+http://www.literateprogramming.com/
+
+https://cs.stanford.edu/~knuth/index.html
+
+https://github.com/Nickysix/literate-programming-examples
+
+
+https://www.gnu.org/software/emacs/manual/index.html
+
+http://ergoemacs.org/emacs/emacs.html
+
+
+http://www.modernemacs.com/
+
+http://www.modernemacs.com/post/outline-ivy/
+
+https://jblevins.org/projects/deft/
+
+http://cestlaz.github.io/
+http://cestlaz.github.io/stories/emacs/
+
+https://github.com/zamansky
+
+https://github.com/zamansky/Hanoi
+
+https://github.com/zamansky/using-emacs/blob/master/myinit.org
+
+https://github.com/zamansky/awesome-cs-education
+
+
+https://github.com/howardabrams
+http://www.howardism.org/
+http://www.howardism.org/Technical/Emacs/capturing-content.html
+
+
+https://github.com/purcell
+https://github.com/purcell/emacs.d
+
+http://overtone.github.io/emacs-live/
+
+
+https://github.com/caisah/emacs.dz
+Awesome emacs config files
+
+
+https://github.com/sindresorhus/awesome
+
+https://github.com/Macmod/awesome-cs
+
+
+http://yogthos.github.io/ClojureDistilled.html
+
+
+http://clojure-doc.org/
+
+
+https://www.braveclojure.com/
+
+http://www.parens-of-the-dead.com/
+
+https://clojure.org/guides/getting_started
+
+https://github.com/bbatsov/clojure-style-guide
+
+
+
+
+https://www.nand2tetris.org/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+* How does frequency effect human health 
+** Theres evidence all the towers may be weaponized.
+** Remember what the Georgia guide stones say about reducing human population.
+** The wrong frequencies applied can kill; over time many are getting sick today.
+
+
+
+* Audio-books reference list: 
+
+* Health:
+** colloidal silver
+** How keep arteries clear (youtube health channel).
+
+
+* Manley P. Hall
+* Santos Bonocci
+* Bill Donahue
+
+
+
+* The art of fermentation by Sandor ellix katz
+* audio notes in emacs how to.
+
+
+* Computer-Science:--------------------------------------------------------
+
+** concepts
+
+- create minor-mode for personal keybindings customization.
+- create cfg + config directories for different mode configurations.
+- create github repo for neos.
+- setup syncthing 
+- artist-mode + picture-mode experiment with.
+- use isearch in info mode to search topics.
+
+-
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.5.0 -->
+<title>org-mode todo setup so far | John’s Blog</title>
+<meta name="generator" content="Jekyll v3.8.5" />
+<meta property="og:title" content="org-mode todo setup so far" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="How I’m using org-mode for my task list so far." />
+<meta property="og:description" content="How I’m using org-mode for my task list so far." />
+<link rel="canonical" href="http://www.johnborwick.com/2019/02/23/org-todo-setup.html" />
+<meta property="og:url" content="http://www.johnborwick.com/2019/02/23/org-todo-setup.html" />
+<meta property="og:site_name" content="John’s Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2019-02-23T00:00:00-08:00" />
+<script type="application/ld+json">
+{"description":"How I’m using org-mode for my task list so far.","@type":"BlogPosting","url":"http://www.johnborwick.com/2019/02/23/org-todo-setup.html","headline":"org-mode todo setup so far","dateModified":"2019-02-23T00:00:00-08:00","datePublished":"2019-02-23T00:00:00-08:00","mainEntityOfPage":{"@type":"WebPage","@id":"http://www.johnborwick.com/2019/02/23/org-todo-setup.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://www.johnborwick.com/feed.xml" title="John's Blog" /><script>
+if(!(window.doNotTrack === "1" || navigator.doNotTrack === "1" || navigator.doNotTrack === "yes" || navigator.msDoNotTrack === "1")) {
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-12529469-1', 'auto');
+  ga('send', 'pageview');
+}
+</script>
+  
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">John&#39;s Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about.html">About</a><a class="page-link" href="/archive.html">Archive</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">org-mode todo setup so far</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2019-02-23T00:00:00-08:00" itemprop="datePublished">Feb 23, 2019
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>
+<a href="/2019/02/01/execution-system.html">As I described a few weeks ago</a>, I've been using a complex Getting Things Done system for around fifteen years. I've been using toodledo for my task system but recently I've gotten more interested in <a href="/2019/01/29/org-mode.html">Emacs's org-mode</a>. I've realized that I've been <a href="/2019/02/08/missing-features.html">missing features and not knowing it</a>; as one simple example, it's very easy to have multiple sets of tags in org-mode.
+</p>
+
+<p>
+Below I'll describe how I have org-mode configured so far.
+</p>
+
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#org559e557">Files and directory structure</a></li>
+<li><a href="#org7336d37">Task intake: org-capture</a></li>
+<li><a href="#org7f88469">Archiving and refiling</a></li>
+<li><a href="#org1e8bf0f">Tags and states</a></li>
+<li><a href="#org928a866">SCHEDULED vs. DEADLINE</a></li>
+<li><a href="#org8d95efe">Agendas and viewing consolidated tasks</a>
+<ul>
+<li><a href="#org1a39732">configuring custom org-agenda options</a></li>
+<li><a href="#org7ebde60">Priority A tasks</a></li>
+<li><a href="#orgd139456">Due soon</a></li>
+<li><a href="#orgfd1978f">Project list</a></li>
+<li><a href="#orgdaae0a3">Non-project tasks</a></li>
+</ul>
+</li>
+<li><a href="#orge8d44e5">checklists and org-checklist</a></li>
+<li><a href="#org6891e2f">Lessons learned so far</a></li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-org559e557" class="outline-2">
+<h2 id="org559e557">Files and directory structure</h2>
+<div class="outline-text-2" id="text-org559e557">
+<p>
+I have a Dropbox folder <code>org/</code> at the path <code>~/Dropbox/org</code>. Inside this directory I have several files:
+</p>
+
+<dl class="org-dl">
+<dt>backlog.org</dt><dd>"someday/maybe" ideas that are not otherwise tracked.</dd>
+<dt>home goals.org</dt><dd>experimental place for "someday/maybe" home ideas.</dd>
+<dt>inbox.org</dt><dd>I configured this as where <code>org-capture</code> dumps tasks.</dd>
+<dt>main-todo.org</dt><dd>Non-project todo items.</dd>
+<dt>now.org</dt><dd>Stuff I'm doing right now, mainly to make using <a href="http://www.orgzly.com/">orgzly</a> easier.</dd>
+<dt>orgzly-inbox.org</dt><dd>Default place where orgzly saves tasks.<sup><a id="fnr.1" class="footref" href="#fn.1">1</a></sup></dd>
+<dt>projects.org</dt><dd>Location for larger projects with many todo items.</dd>
+<dt>web site ideas.org</dt><dd>experimental place for "someday/maybe" web site ideas.</dd>
+<dt>work ideas.org</dt><dd>experimental place for "someday/maybe" work ideas.</dd>
+</dl>
+
+<p>
+I am still experimenting with what files make the most sense. With org-mode you can do searches across many files at once, so I'm still figuring out when to use separate files. The main factor in using separate files seems to be orgzly's file synchronization.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org7336d37" class="outline-2">
+<h2 id="org7336d37">Task intake: org-capture</h2>
+<div class="outline-text-2" id="text-org7336d37">
+<p>
+One way to create tasks is just to go to a file and start typing. This is really strange to me, because you can tell you're just using a text file. But if you have a list of tasks this can be the fastest way, hitting <code>M-S-RET</code> after each item to create a new line.
+</p>
+
+<p>
+However, if you're doing other stuff and want to create a task on the fly, org-capture is really useful.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(<span style="color: #a020f0;">use-package</span> <span style="color: #008b8b;">org</span>
+  <span style="color: #483d8b;">:ensure</span> org-plus-contrib
+  <span style="color: #483d8b;">:config</span>
+    <span style="color: #b22222;">; </span><span style="color: #b22222;">really long config section omitted</span>
+    <span style="color: #b22222;">; </span><span style="color: #b22222;">not sure if I need this:</span>
+    (<span style="color: #a020f0;">setq</span> org-default-notes-file <span style="color: #8b2252;">"~/Dropbox/org/inbox.org"</span>)
+    (<span style="color: #a020f0;">setq</span> org-capture-templates
+          '((<span style="color: #8b2252;">"t"</span> <span style="color: #8b2252;">"Todo [inbox]"</span> entry
+          (file+headline <span style="color: #8b2252;">"~/Dropbox/org/inbox.org"</span> <span style="color: #8b2252;">"Tasks"</span>)
+          <span style="color: #8b2252;">"* TODO %i%?\n%a"</span>)
+            (<span style="color: #8b2252;">"n"</span> <span style="color: #8b2252;">"Todo [inbox, no link]"</span> entry
+            (file+headline <span style="color: #8b2252;">"~/Dropbox/org/inbox.org"</span> <span style="color: #8b2252;">"Tasks"</span>)
+            <span style="color: #8b2252;">"* TODO %i%?\n"</span>)
+            (<span style="color: #8b2252;">"b"</span> <span style="color: #8b2252;">"Backlog"</span> entry
+            (file+headline <span style="color: #8b2252;">"~/Dropbox/org/backlog.org"</span> <span style="color: #8b2252;">"Backlog"</span>)
+            <span style="color: #8b2252;">"* %i%?\n%a"</span>)))
+  <span style="color: #483d8b;">:bind</span> (<span style="color: #b22222;">; </span><span style="color: #b22222;">other bindings removed</span>
+         (<span style="color: #8b2252;">"C-c c"</span> . org-capture)))
+</pre>
+</div>
+
+<p>
+With the above, I can hit <code>C-c c</code> to capture something; I then have three options:
+</p>
+
+<ul class="org-ul">
+<li><code>t</code> to capture a todo item <i>with a link</i></li>
+<li><code>n</code> to capture a todo item <i>without a link</i></li>
+<li><code>b</code> to capture a backlog item (i.e. idea)</li>
+</ul>
+
+<p>
+The "link" is a link to wherever you were when you created the todo. For example I hit <code>C-c c t</code> right here and the link was to <code>file:~/Dropbox/jb.com/org/_posts/2019-02-23-org-todo-setup.org::*Task%20intake:%20org-capture</code>. That is a link to the section of the org-mode file that I'm using to write this article!
+</p>
+
+<p>
+This is especially helpful if I'm reading email (in Emacs); I can hit <code>C-c c t</code> and create a todo that links to an email. In the todo later I can click the link to get back to that same email!
+</p>
+</div>
+</div>
+
+<div id="outline-container-org7f88469" class="outline-2">
+<h2 id="org7f88469">Archiving and refiling</h2>
+<div class="outline-text-2" id="text-org7f88469">
+<p>
+Archiving is built into org-mode directly, I believe. If you're on a heading you want to archive, you can hit <code>C-c C-x C-a</code> to archive that item. If you archive a task in <code>main-todo.org</code>, the archive file will by default be <code>main-todo.org_archive</code>. Archiving just moves your todo to another file for preservation.
+</p>
+
+<p>
+Refiling lets you move a todo from one physical file to another. Here's how I set this up:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(<span style="color: #a020f0;">setq</span> org-refile-targets
+  '(((<span style="color: #8b2252;">"~/Dropbox/org/main-todo.org"</span>) <span style="color: #483d8b;">:maxlevel</span> . 3)
+    ((<span style="color: #8b2252;">"~/Dropbox/org/projects.org"</span>) <span style="color: #483d8b;">:maxlevel</span> . 3)
+    ((<span style="color: #8b2252;">"~/Dropbox/org/backlog.org"</span>) <span style="color: #483d8b;">:maxlevel</span> . 3)
+    ((<span style="color: #8b2252;">"~/Dropbox/org/now.org"</span>) <span style="color: #483d8b;">:maxlevel</span> . 3)
+    ))
+</pre>
+</div>
+
+<p>
+When you're on a heading, if you hit <code>C-c C-w</code>, you'll be presented with all the headings down to level 3 for each of these files. This makes it easy to process <code>inbox.org</code> or other files to move content to the right place.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org1e8bf0f" class="outline-2">
+<h2 id="org1e8bf0f">Tags and states</h2>
+<div class="outline-text-2" id="text-org1e8bf0f">
+<p>
+Here are my todo "proper" settings:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(<span style="color: #a020f0;">setq</span> org-todo-keyword-faces
+  '((<span style="color: #8b2252;">"WORKING"</span> . <span style="color: #8b2252;">"orange"</span>)
+   (<span style="color: #8b2252;">"CANCELLED"</span> . <span style="color: #8b2252;">"grey"</span>)))
+(<span style="color: #a020f0;">setq</span> org-todo-keywords
+  '((sequence <span style="color: #8b2252;">"TODO(t)"</span> <span style="color: #8b2252;">"WORKING(n)"</span> <span style="color: #8b2252;">"WAITING(w@/!)"</span>
+              <span style="color: #8b2252;">"POSTPONED(p)"</span> <span style="color: #8b2252;">"|"</span> <span style="color: #8b2252;">"DONE(d@/!)"</span> <span style="color: #8b2252;">"CANCELLED(c)"</span>)))
+</pre>
+</div>
+
+<p>
+This means that tasks can be in the states TODO, WORKING, WAITING, POSTPONED, DONE, or CANCELLED. The extra stuff after each keyword defines a shortcut key and whether a log entry should be added. For example <code>WAITING(w@/!)</code> means <code>w</code> is the keyboard shortcut, <code>@</code> means "note with timestamp" and <code>/!</code> means "add a timestamp even if I bailed on writing a note."
+</p>
+
+<p>
+With those "states" defined, I next defined my contexts:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(<span style="color: #a020f0;">setq</span> org-tag-alist '(
+  (<span style="color: #483d8b;">:startgroup</span> . nil)
+    (<span style="color: #8b2252;">"home"</span> . ?h)
+    (<span style="color: #8b2252;">"work"</span> . ?w)
+  (<span style="color: #483d8b;">:endgroup</span> . nil)
+  (<span style="color: #483d8b;">:startgroup</span> . nil)
+    (<span style="color: #8b2252;">"@errands"</span> . ?e)
+    (<span style="color: #8b2252;">"@house"</span> . ?s)
+    (<span style="color: #8b2252;">"@now"</span> . ?n)
+    (<span style="color: #8b2252;">"@online"</span> . ?o)
+    (<span style="color: #8b2252;">"@phone"</span> . ?p)
+    (<span style="color: #8b2252;">"@campus"</span> . ?c)
+    (<span style="color: #8b2252;">"@office"</span> . ?f)
+  (<span style="color: #483d8b;">:endgroup</span> . nil)
+))
+</pre>
+</div>
+
+<p>
+This is a neat thing that toodledo didn't have&#x2013;you can have different "groups" of tags, where you can only choose one item from the group. My group #1 is either home or work; my group #2 is the GTD "context" i.e. where you need to be to do this work.
+</p>
+
+<p>
+Theoretically for example I could have a "work" task with a context of "house," if I needed to be home to do it but the task was for work. This has helped me move past GTD's insistence that your context is the only thing you should be tracking, and it also makes searching for work vs. home tasks much easier.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org928a866" class="outline-2">
+<h2 id="org928a866">SCHEDULED vs. DEADLINE</h2>
+<div class="outline-text-2" id="text-org928a866">
+<p>
+To set dates on tasks, when you're on the task you can use <code>C-c C-d</code> to set the DEADLINE date and/or <code>C-c C-s</code> to set the SCHEDULED date. (You could also manually type these in.)
+</p>
+
+<p>
+DEADLINE best corresponds to the due date of a task. Just like normal in GTD, the date should only be set if it's a real due date.
+</p>
+
+<p>
+SCHEDULED best corresponds to the start date of a task. There are a few org-agenda options to hide tasks with a future scheduled date:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(<span style="color: #a020f0;">setq</span> org-agenda-todo-ignore-scheduled 'future)
+(<span style="color: #a020f0;">setq</span> org-agenda-tags-todo-honor-ignore-options t)
+(<span style="color: #a020f0;">setq</span> org-agenda-skip-deadline-prewarning-if-scheduled t)
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org8d95efe" class="outline-2">
+<h2 id="org8d95efe">Agendas and viewing consolidated tasks</h2>
+<div class="outline-text-2" id="text-org8d95efe">
+<p>
+The last big piece is configuring org-agenda to show me a summary of tasks to be done. To set org-agenda up, at a minimum you need to tell it what files to read:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(<span style="color: #a020f0;">setq</span> org-agenda-files (list
+  <span style="color: #8b2252;">"~/Dropbox/org/inbox.org"</span>
+  <span style="color: #8b2252;">"~/Dropbox/org/main-todo.org"</span>
+  <span style="color: #8b2252;">"~/Dropbox/org/orgzly-inbox.org"</span>
+  <span style="color: #8b2252;">"~/Dropbox/org/projects.org"</span>))
+
+<span style="color: #b22222;">; </span><span style="color: #b22222;">also bind "C-c a" to org-agenda e.g. via use-package</span>
+</pre>
+</div>
+
+<p>
+After adding the keybinding, I can hit <code>C-c a</code> to get to the org-agenda list of options, one of which is <code>a</code> for agenda: <code>C-c a a</code> in total. This lets me see the default org-agenda.
+</p>
+</div>
+
+<div id="outline-container-org1a39732" class="outline-3">
+<h3 id="org1a39732">configuring custom org-agenda options</h3>
+<div class="outline-text-3" id="text-org1a39732">
+<p>
+I'd like to have more control over what I see in org-agenda than the default view. This is done through as many parentheses as possible:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(<span style="color: #a020f0;">setq</span> org-agenda-custom-commands
+ ((<span style="color: #8b2252;">"w"</span> <span style="color: #8b2252;">"Work agenda"</span>
+   <span style="color: #b22222;">; </span><span style="color: #b22222;">Priority A</span>
+   ((tags-todo <span style="color: #8b2252;">"PRIORITY=\"A\"&amp;-home"</span>
+   ((org-agenda-overriding-header <span style="color: #8b2252;">"Priority A"</span>)))
+   <span style="color: #b22222;">; </span><span style="color: #b22222;">Due soon</span>
+   (tags-todo <span style="color: #8b2252;">"-PRIORITY=\"A\"&amp;DEADLINE&lt;=\"&lt;+7d&gt;\"&amp;-home"</span>
+   ((org-agenda-overriding-header <span style="color: #8b2252;">"Due soon"</span>)))
+   <span style="color: #b22222;">; </span><span style="color: #b22222;">Project list</span>
+   (tags <span style="color: #8b2252;">"LEVEL=2&amp;-home"</span>
+   ((org-agenda-files '(<span style="color: #8b2252;">"~/Dropbox/org/projects.org"</span>))
+    (org-agenda-overriding-header <span style="color: #8b2252;">"Projects"</span>)))
+   (tags-todo (concat <span style="color: #8b2252;">"-home&amp;-TODO=\"WAITING\"&amp;-FILE=\""</span>
+                       (expand-file-name <span style="color: #8b2252;">"~/Dropbox/org/projects.org"</span>)
+                       <span style="color: #8b2252;">"\""</span>)
+    ((org-agenda-overriding-header <span style="color: #8b2252;">"All non-project tasks"</span>)))
+   )
+   ((org-agenda-compact-blocks t))) <span style="color: #b22222;">;; </span><span style="color: #b22222;">options set here apply to the entire block</span>
+ (<span style="color: #8b2252;">"h"</span> <span style="color: #8b2252;">"Home agenda"</span>
+   <span style="color: #b22222;">; </span><span style="color: #b22222;">Priority A</span>
+   ((tags-todo <span style="color: #8b2252;">"PRIORITY=\"A\"&amp;-work"</span>
+   ((org-agenda-overriding-header <span style="color: #8b2252;">"Priority A"</span>)))
+   <span style="color: #b22222;">; </span><span style="color: #b22222;">Due soon</span>
+   (tags-todo <span style="color: #8b2252;">"-PRIORITY=\"A\"&amp;DEADLINE&lt;=\"&lt;+7d&gt;\"&amp;-work"</span>
+   ((org-agenda-overriding-header <span style="color: #8b2252;">"Due soon"</span>)))
+   <span style="color: #b22222;">; </span><span style="color: #b22222;">Project list</span>
+   (tags <span style="color: #8b2252;">"LEVEL=2&amp;-work"</span>
+   ((org-agenda-files '(<span style="color: #8b2252;">"~/Dropbox/org/projects.org"</span>))
+    (org-agenda-overriding-header <span style="color: #8b2252;">"Projects"</span>)))
+
+   (tags-todo (concat <span style="color: #8b2252;">"-work&amp;-TODO=\"WAITING\"&amp;-FILE=\""</span>
+                       (expand-file-name <span style="color: #8b2252;">"~/Dropbox/org/projects.org"</span>)
+                       <span style="color: #8b2252;">"\""</span>)
+    ((org-agenda-overriding-header <span style="color: #8b2252;">"All non-project tasks"</span>))))
+    ((org-agenda-compact-blocks t))) <span style="color: #b22222;">;; </span><span style="color: #b22222;">options set here apply to the entire block</span>
+ (<span style="color: #8b2252;">"W"</span> <span style="color: #8b2252;">"Waiting"</span>
+   ((tags-todo <span style="color: #8b2252;">"WAITING"</span>
+    ((org-agenda-overriding-header <span style="color: #8b2252;">"Waiting tasks"</span>))))
+   )))
+</pre>
+</div>
+
+<p>
+The above defines three org-agenda keys: <code>w</code> ("work agenda"), <code>h</code> ("home agenda"), and <code>W</code> ("waiting"). I'm going to go through each of the sections within "work agenda:"
+</p>
+</div>
+</div>
+
+<div id="outline-container-org7ebde60" class="outline-3">
+<h3 id="org7ebde60">Priority A tasks</h3>
+<div class="outline-text-3" id="text-org7ebde60">
+<div class="org-src-container">
+<pre class="src src-emacs-lisp"><span style="color: #b22222;">; </span><span style="color: #b22222;">Priority A</span>
+((tags-todo <span style="color: #8b2252;">"PRIORITY=\"A\"&amp;-home"</span>
+((org-agenda-overriding-header <span style="color: #8b2252;">"Priority A"</span>)))
+</pre>
+</div>
+
+<p>
+First, show me the "Priority A" tasks, only if they don't have a "home" tag. <b>Very notably, tags get inherited</b>, so if you have a block like so:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-org"><span style="color: #0000ff;">* example heading                                                      </span><span style="color: #0000ff; font-weight: bold;">:home:</span>
+<span style="color: #ffffff;">*</span><span style="color: #a0522d;">* </span><span style="color: #ff0000; font-weight: bold;">TODO</span><span style="color: #a0522d;"> thing #1</span>
+</pre>
+</div>
+
+<p>
+"thing #1" gets the ":home:" tag. This means I can have a section tagged "home" called "Random home tasks" and nothing underneath it will show up if I hide the "home" tag.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgd139456" class="outline-3">
+<h3 id="orgd139456">Due soon</h3>
+<div class="outline-text-3" id="text-orgd139456">
+<div class="org-src-container">
+<pre class="src src-emacs-lisp"><span style="color: #b22222;">; </span><span style="color: #b22222;">Due soon</span>
+(tags-todo <span style="color: #8b2252;">"-PRIORITY=\"A\"&amp;DEADLINE&lt;=\"&lt;+7d&gt;\"&amp;-home"</span>
+((org-agenda-overriding-header <span style="color: #8b2252;">"Due soon"</span>)))
+</pre>
+</div>
+
+<p>
+Next, I want to see anything with a deadline within 7 days, and I don't want to see anything tagged PRIORITY "A" because I already saw that.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgfd1978f" class="outline-3">
+<h3 id="orgfd1978f">Project list</h3>
+<div class="outline-text-3" id="text-orgfd1978f">
+<div class="org-src-container">
+<pre class="src src-emacs-lisp"><span style="color: #b22222;">; </span><span style="color: #b22222;">Project list</span>
+(tags <span style="color: #8b2252;">"LEVEL=2&amp;-home"</span>
+((org-agenda-files '(<span style="color: #8b2252;">"~/Dropbox/org/projects.org"</span>))
+ (org-agenda-overriding-header <span style="color: #8b2252;">"Projects"</span>)))
+</pre>
+</div>
+
+<p>
+Next, I want to see the "LEVEL 2" headings from the projects file unless they have a "home" task. <b>THIS IS AMAZING.</b> I'll see any tasks due soon because of the <a href="#orgd139456">Due soon</a> rule. Otherwise, I don't want my task system cluttered up with dozens of project tasks&#x2013;I just want to remember that these projects are happening.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgdaae0a3" class="outline-3">
+<h3 id="orgdaae0a3">Non-project tasks</h3>
+<div class="outline-text-3" id="text-orgdaae0a3">
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(tags-todo (concat <span style="color: #8b2252;">"-home&amp;-TODO=\"WAITING\"&amp;-FILE=\""</span>
+                    (expand-file-name <span style="color: #8b2252;">"~/Dropbox/org/projects.org"</span>)
+                    <span style="color: #8b2252;">"\""</span>)
+ ((org-agenda-overriding-header <span style="color: #8b2252;">"All non-project tasks"</span>)))
+)
+</pre>
+</div>
+
+<p>
+Finally, I want to see all the non-project tasks that aren't in a "waiting" state. There's a <a href="https://orgmode.org/manual/Special-properties.html">special property</a> "FILE" that lets you filter on a file, so I can filter out all the "projects.org" files. (FILE is apparently populated with the complete path, which is why I need to call <code>expand-file-name</code>.)
+</p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orge8d44e5" class="outline-2">
+<h2 id="orge8d44e5">checklists and org-checklist</h2>
+<div class="outline-text-2" id="text-orge8d44e5">
+<p>
+I really like org-mode's checklist option&#x2013;these checklists don't show up in my org-agenda view, but they help me remember to do parts of my tasks. For example I can have a task:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-org"><span style="color: #0000ff;">* </span><span style="color: #ff0000; font-weight: bold;">TODO</span><span style="color: #0000ff;"> test-task</span>
+ - <span style="font-weight: bold;">[ ]</span> do this
+ - <span style="font-weight: bold;">[ ]</span> do that
+ - <span style="font-weight: bold;">[ ]</span> do the other thing
+</pre>
+</div>
+
+<p>
+and I can then check the boxes with <code>C-c C-c</code> as I complete them. This has been extremely helpful to me so that I can focus on one task that may have many parts to it.
+</p>
+
+<p>
+I especially like using these checklists with repeating tasks. I'm using <code>org-plus-contrib</code> rather than just <code>org</code> because I want access to <code>org-checklist</code>:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(add-to-list 'org-modules 'org-checklist)
+(<span style="color: #a020f0;">require</span> '<span style="color: #008b8b;">org-checklist</span>)
+</pre>
+</div>
+
+<p>
+This module will look for a property <code>RESET_CHECK_BOXES</code>:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-org"><span style="color: #ffffff;">*</span><span style="color: #a0522d;">* </span><span style="color: #ff0000; font-weight: bold;">TODO</span><span style="color: #a0522d;"> Weekly home tasks</span>
+   <span style="color: #a020f0;">DEADLINE:</span> <span style="color: #a020f0; text-decoration: underline;">&lt;2019-03-03 Sun +1w&gt;</span> <span style="color: #a020f0;">SCHEDULED:</span> <span style="color: #a020f0; text-decoration: underline;">&lt;2019-02-25 Mon +1w&gt;</span>
+<span style="color: #a020f0;">   :PROPERTIES:</span>
+   <span style="color: #a020f0;">:RESET_CHECK_BOXES:</span> t
+<span style="color: #a020f0;">   :END:</span>
+ - <span style="font-weight: bold;">[ ]</span> process paper inbox
+ - <span style="font-weight: bold;">[ ]</span> clean fridge
+ - <span style="font-weight: bold;">[ ]</span> clear out onetab tabs
+ - <span style="font-weight: bold;">[ ]</span> review w/f and follow-up email
+</pre>
+</div>
+
+<p>
+When this task is marked complete, the checklists will become unchecked again.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org6891e2f" class="outline-2">
+<h2 id="org6891e2f">Lessons learned so far</h2>
+<div class="outline-text-2" id="text-org6891e2f">
+<p>
+I'm still halfway using toodledo and halfway using org-mode. So far I've found that org-mode is much less intrusive for todo intake; I can be checking my email and quickly add a task rather than having to switch to my web browser to type up a task with more context (because previously my email and task systems weren't integrated at all).
+</p>
+
+<p>
+I also really like how projects and non-projects can be blended with this system. I've always had to use separate systems in the past.
+</p>
+</div>
+</div>
+<div id="footnotes">
+<h2 class="footnotes">Footnotes: </h2>
+<div id="text-footnotes">
+
+<div class="footdef"><sup><a id="fn.1" class="footnum" href="#fnr.1">1</a></sup> <div class="footpara"><p class="footpara">
+This is to reduce the chance of orgzly editing a file that has also been edited elsewhere; orgzly doesn't have a good merge function so it's easy to have to throw away content if you aren't synchronizing.
+</p></div></div>
+
+
+</div>
+</div>
+
+  </div><a class="u-url" href="/2019/02/23/org-todo-setup.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">John&#39;s Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">John&#39;s Blog</li><li><a class="u-email" href="mailto:john_borwick@pobox.com">john_borwick@pobox.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/borwick"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">borwick</span></a></li><li><a href="https://www.linkedin.com/in/borwick"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#linkedin"></use></svg> <span class="username">borwick</span></a></li><li><a href="https://www.twitter.com/borwick"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">borwick</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Neat stuff John likes.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

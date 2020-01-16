@@ -1,0 +1,80 @@
+# elpa files
+/elpa
+
+# straight.el files
+/straight
+
+# project file cache
+/data/.projectile-bookmarks.eld
+/data/.projectile.cache
+
+# M-x command history
+/.smex-items
+
+# recentf file
+/data/recentf
+
+/data/.session
+/data/session*
+
+# semantic parser cache
+/data/semanticdb
+/data/srecode-map.el
+
+
+# emacs browser cookies
+/url
+
+# UCS cache
+/var
+
+
+# tramp connection history
+/data/tramp
+
+
+
+# misc
+*~
+*.undo.xz
+*#
+.#*
+flycheck_*
+*.swp
+*.elc
+/.elisp-cache-stamp
+
+
+/data/anaconda-mode
+/data/irony
+/data/savehist
+/data/undo-backups
+
+
+# package cache
+/data/package-cache.el
+
+
+# historian statistics
+/data/.historian
+
+
+# quelpa cache
+/quelpa
+
+
+# the custom file
+/custom.el
+
+
+# the abbrev file
+/data/.abbrev_defs
+
+
+/personal
+
+/data/auctex
+
+/eshell
+
+/data/authinfo.gpg

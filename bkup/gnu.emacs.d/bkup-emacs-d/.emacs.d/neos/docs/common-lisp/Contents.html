@@ -1,0 +1,633 @@
+<!DOCTYPE html PUBLIC "-//W3O//DTD W3 HTML 2.0//EN">
+<!-- saved from url=(0084)http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node1.html#SECTION00100000000000000000 -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<title>Contents</title>
+<style id="dark-reader-style" type="text/css">@media screen {
+
+/* Leading rule */
+html {
+  -webkit-filter: invert(100%) hue-rotate(180deg) brightness(70%) contrast(90%) !important;
+  filter: invert(100%) hue-rotate(180deg) brightness(70%) contrast(90%) !important;
+}
+
+/* Reverse rule */
+img,
+video,
+:not(object):not(body)>embed,
+object,
+svg image,
+[style*="background:url"],
+[style*="background-image:url"],
+[style*="background: url"],
+[style*="background-image: url"],
+[background],
+twitterwidget {
+  -webkit-filter: invert(100%) hue-rotate(180deg) !important;
+  filter: invert(100%) hue-rotate(180deg) !important;
+}
+[style*="background:url"] *,
+[style*="background-image:url"] *,
+[style*="background: url"] *,
+[style*="background-image: url"] *,
+input,
+[background] *,
+img[src^="https://s0.wp.com/latex.php"],
+twitterwidget .NaturalImage-image {
+  -webkit-filter: none !important;
+  filter: none !important;
+}
+.compatibility-with-darkreader-below-4-3-3 {
+  background: white !important;
+}
+
+/* Text contrast */
+html {
+  text-shadow: 0 0 0 !important;
+}
+
+/* Full screen */
+:-webkit-full-screen, :-webkit-full-screen * {
+  -webkit-filter: none !important;
+  filter: none !important;
+}
+:-moz-full-screen, :-moz-full-screen * {
+  -webkit-filter: none !important;
+  filter: none !important;
+}
+:fullscreen, :fullscreen * {
+  -webkit-filter: none !important;
+  filter: none !important;
+}
+
+/* Page background */
+html {
+  background: rgb(13,13,13) !important;
+}
+
+/* Custom rules */
+.compatibility-with-darkreader-below-4-3-3 {
+    background: white !important;
+}
+
+}</style></head>
+<body>
+<meta name="description" value="Contents">
+<meta name="keywords" value="clm">
+<meta name="resource-type" value="document">
+<meta name="distribution" value="global">
+<p>
+<b>Common Lisp the Language, 2nd Edition</b> <br> </p><hr><a name="tex2html1118" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node2.html"><img align="BOTTOM" alt="next" src="./Contents_files/next_motif.gif"></a> <a name="tex2html1116" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/clm.html"><img align="BOTTOM" alt="up" src="./Contents_files/up_motif.gif"></a> <a name="tex2html1110" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/clm.html"><img align="BOTTOM" alt="previous" src="./Contents_files/previous_motif.gif"></a>  <a name="tex2html1120" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/index.html"><img align="BOTTOM" alt="index" src="./Contents_files/index_motif.gif"></a> <br>
+<b> Next:</b> <a name="tex2html1119" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node2.html"> Preface 
+                SECOND EDITION</a>
+<b>Up:</b> <a name="tex2html1117" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/clm.html">Common Lisp the Language</a>
+<b> Previous:</b> <a name="tex2html1111" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/clm.html">Common Lisp the Language</a>
+<hr> <p>
+</p><p></p><h2><a name="SECTION00100000000000000000">Contents</a></h2>
+<ul> 
+<li> <a name="tex2html1121" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node2.html#SECTION00200000000000000000"> Preface 
+                SECOND EDITION</a>
+</li><li> <a name="tex2html1122" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node3.html#SECTION00300000000000000000"> Acknowledgments 
+                SECOND EDITION</a>
+</li><li> <a name="tex2html1123" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node4.html#SECTION00400000000000000000"> Acknowledgments 
+                FIRST EDITION (1984)</a>
+<p>
+</p></li><li> <b>1. <a name="tex2html1124" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node5.html#SECTION00500000000000000000"> Introduction</a></b>
+<ul> 
+<li> <a name="tex2html1125" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node6.html#SECTION00510000000000000000"> Purpose</a>
+</li><li> <a name="tex2html1126" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node7.html#SECTION00520000000000000000"> Notational Conventions</a>
+<ul> 
+<li> <a name="tex2html1127" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node8.html#SECTION00521000000000000000"> Decimal Numbers</a>
+</li><li> <a name="tex2html1128" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node9.html#SECTION00522000000000000000"> Nil, False, and the Empty List</a>
+</li><li> <a name="tex2html1129" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node10.html#SECTION00523000000000000000"> Evaluation, Expansion, and Equivalence</a>
+</li><li> <a name="tex2html1130" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node11.html#SECTION00524000000000000000"> Errors</a>
+</li><li> <a name="tex2html1131" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node12.html#SECTION00525000000000000000"> Descriptions of Functions and Other Entities</a>
+</li><li> <a name="tex2html1132" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node13.html#SECTION00526000000000000000"> The Lisp Reader</a>
+</li><li> <a name="tex2html1133" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node14.html#SECTION00527000000000000000"> Overview of Syntax</a>
+</li></ul> 
+</li></ul> 
+<p>
+</p></li><li> <b>2. <a name="tex2html1134" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node15.html#SECTION00600000000000000000"> Data Types</a></b>
+<ul> 
+<li> <a name="tex2html1135" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node16.html#SECTION00610000000000000000"> Numbers</a>
+<ul> 
+<li> <a name="tex2html1136" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node17.html#SECTION00611000000000000000"> Integers</a>
+</li><li> <a name="tex2html1137" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node18.html#SECTION00612000000000000000"> Ratios</a>
+</li><li> <a name="tex2html1138" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node19.html#SECTION00613000000000000000"> Floating-Point Numbers</a>
+</li><li> <a name="tex2html1139" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node20.html#SECTION00614000000000000000"> Complex Numbers</a>
+</li></ul> 
+</li><li> <a name="tex2html1140" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node21.html#SECTION00620000000000000000"> Characters</a>
+<ul> 
+<li> <a name="tex2html1141" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node22.html#SECTION00621000000000000000"> Standard Characters</a>
+</li><li> <a name="tex2html1142" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node23.html#SECTION00622000000000000000"> Line Divisions</a>
+</li><li> <a name="tex2html1143" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node24.html#SECTION00623000000000000000"> Non-standard Characters</a>
+</li><li> <a name="tex2html1144" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node25.html#SECTION00624000000000000000"> Character Attributes</a>
+</li><li> <a name="tex2html1145" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node26.html#SECTION00625000000000000000"> String Characters</a>
+</li></ul> 
+</li><li> <a name="tex2html1146" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node27.html#SECTION00630000000000000000"> Symbols</a>
+</li><li> <a name="tex2html1147" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node28.html#SECTION00640000000000000000"> Lists and Conses</a>
+</li><li> <a name="tex2html1148" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node29.html#SECTION00650000000000000000"> Arrays</a>
+<ul> 
+<li> <a name="tex2html1149" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node30.html#SECTION00651000000000000000"> Vectors</a>
+</li><li> <a name="tex2html1150" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node31.html#SECTION00652000000000000000"> Strings</a>
+</li><li> <a name="tex2html1151" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node32.html#SECTION00653000000000000000"> Bit-Vectors</a>
+</li></ul> 
+</li><li> <a name="tex2html1152" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node33.html#SECTION00660000000000000000"> Hash Tables</a>
+</li><li> <a name="tex2html1153" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node34.html#SECTION00670000000000000000"> Readtables</a>
+</li><li> <a name="tex2html1154" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node35.html#SECTION00680000000000000000"> Packages</a>
+</li><li> <a name="tex2html1155" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node36.html#SECTION00690000000000000000"> Pathnames</a>
+</li><li> <a name="tex2html1156" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node37.html#SECTION006100000000000000000"> Streams</a>
+</li><li> <a name="tex2html1157" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node38.html#SECTION006110000000000000000"> Random-States</a>
+</li><li> <a name="tex2html1158" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node39.html#SECTION006120000000000000000"> Structures</a>
+</li><li> <a name="tex2html1159" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node40.html#SECTION006130000000000000000"> Functions</a>
+</li><li> <a name="tex2html1160" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node41.html#SECTION006140000000000000000"> Unreadable Data Objects</a>
+</li><li> <a name="tex2html1161" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node42.html#SECTION006150000000000000000"> Overlap, Inclusion, and Disjointness of Types</a>
+</li></ul> 
+<p>
+</p></li><li> <b>3. <a name="tex2html1162" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node43.html#SECTION00700000000000000000"> Scope and Extent</a></b>
+<p>
+</p></li><li> <b>4. <a name="tex2html1163" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node44.html#SECTION00800000000000000000"> Type Specifiers</a></b>
+<ul> 
+<li> <a name="tex2html1164" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node45.html#SECTION00810000000000000000"> Type Specifier Symbols</a>
+</li><li> <a name="tex2html1165" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node46.html#SECTION00820000000000000000"> Type Specifier Lists</a>
+</li><li> <a name="tex2html1166" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node47.html#SECTION00830000000000000000"> Predicating Type Specifiers</a>
+</li><li> <a name="tex2html1167" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node48.html#SECTION00840000000000000000"> Type Specifiers That Combine</a>
+</li><li> <a name="tex2html1168" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node49.html#SECTION00850000000000000000"> Type Specifiers That Specialize</a>
+</li><li> <a name="tex2html1169" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node50.html#SECTION00860000000000000000"> Type Specifiers That Abbreviate</a>
+</li><li> <a name="tex2html1170" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node51.html#SECTION00870000000000000000"> Defining New Type Specifiers</a>
+</li><li> <a name="tex2html1171" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node52.html#SECTION00880000000000000000"> Type Conversion Function</a>
+</li><li> <a name="tex2html1172" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node53.html#SECTION00890000000000000000"> Determining the Type of an Object</a>
+</li><li> <a name="tex2html1173" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node54.html#SECTION008100000000000000000"> Type Upgrading</a>
+</li></ul> 
+<p>
+</p></li><li> <b>5. <a name="tex2html1174" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node55.html#SECTION00900000000000000000"> Program Structure</a></b>
+<ul> 
+<li> <a name="tex2html1175" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node56.html#SECTION00910000000000000000"> Forms</a>
+<ul> 
+<li> <a name="tex2html1176" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node57.html#SECTION00911000000000000000"> Self-Evaluating Forms</a>
+</li><li> <a name="tex2html1177" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node58.html#SECTION00912000000000000000"> Variables</a>
+</li><li> <a name="tex2html1178" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node59.html#SECTION00913000000000000000"> Special Forms</a>
+</li><li> <a name="tex2html1179" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node60.html#SECTION00914000000000000000"> Macros</a>
+</li><li> <a name="tex2html1180" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node61.html#SECTION00915000000000000000"> Function Calls</a>
+</li></ul> 
+</li><li> <a name="tex2html1181" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node62.html#SECTION00920000000000000000"> Functions</a>
+<ul> 
+<li> <a name="tex2html1182" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node63.html#SECTION00921000000000000000"> Named Functions</a>
+</li><li> <a name="tex2html1183" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node64.html#SECTION00922000000000000000"> Lambda-Expressions</a>
+</li></ul> 
+</li><li> <a name="tex2html1184" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node65.html#SECTION00930000000000000000"> Top-Level Forms</a>
+<ul> 
+<li> <a name="tex2html1185" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node66.html#SECTION00931000000000000000"> Defining Named Functions</a>
+</li><li> <a name="tex2html1186" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node67.html#SECTION00932000000000000000"> Declaring Global Variables and Named Constants</a>
+</li><li> <a name="tex2html1187" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node68.html#SECTION00933000000000000000"> Control of Time of Evaluation</a>
+</li></ul> 
+</li></ul> 
+<p>
+</p></li><li> <b>6. <a name="tex2html1188" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node69.html#SECTION001000000000000000000"> Predicates</a></b>
+<ul> 
+<li> <a name="tex2html1189" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node70.html#SECTION001010000000000000000"> Logical Values</a>
+</li><li> <a name="tex2html1190" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node71.html#SECTION001020000000000000000"> Data Type Predicates</a>
+<ul> 
+<li> <a name="tex2html1191" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node72.html#SECTION001021000000000000000"> General Type Predicates</a>
+</li><li> <a name="tex2html1192" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node73.html#SECTION001022000000000000000"> Specific Data Type Predicates</a>
+</li></ul> 
+</li><li> <a name="tex2html1193" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node74.html#SECTION001030000000000000000"> Equality Predicates</a>
+</li><li> <a name="tex2html1194" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node75.html#SECTION001040000000000000000"> Logical Operators</a>
+</li></ul> 
+<p>
+</p></li><li> <b>7. <a name="tex2html1195" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node76.html#SECTION001100000000000000000"> Control Structure</a></b>
+<ul> 
+<li> <a name="tex2html1196" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node77.html#SECTION001110000000000000000"> Constants and Variables</a>
+<ul> 
+<li> <a name="tex2html1197" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node78.html#SECTION001111000000000000000"> Reference</a>
+</li><li> <a name="tex2html1198" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node79.html#SECTION001112000000000000000"> Assignment</a>
+</li></ul> 
+</li><li> <a name="tex2html1199" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node80.html#SECTION001120000000000000000"> Generalized Variables</a>
+</li><li> <a name="tex2html1200" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node81.html#SECTION001130000000000000000"> Function Invocation</a>
+</li><li> <a name="tex2html1201" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node82.html#SECTION001140000000000000000"> Simple Sequencing</a>
+</li><li> <a name="tex2html1202" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node83.html#SECTION001150000000000000000"> Establishing New Variable Bindings</a>
+</li><li> <a name="tex2html1203" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node84.html#SECTION001160000000000000000"> Conditionals</a>
+</li><li> <a name="tex2html1204" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node85.html#SECTION001170000000000000000"> Blocks and Exits</a>
+</li><li> <a name="tex2html1205" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node86.html#SECTION001180000000000000000"> Iteration</a>
+<ul> 
+<li> <a name="tex2html1206" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node87.html#SECTION001181000000000000000"> Indefinite Iteration</a>
+</li><li> <a name="tex2html1207" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node88.html#SECTION001182000000000000000"> General Iteration</a>
+</li><li> <a name="tex2html1208" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node89.html#SECTION001183000000000000000"> Simple Iteration Constructs</a>
+</li><li> <a name="tex2html1209" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node90.html#SECTION001184000000000000000"> Mapping</a>
+</li><li> <a name="tex2html1210" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node91.html#SECTION001185000000000000000"> The ``Program Feature''</a>
+</li></ul> 
+</li><li> <a name="tex2html1211" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node92.html#SECTION001190000000000000000"> Structure Traversal and Side Effects</a>
+</li><li> <a name="tex2html1212" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node93.html#SECTION0011100000000000000000"> Multiple Values</a>
+<ul> 
+<li> <a name="tex2html1213" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node94.html#SECTION0011101000000000000000"> Constructs for Handling Multiple Values</a>
+</li><li> <a name="tex2html1214" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node95.html#SECTION0011102000000000000000"> Rules Governing the Passing of Multiple Values</a>
+</li></ul> 
+</li><li> <a name="tex2html1215" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node96.html#SECTION0011110000000000000000"> Dynamic Non-Local Exits</a>
+</li></ul> 
+<p>
+</p></li><li> <b>8. <a name="tex2html1216" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node97.html#SECTION001200000000000000000"> Macros</a></b>
+<ul> 
+<li> <a name="tex2html1217" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node98.html#SECTION001210000000000000000"> Macro Definition</a>
+</li><li> <a name="tex2html1218" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node99.html#SECTION001220000000000000000"> Macro Expansion</a>
+</li><li> <a name="tex2html1219" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node100.html#SECTION001230000000000000000"> Destructuring</a>
+</li><li> <a name="tex2html1220" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node101.html#SECTION001240000000000000000"> Compiler Macros</a>
+</li><li> <a name="tex2html1221" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node102.html#SECTION001250000000000000000"> Environments</a>
+</li></ul> 
+<p>
+</p></li><li> <b>9. <a name="tex2html1222" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node103.html#SECTION001300000000000000000"> Declarations</a></b>
+<ul> 
+<li> <a name="tex2html1223" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node104.html#SECTION001310000000000000000"> Declaration Syntax</a>
+</li><li> <a name="tex2html1224" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node105.html#SECTION001320000000000000000"> Declaration Specifiers</a>
+</li><li> <a name="tex2html1225" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node106.html#SECTION001330000000000000000"> Type Declaration for Forms</a>
+</li></ul> 
+<p>
+</p></li><li> <b>10. <a name="tex2html1226" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node107.html#SECTION001400000000000000000"> Symbols</a></b>
+<ul> 
+<li> <a name="tex2html1227" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node108.html#SECTION001410000000000000000"> The Property List</a>
+</li><li> <a name="tex2html1228" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node109.html#SECTION001420000000000000000"> The Print Name</a>
+</li><li> <a name="tex2html1229" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node110.html#SECTION001430000000000000000"> Creating Symbols</a>
+</li></ul> 
+<p>
+</p></li><li> <b>11. <a name="tex2html1230" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node111.html#SECTION001500000000000000000"> Packages</a></b>
+<ul> 
+<li> <a name="tex2html1231" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node112.html#SECTION001510000000000000000"> Consistency Rules</a>
+</li><li> <a name="tex2html1232" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node113.html#SECTION001520000000000000000"> Package Names</a>
+</li><li> <a name="tex2html1233" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node114.html#SECTION001530000000000000000"> Translating Strings to Symbols</a>
+</li><li> <a name="tex2html1234" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node115.html#SECTION001540000000000000000"> Exporting and Importing Symbols</a>
+</li><li> <a name="tex2html1235" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node116.html#SECTION001550000000000000000"> Name Conflicts</a>
+</li><li> <a name="tex2html1236" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node117.html#SECTION001560000000000000000"> Built-in Packages</a>
+</li><li> <a name="tex2html1237" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node118.html#SECTION001570000000000000000"> Package System Functions and Variables</a>
+</li><li> <a name="tex2html1238" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node119.html#SECTION001580000000000000000"> Modules</a>
+</li><li> <a name="tex2html1239" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node120.html#SECTION001590000000000000000"> An Example</a>
+</li></ul> 
+<p>
+</p></li><li><b>12. <a name="tex2html1240" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node121.html#SECTION001600000000000000000"> Numbers</a></b>
+<ul> 
+<li> <a name="tex2html1241" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node122.html#SECTION001610000000000000000"> Precision, Contagion, and Coercion</a>
+</li><li> <a name="tex2html1242" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node123.html#SECTION001620000000000000000"> Predicates on Numbers</a>
+</li><li> <a name="tex2html1243" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node124.html#SECTION001630000000000000000"> Comparisons on Numbers</a>
+</li><li> <a name="tex2html1244" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node125.html#SECTION001640000000000000000"> Arithmetic Operations</a>
+</li><li> <a name="tex2html1245" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node126.html#SECTION001650000000000000000"> Irrational and Transcendental Functions</a>
+<ul> 
+<li> <a name="tex2html1246" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node127.html#SECTION001651000000000000000"> Exponential and Logarithmic Functions</a>
+</li><li> <a name="tex2html1247" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node128.html#SECTION001652000000000000000"> Trigonometric and Related Functions</a>
+</li><li> <a name="tex2html1248" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node129.html#SECTION001653000000000000000"> Branch Cuts, Principal Values, and Boundary Conditions in the Complex Plane</a>
+</li></ul> 
+</li><li> <a name="tex2html1249" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node130.html#SECTION001660000000000000000"> Type Conversions and Component Extractions on Numbers</a>
+</li><li> <a name="tex2html1250" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node131.html#SECTION001670000000000000000"> Logical Operations on Numbers</a>
+</li><li> <a name="tex2html1251" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node132.html#SECTION001680000000000000000"> Byte Manipulation Functions</a>
+</li><li> <a name="tex2html1252" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node133.html#SECTION001690000000000000000"> Random Numbers</a>
+</li><li> <a name="tex2html1253" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node134.html#SECTION0016100000000000000000"> Implementation Parameters</a>
+</li></ul> 
+<p>
+</p></li><li> <b>13. <a name="tex2html1254" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node135.html#SECTION001700000000000000000"> Characters</a></b>
+<ul> 
+<li> <a name="tex2html1255" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node136.html#SECTION001710000000000000000"> Character Attributes</a>
+</li><li> <a name="tex2html1256" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node137.html#SECTION001720000000000000000"> Predicates on Characters</a>
+</li><li> <a name="tex2html1257" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node138.html#SECTION001730000000000000000"> Character Construction and Selection</a>
+</li><li> <a name="tex2html1258" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node139.html#SECTION001740000000000000000"> Character Conversions</a>
+</li><li> <a name="tex2html1259" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node140.html#SECTION001750000000000000000"> Character Control-Bit Functions</a>
+</li></ul> 
+<p>
+</p></li><li> <b>14. <a name="tex2html1260" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node141.html#SECTION001800000000000000000"> Sequences</a></b>
+<ul> 
+<li> <a name="tex2html1261" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node142.html#SECTION001810000000000000000"> Simple Sequence Functions</a>
+</li><li> <a name="tex2html1262" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node143.html#SECTION001820000000000000000"> Concatenating, Mapping, and Reducing Sequences</a>
+</li><li> <a name="tex2html1263" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node144.html#SECTION001830000000000000000"> Modifying Sequences</a>
+</li><li> <a name="tex2html1264" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node145.html#SECTION001840000000000000000"> Searching Sequences for Items</a>
+</li><li> <a name="tex2html1265" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node146.html#SECTION001850000000000000000"> Sorting and Merging</a>
+</li></ul> 
+<p>
+</p></li><li> <b>15. <a name="tex2html1266" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node147.html#SECTION001900000000000000000"> Lists</a></b>
+<ul> 
+<li> <a name="tex2html1267" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node148.html#SECTION001910000000000000000"> Conses</a>
+</li><li> <a name="tex2html1268" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node149.html#SECTION001920000000000000000"> Lists</a>
+</li><li> <a name="tex2html1269" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node150.html#SECTION001930000000000000000"> Alteration of List Structure</a>
+</li><li> <a name="tex2html1270" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node151.html#SECTION001940000000000000000"> Substitution of Expressions</a>
+</li><li> <a name="tex2html1271" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node152.html#SECTION001950000000000000000"> Using Lists as Sets</a>
+</li><li> <a name="tex2html1272" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node153.html#SECTION001960000000000000000"> Association Lists</a>
+</li></ul> 
+<p>
+</p></li><li> <b>16. <a name="tex2html1273" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node154.html#SECTION002000000000000000000"> Hash Tables</a></b>
+<ul> 
+<li> <a name="tex2html1274" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node155.html#SECTION002010000000000000000"> Hash Table Functions</a>
+</li><li> <a name="tex2html1275" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node156.html#SECTION002020000000000000000"> Primitive Hash Function</a>
+</li></ul> 
+<p>
+</p></li><li> <b>17. <a name="tex2html1276" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node157.html#SECTION002100000000000000000"> Arrays</a></b>
+<ul> 
+<li> <a name="tex2html1277" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node158.html#SECTION002110000000000000000"> Array Creation</a>
+</li><li> <a name="tex2html1278" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node159.html#SECTION002120000000000000000"> Array Access</a>
+</li><li> <a name="tex2html1279" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node160.html#SECTION002130000000000000000"> Array Information</a>
+</li><li> <a name="tex2html1280" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node161.html#SECTION002140000000000000000"> Functions on Arrays of Bits</a>
+</li><li> <a name="tex2html1281" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node162.html#SECTION002150000000000000000"> Fill Pointers</a>
+</li><li> <a name="tex2html1282" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node163.html#SECTION002160000000000000000"> Changing the Dimensions of an Array</a>
+</li></ul> 
+<p>
+</p></li><li> <b>18. <a name="tex2html1283" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node164.html#SECTION002200000000000000000"> Strings</a></b>
+<ul> 
+<li> <a name="tex2html1284" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node165.html#SECTION002210000000000000000"> String Access</a>
+</li><li> <a name="tex2html1285" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node166.html#SECTION002220000000000000000"> String Comparison</a>
+</li><li> <a name="tex2html1286" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node167.html#SECTION002230000000000000000"> String Construction and Manipulation</a>
+</li></ul> 
+<p>
+</p></li><li> <b>19. <a name="tex2html1287" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node168.html#SECTION002300000000000000000"> Structures</a></b>
+<ul> 
+<li> <a name="tex2html1288" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node169.html#SECTION002310000000000000000"> Introduction to Structures</a>
+</li><li> <a name="tex2html1289" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node170.html#SECTION002320000000000000000"> How to Use Defstruct</a>
+</li><li> <a name="tex2html1290" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node171.html#SECTION002330000000000000000"> Using the Automatically Defined Constructor Function</a>
+</li><li> <a name="tex2html1291" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node172.html#SECTION002340000000000000000"> Defstruct Slot-Options</a>
+</li><li> <a name="tex2html1292" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node173.html#SECTION002350000000000000000"> Defstruct Options</a>
+</li><li> <a name="tex2html1293" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node174.html#SECTION002360000000000000000"> By-Position Constructor Functions</a>
+</li><li> <a name="tex2html1294" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node175.html#SECTION002370000000000000000"> Structures of Explicitly Specified Representational Type</a>
+<ul> 
+<li> <a name="tex2html1295" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node176.html#SECTION002371000000000000000"> Unnamed Structures</a>
+</li><li> <a name="tex2html1296" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node177.html#SECTION002372000000000000000"> Named Structures</a>
+</li><li> <a name="tex2html1297" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node178.html#SECTION002373000000000000000"> Other Aspects of Explicitly Specified Structures</a>
+</li></ul> 
+</li></ul> 
+<p>
+</p></li><li> <b>20. <a name="tex2html1298" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node179.html#SECTION002400000000000000000"> The Evaluator</a></b>
+<ul> 
+<li> <a name="tex2html1299" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node180.html#SECTION002410000000000000000"> Run-Time Evaluation of Forms</a>
+</li><li> <a name="tex2html1300" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node181.html#SECTION002420000000000000000"> The Top-Level Loop</a>
+</li></ul> 
+<p>
+</p></li><li> <b>21. <a name="tex2html1301" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node182.html#SECTION002500000000000000000"> Streams</a></b>
+<ul> 
+<li> <a name="tex2html1302" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node183.html#SECTION002510000000000000000"> Standard Streams</a>
+</li><li> <a name="tex2html1303" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node184.html#SECTION002520000000000000000"> Creating New Streams</a>
+</li><li> <a name="tex2html1304" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node185.html#SECTION002530000000000000000"> Operations on Streams</a>
+</li></ul> 
+<p>
+</p></li><li> <b>22. <a name="tex2html1305" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node186.html#SECTION002600000000000000000"> Input/Output</a></b>
+<ul> 
+<li> <a name="tex2html1306" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node187.html#SECTION002610000000000000000"> Printed Representation of Lisp Objects</a>
+<ul> 
+<li> <a name="tex2html1307" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node188.html#SECTION002611000000000000000"> What the Read Function Accepts</a>
+</li><li> <a name="tex2html1308" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node189.html#SECTION002612000000000000000"> Parsing of Numbers and Symbols</a>
+</li><li> <a name="tex2html1309" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node190.html#SECTION002613000000000000000"> Macro Characters</a>
+</li><li> <a name="tex2html1310" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node191.html#SECTION002614000000000000000"> Standard Dispatching Macro Character Syntax</a>
+</li><li> <a name="tex2html1311" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node192.html#SECTION002615000000000000000"> The Readtable</a>
+</li><li> <a name="tex2html1312" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node193.html#SECTION002616000000000000000"> What the Print Function Produces</a>
+</li></ul> 
+</li><li> <a name="tex2html1313" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node194.html#SECTION002620000000000000000"> Input Functions</a>
+<ul> 
+<li> <a name="tex2html1314" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node195.html#SECTION002621000000000000000"> Input from Character Streams</a>
+</li><li> <a name="tex2html1315" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node196.html#SECTION002622000000000000000"> Input from Binary Streams</a>
+</li></ul> 
+</li><li> <a name="tex2html1316" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node197.html#SECTION002630000000000000000"> Output Functions</a>
+<ul> 
+<li> <a name="tex2html1317" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node198.html#SECTION002631000000000000000"> Output to Character Streams</a>
+</li><li> <a name="tex2html1318" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node199.html#SECTION002632000000000000000"> Output to Binary Streams</a>
+</li><li> <a name="tex2html1319" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node200.html#SECTION002633000000000000000"> Formatted Output to Character Streams</a>
+</li></ul> 
+</li><li> <a name="tex2html1320" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node201.html#SECTION002640000000000000000"> Querying the User</a>
+</li></ul> 
+<p>
+</p></li><li> <b>23. <a name="tex2html1321" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node202.html#SECTION002700000000000000000"> File System Interface</a></b>
+<ul> 
+<li> <a name="tex2html1322" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node203.html#SECTION002710000000000000000"> File Names</a>
+<ul> 
+<li> <a name="tex2html1323" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node204.html#SECTION002711000000000000000"> Pathnames</a>
+</li><li> <a name="tex2html1324" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node205.html#SECTION002712000000000000000"> Case Conventions</a>
+</li><li> <a name="tex2html1325" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node206.html#SECTION002713000000000000000"> Structured Directories</a>
+</li><li> <a name="tex2html1326" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node207.html#SECTION002714000000000000000"> Extended Wildcards</a>
+</li><li> <a name="tex2html1327" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node208.html#SECTION002715000000000000000"> Logical Pathnames</a>
+<ul> 
+<li> <a name="tex2html1328" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node209.html#SECTION002715100000000000000"> Syntax of Logical Pathname Namestrings</a>
+</li><li> <a name="tex2html1329" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node210.html#SECTION002715200000000000000"> Parsing of Logical Pathname Namestrings</a>
+</li><li> <a name="tex2html1330" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node211.html#SECTION002715300000000000000"> Using Logical Pathnames</a>
+</li><li> <a name="tex2html1331" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node212.html#SECTION002715400000000000000"> Examples of the Use of Logical Pathnames</a>
+</li><li> <a name="tex2html1332" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node213.html#SECTION002715500000000000000"> Discussion of Logical Pathnames</a>
+</li></ul> 
+</li><li> <a name="tex2html1333" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node214.html#SECTION002716000000000000000"> Pathname Functions</a>
+</li></ul> 
+</li><li> <a name="tex2html1334" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node215.html#SECTION002720000000000000000"> Opening and Closing Files</a>
+</li><li> <a name="tex2html1335" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node216.html#SECTION002730000000000000000"> Renaming, Deleting, and Other File Operations</a>
+</li><li> <a name="tex2html1336" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node217.html#SECTION002740000000000000000"> Loading Files</a>
+</li><li> <a name="tex2html1337" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node218.html#SECTION002750000000000000000"> Accessing Directories</a>
+</li></ul> 
+<p>
+</p></li><li> <b>24. <a name="tex2html1338" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node219.html#SECTION002800000000000000000"> Errors</a></b>
+<ul> 
+<li> <a name="tex2html1339" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node220.html#SECTION002810000000000000000"> General Error-Signaling Functions</a>
+</li><li> <a name="tex2html1340" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node221.html#SECTION002820000000000000000"> Specialized Error-Signaling Forms and Macros</a>
+</li><li> <a name="tex2html1341" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node222.html#SECTION002830000000000000000"> Special Forms for Exhaustive Case Analysis</a>
+</li></ul> 
+<p>
+</p></li><li> <b>25. <a name="tex2html1342" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node223.html#SECTION002900000000000000000"> Miscellaneous Features</a></b>
+<ul> 
+<li> <a name="tex2html1343" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node224.html#SECTION002910000000000000000"> The Compiler</a>
+<ul> 
+<li> <a name="tex2html1344" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node225.html#SECTION002911000000000000000"> Compiler Diagnostics</a>
+</li><li> <a name="tex2html1345" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node226.html#SECTION002912000000000000000"> Compiled Functions</a>
+</li><li> <a name="tex2html1346" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node227.html#SECTION002913000000000000000"> Compilation Environment</a>
+</li><li> <a name="tex2html1347" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node228.html#SECTION002914000000000000000"> Similarity of Constants</a>
+</li></ul> 
+</li><li> <a name="tex2html1348" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node229.html#SECTION002920000000000000000"> Documentation</a>
+</li><li> <a name="tex2html1349" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node230.html#SECTION002930000000000000000"> Debugging Tools</a>
+</li><li> <a name="tex2html1350" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node231.html#SECTION002940000000000000000"> Environment Inquiries</a>
+<ul> 
+<li> <a name="tex2html1351" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node232.html#SECTION002941000000000000000"> Time Functions</a>
+</li><li> <a name="tex2html1352" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node233.html#SECTION002942000000000000000"> Other Environment Inquiries</a>
+</li></ul> 
+</li><li> <a name="tex2html1353" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node234.html#SECTION002950000000000000000"> Identity Function</a>
+</li></ul> 
+<p>
+</p></li><li> <b>26. <a name="tex2html1354" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node235.html#SECTION003000000000000000000"> Loop</a></b>
+<ul> 
+<li> <a name="tex2html1355" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node236.html#SECTION003010000000000000000"> Introduction</a>
+</li><li> <a name="tex2html1356" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node237.html#SECTION003020000000000000000"> How the Loop Facility Works</a>
+</li><li> <a name="tex2html1357" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node238.html#SECTION003030000000000000000"> Parsing Loop Clauses</a>
+<ul> 
+<li> <a name="tex2html1358" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node239.html#SECTION003031000000000000000"> Order of Execution</a>
+</li><li> <a name="tex2html1359" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node240.html#SECTION003032000000000000000"> Kinds of Loop Clauses</a>
+</li><li> <a name="tex2html1360" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node241.html#SECTION003033000000000000000"> Loop Syntax</a>
+</li></ul> 
+</li><li> <a name="tex2html1361" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node242.html#SECTION003040000000000000000"> User Extensibility</a>
+</li><li> <a name="tex2html1362" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node243.html#SECTION003050000000000000000"> Loop Constructs</a>
+</li><li> <a name="tex2html1363" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node244.html#SECTION003060000000000000000"> Iteration Control</a>
+</li><li> <a name="tex2html1364" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node245.html#SECTION003070000000000000000"> End-Test Control</a>
+</li><li> <a name="tex2html1365" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node246.html#SECTION003080000000000000000"> Value Accumulation</a>
+</li><li> <a name="tex2html1366" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node247.html#SECTION003090000000000000000"> Variable Initializations</a>
+</li><li> <a name="tex2html1367" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node248.html#SECTION0030100000000000000000"> Conditional Execution</a>
+</li><li> <a name="tex2html1368" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node249.html#SECTION0030110000000000000000"> Unconditional Execution</a>
+</li><li> <a name="tex2html1369" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node250.html#SECTION0030120000000000000000"> Miscellaneous Features</a>
+<ul> 
+<li> <a name="tex2html1370" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node251.html#SECTION0030121000000000000000"> Data Types</a>
+</li><li> <a name="tex2html1371" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node252.html#SECTION0030122000000000000000"> Destructuring</a>
+</li></ul> 
+</li></ul> 
+<p>
+</p></li><li> <b>27. <a name="tex2html1372" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node253.html#SECTION003100000000000000000"> Pretty Printing</a></b>
+<ul> 
+<li> <a name="tex2html1373" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node254.html#SECTION003110000000000000000"> Introduction</a>
+</li><li> <a name="tex2html1374" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node255.html#SECTION003120000000000000000"> Pretty Printing Control Variables</a>
+</li><li> <a name="tex2html1375" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node256.html#SECTION003130000000000000000"> Dynamic Control of the Arrangement of Output</a>
+</li><li> <a name="tex2html1376" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node257.html#SECTION003140000000000000000"> Format Directive Interface</a>
+</li><li> <a name="tex2html1377" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node258.html#SECTION003150000000000000000"> Compiling Format Control Strings</a>
+</li><li> <a name="tex2html1378" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node259.html#SECTION003160000000000000000"> Pretty Printing Dispatch Tables</a>
+</li></ul> 
+<p>
+</p></li><li> <b>28. <a name="tex2html1379" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node260.html#SECTION003200000000000000000"> Common Lisp Object System</a></b>
+<ul> 
+<li> <a name="tex2html1380" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node261.html#SECTION003210000000000000000"> Programmer Interface Concepts</a>
+<ul> 
+<li> <a name="tex2html1381" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node262.html#SECTION003211000000000000000"> Error Terminology</a>
+</li><li> <a name="tex2html1382" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node263.html#SECTION003212000000000000000"> Classes</a>
+<ul> 
+<li> <a name="tex2html1383" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node264.html#SECTION003212100000000000000"> Defining Classes</a>
+</li><li> <a name="tex2html1384" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node265.html#SECTION003212200000000000000"> Creating Instances of Classes</a>
+</li><li> <a name="tex2html1385" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node266.html#SECTION003212300000000000000"> Slots</a>
+</li><li> <a name="tex2html1386" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node267.html#SECTION003212400000000000000"> Accessing Slots</a>
+</li></ul> 
+</li><li> <a name="tex2html1387" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node268.html#SECTION003213000000000000000"> Inheritance</a>
+<ul> 
+<li> <a name="tex2html1388" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node269.html#SECTION003213100000000000000"> Inheritance of Methods</a>
+</li><li> <a name="tex2html1389" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node270.html#SECTION003213200000000000000"> Inheritance of Slots and Slot Options</a>
+</li><li> <a name="tex2html1390" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node271.html#SECTION003213300000000000000"> Inheritance of Class Options</a>
+</li><li> <a name="tex2html1391" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node272.html#SECTION003213400000000000000"> Examples</a>
+</li></ul> 
+</li><li> <a name="tex2html1392" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node273.html#SECTION003214000000000000000"> Integrating Types and Classes</a>
+</li><li> <a name="tex2html1393" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node274.html#SECTION003215000000000000000"> Determining the Class Precedence List</a>
+<ul> 
+<li> <a name="tex2html1394" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node275.html#SECTION003215100000000000000"> Topological Sorting</a>
+</li><li> <a name="tex2html1395" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node276.html#SECTION003215200000000000000"> Examples</a>
+</li></ul> 
+</li><li> <a name="tex2html1396" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node277.html#SECTION003216000000000000000"> Generic Functions and Methods</a>
+<ul> 
+<li> <a name="tex2html1397" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node278.html#SECTION003216100000000000000"> Introduction to Generic Functions</a>
+</li><li> <a name="tex2html1398" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node279.html#SECTION003216200000000000000"> Introduction to Methods</a>
+</li><li> <a name="tex2html1399" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node280.html#SECTION003216300000000000000"> Agreement on Parameter Specializers and Qualifiers</a>
+</li><li> <a name="tex2html1400" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node281.html#SECTION003216400000000000000"> Congruent Lambda-Lists for All Methods of a Generic Function</a>
+</li><li> <a name="tex2html1401" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node282.html#SECTION003216500000000000000"> Keyword Arguments in Generic Functions and Methods</a>
+</li></ul> 
+</li><li> <a name="tex2html1402" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node283.html#SECTION003217000000000000000"> Method Selection and Combination</a>
+<ul> 
+<li> <a name="tex2html1403" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node284.html#SECTION003217100000000000000"> Determining the Effective Method</a>
+</li><li> <a name="tex2html1404" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node285.html#SECTION003217200000000000000"> Standard Method Combination</a>
+</li><li> <a name="tex2html1405" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node286.html#SECTION003217300000000000000"> Declarative Method Combination</a>
+</li><li> <a name="tex2html1406" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node287.html#SECTION003217400000000000000"> Built-in Method Combination Types</a>
+</li></ul> 
+</li><li> <a name="tex2html1407" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node288.html#SECTION003218000000000000000"> Meta-objects</a>
+<ul> 
+<li> <a name="tex2html1408" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node289.html#SECTION003218100000000000000"> Metaclasses</a>
+</li><li> <a name="tex2html1409" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node290.html#SECTION003218200000000000000"> Standard Metaclasses</a>
+</li><li> <a name="tex2html1410" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node291.html#SECTION003218300000000000000"> Standard Meta-objects</a>
+</li></ul> 
+</li><li> <a name="tex2html1411" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node292.html#SECTION003219000000000000000"> Object Creation and Initialization</a>
+<ul> 
+<li> <a name="tex2html1412" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node293.html#SECTION003219100000000000000"> Initialization Arguments</a>
+</li><li> <a name="tex2html1413" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node294.html#SECTION003219200000000000000"> Declaring the Validity of Initialization Arguments</a>
+</li><li> <a name="tex2html1414" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node295.html#SECTION003219300000000000000"> Defaulting of Initialization Arguments</a>
+</li><li> <a name="tex2html1415" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node296.html#SECTION003219400000000000000"> Rules for Initialization Arguments</a>
+</li><li> <a name="tex2html1416" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node297.html#SECTION003219500000000000000"> Shared-Initialize</a>
+</li><li> <a name="tex2html1417" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node298.html#SECTION003219600000000000000"> Initialize-Instance</a>
+</li><li> <a name="tex2html1418" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node299.html#SECTION003219700000000000000"> Definitions of Make-Instance and Initialize-Instance</a>
+</li></ul> 
+</li><li> <a name="tex2html1419" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node300.html#SECTION0032110000000000000000"> Redefining Classes</a>
+<ul> 
+<li> <a name="tex2html1420" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node301.html#SECTION0032110100000000000000"> Modifying the Structure of Instances</a>
+</li><li> <a name="tex2html1421" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node302.html#SECTION0032110200000000000000"> Initializing Newly Added Local Slots</a>
+</li><li> <a name="tex2html1422" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node303.html#SECTION0032110300000000000000"> Customizing Class Redefinition</a>
+</li><li> <a name="tex2html1423" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node304.html#SECTION0032110400000000000000"> Extensions</a>
+</li></ul> 
+</li><li> <a name="tex2html1424" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node305.html#SECTION0032111000000000000000"> Changing the Class of an Instance</a>
+<ul> 
+<li> <a name="tex2html1425" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node306.html#SECTION0032111100000000000000"> Modifying the Structure of an Instance</a>
+</li><li> <a name="tex2html1426" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node307.html#SECTION0032111200000000000000"> Initializing Newly Added Local Slots</a>
+</li><li> <a name="tex2html1427" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node308.html#SECTION0032111300000000000000"> Customizing the Change of Class of an Instance</a>
+</li></ul> 
+</li><li> <a name="tex2html1428" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node309.html#SECTION0032112000000000000000"> Reinitializing an Instance</a>
+<ul> 
+<li> <a name="tex2html1429" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node310.html#SECTION0032112100000000000000"> Customizing Reinitialization</a>
+</li></ul> 
+</li></ul> 
+</li><li> <a name="tex2html1430" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node311.html#SECTION003220000000000000000"> Functions in the Programmer Interface</a>
+</li></ul> 
+<p>
+</p></li><li> <b>29. <a name="tex2html1431" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node312.html#SECTION003300000000000000000"> Conditions</a></b>
+<ul> 
+<li> <a name="tex2html1432" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node313.html#SECTION003310000000000000000"> Introduction</a>
+</li><li> <a name="tex2html1433" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node314.html#SECTION003320000000000000000"> Changes in Terminology</a>
+</li><li> <a name="tex2html1434" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node315.html#SECTION003330000000000000000"> Survey of Concepts</a>
+<ul> 
+<li> <a name="tex2html1435" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node316.html#SECTION003331000000000000000"> Signaling Errors</a>
+</li><li> <a name="tex2html1436" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node317.html#SECTION003332000000000000000"> Trapping Errors</a>
+</li><li> <a name="tex2html1437" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node318.html#SECTION003333000000000000000"> Handling Conditions</a>
+</li><li> <a name="tex2html1438" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node319.html#SECTION003334000000000000000"> Object-Oriented Basis of Condition Handling</a>
+</li><li> <a name="tex2html1439" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node320.html#SECTION003335000000000000000"> Restarts</a>
+</li><li> <a name="tex2html1440" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node321.html#SECTION003336000000000000000"> Anonymous Restarts</a>
+</li><li> <a name="tex2html1441" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node322.html#SECTION003337000000000000000"> Named Restarts</a>
+</li><li> <a name="tex2html1442" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node323.html#SECTION003338000000000000000"> Restart Functions</a>
+</li><li> <a name="tex2html1443" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node324.html#SECTION003339000000000000000"> Comparison of Restarts and Catch/Throw</a>
+</li><li> <a name="tex2html1444" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node325.html#SECTION0033310000000000000000"> Generalized Restarts</a>
+</li><li> <a name="tex2html1445" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node326.html#SECTION0033311000000000000000"> Interactive Condition Handling</a>
+</li><li> <a name="tex2html1446" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node327.html#SECTION0033312000000000000000"> Serious Conditions</a>
+</li><li> <a name="tex2html1447" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node328.html#SECTION0033313000000000000000"> Non-Serious Conditions</a>
+</li><li> <a name="tex2html1448" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node329.html#SECTION0033314000000000000000"> Condition Types</a>
+</li><li> <a name="tex2html1449" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node330.html#SECTION0033315000000000000000"> Signaling Conditions</a>
+</li><li> <a name="tex2html1450" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node331.html#SECTION0033316000000000000000"> Resignaling Conditions</a>
+</li><li> <a name="tex2html1451" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node332.html#SECTION0033317000000000000000"> Condition Handlers</a>
+</li><li> <a name="tex2html1452" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node333.html#SECTION0033318000000000000000"> Printing Conditions</a>
+</li></ul> 
+</li><li> <a name="tex2html1453" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node334.html#SECTION003340000000000000000"> Program Interface to the Condition System</a>
+<ul> 
+<li> <a name="tex2html1454" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node335.html#SECTION003341000000000000000"> Signaling Conditions</a>
+</li><li> <a name="tex2html1455" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node336.html#SECTION003342000000000000000"> Assertions</a>
+</li><li> <a name="tex2html1456" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node337.html#SECTION003343000000000000000"> Exhaustive Case Analysis</a>
+</li><li> <a name="tex2html1457" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node338.html#SECTION003344000000000000000"> Handling Conditions</a>
+</li><li> <a name="tex2html1458" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node339.html#SECTION003345000000000000000"> Defining Conditions</a>
+</li><li> <a name="tex2html1459" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node340.html#SECTION003346000000000000000"> Creating Conditions</a>
+</li><li> <a name="tex2html1460" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node341.html#SECTION003347000000000000000"> Establishing Restarts</a>
+</li><li> <a name="tex2html1461" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node342.html#SECTION003348000000000000000"> Finding and Manipulating Restarts</a>
+</li><li> <a name="tex2html1462" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node343.html#SECTION003349000000000000000"> Warnings</a>
+</li><li> <a name="tex2html1463" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node344.html#SECTION0033410000000000000000"> Restart Functions</a>
+</li><li> <a name="tex2html1464" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node345.html#SECTION0033411000000000000000"> Debugging Utilities</a>
+</li></ul> 
+</li><li> <a name="tex2html1465" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node346.html#SECTION003350000000000000000"> Predefined Condition Types</a>
+</li></ul> 
+<p>
+</p></li><li> <b>A. <a name="tex2html1466" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node347.html#SECTION003400000000000000000"> Series</a></b>
+<ul> 
+<li> <a name="tex2html1467" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node348.html#SECTION003410000000000000000"> Introduction</a>
+</li><li> <a name="tex2html1468" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node349.html#SECTION003420000000000000000"> Series Functions</a>
+<ul> 
+<li> <a name="tex2html1469" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node350.html#SECTION003421000000000000000"> Scanners</a>
+</li><li> <a name="tex2html1470" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node351.html#SECTION003422000000000000000"> Mapping</a>
+</li><li> <a name="tex2html1471" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node352.html#SECTION003423000000000000000"> Truncation and Other Simple Transducers</a>
+</li><li> <a name="tex2html1472" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node353.html#SECTION003424000000000000000"> Conditional and Other Complex Transducers</a>
+</li><li> <a name="tex2html1473" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node354.html#SECTION003425000000000000000"> Collectors</a>
+</li><li> <a name="tex2html1474" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node355.html#SECTION003426000000000000000"> Alteration of Series</a>
+</li></ul> 
+</li><li> <a name="tex2html1475" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node356.html#SECTION003430000000000000000"> Optimization</a>
+<ul> 
+<li> <a name="tex2html1476" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node357.html#SECTION003431000000000000000"> Basic Restrictions</a>
+</li><li> <a name="tex2html1477" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node358.html#SECTION003432000000000000000"> Constraint Cycles</a>
+</li><li> <a name="tex2html1478" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node359.html#SECTION003433000000000000000"> Defining New Series Functions</a>
+</li><li> <a name="tex2html1479" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node360.html#SECTION003434000000000000000"> Declarations</a>
+</li></ul> 
+</li><li> <a name="tex2html1480" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node361.html#SECTION003440000000000000000"> Primitives</a>
+</li></ul> 
+<p>
+</p></li><li> <b>B. <a name="tex2html1481" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node362.html#SECTION003500000000000000000"> Generators and Gatherers</a></b>
+<ul> 
+<li> <a name="tex2html1482" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node363.html#SECTION003510000000000000000"> Introduction</a>
+</li><li> <a name="tex2html1483" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node364.html#SECTION003520000000000000000"> Generators</a>
+</li><li> <a name="tex2html1484" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node365.html#SECTION003530000000000000000"> Gatherers</a>
+</li><li> <a name="tex2html1485" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node366.html#SECTION003540000000000000000"> Discussion</a>
+</li></ul> 
+<p>
+</p></li><li> <b>C. <a name="tex2html1486" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node367.html#SECTION003600000000000000000"> Backquote</a></b>
+<p>
+</p></li><li> <b><a name="tex2html1487" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node368.html#SECTION003700000000000000000">References</a></b>
+</li><li> <b><a name="tex2html1488" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/index.html#SECTION003800000000000000000">Index</a></b>
+<p>
+</p></li><li> <i><a name="tex2html1489" href="http://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node370.html#SECTION003900000000000000000">   About this document ... </a></i>
+</li></ul>
+<hr>
+<p></p><address>
+AI.Repository@cs.cmu.edu
+</address>
+
+</body></html>

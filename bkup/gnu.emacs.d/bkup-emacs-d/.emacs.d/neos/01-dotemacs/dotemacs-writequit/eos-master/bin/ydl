@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+set -eou pipefail
+
+URL=$1
+shift
+# youtube-dl --restrict-filenames --force-ipv4 --format best -o '%(uploader)s_%(title)s.%(ext)s' "$URL" $@
+youtube-dl --no-mtime --restrict-filenames --force-ipv4 -o '%(uploader)s_%(title)s.%(ext)s' "$URL" $@
+# youtube-dl --restrict-filenames \
+#            --force-ipv4 \
+#            --prefer-ffmpeg \
+#            --external-downloader aria2c \
+#            --external-downloader-args "-x 8 -j 8 -s 8 --summary-interval=10" \
+#            -o '%(uploader)s_%(title)s.%(ext)s' \
+#            "$URL" \
+#            $@

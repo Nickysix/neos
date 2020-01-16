@@ -1,0 +1,21 @@
+# -*- coding: utf-8; mode: snippet -*-
+# name: arProcessTask
+# --
+'use strict';
+
+const logger = require('workflow.lib/log-trace').logger;
+const LogTrace = require('workflow.lib/log-trace').LogTrace;
+
+const toolHelpers = require('../tool-helpers');
+
+/**
+ * Process task
+ */
+function* processTask() {
+
+}
+
+/*
+ * Start processing task on background
+ */
+toolHelpers.startProcessing(processTask);

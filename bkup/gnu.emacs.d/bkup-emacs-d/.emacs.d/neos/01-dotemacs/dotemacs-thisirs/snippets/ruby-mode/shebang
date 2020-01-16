@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: Insert ruby shebang
+# key: sb
+# --
+#! /usr/bin/env ruby
+
+$0

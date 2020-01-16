@@ -1,0 +1,253 @@
+[[file:linux_keybinding_index.html][Linux Keybinding]]
+
+* Linux: Xfce Keyboard Shortcuts
+  :PROPERTIES:
+  :CUSTOM_ID: linux-xfce-keyboard-shortcuts
+  :END:
+
+By Xah Lee. Date: 2012-09-02. Last updated: 2017-02-04.
+
+The following are the default Xfce keys. (latest public Xfce version as
+of 2017-02-04)
+
+The config file is at
+=~/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-keyboard-shortcuts.xml=
+
+** Window Manipulation Keys
+   :PROPERTIES:
+   :CUSTOM_ID: window-manipulation-keys
+   :END:
+
+| Key             | Purpose                                           |
+|-----------------+---------------------------------------------------|
+| 【Alt+Space】   | window operations menu                            |
+| 【Escape】      | Dismiss/cancel dialog                             |
+| 【Alt+Tab】     | Switch to next window. With Shift for previous.   |
+| 【Super+Tab】   | next window of current app.                       |
+
+| Key                                             | Purpose              |
+|-------------------------------------------------+----------------------|
+| 【Alt+F4】                                      | Close window         |
+| 【Alt+F7】                                      | Move window          |
+| 【Alt+F8】                                      | Resize window        |
+| 【Alt+F9】                                      | Hide window          |
+| 【Alt+F10】                                     | Maximize window      |
+| 【Alt+Shift+Page Up】 【Alt+Shift+Page Down】   | Raise/lower window   |
+| 【Alt+F11】                                     | Toggle fullscreen    |
+| 【Alt+F12】                                     | Toggle above         |
+| 【Ctrl+Alt+d】                                  | show desktop         |
+
+** Move Window to Workspace (virtual screen)
+   :PROPERTIES:
+   :CUSTOM_ID: move-window-to-workspace-virtual-screen
+   :END:
+
+| Key                     | Purpose                                |
+|-------------------------+----------------------------------------|
+| 【Alt+F6】              | stick window (show in all workspace)   |
+| 【Ctrl+Alt+End】        | move window to next workspace          |
+| 【Ctrl+Alt+Home】       | move window to previous workspace      |
+| 【Ctrl+Alt+numpad 1】   | Move window to workspace 1             |
+| 【Ctrl+Alt+numpad 2】   | Move window to workspace 2             |
+
+** Switching Workspace
+   :PROPERTIES:
+   :CUSTOM_ID: switching-workspace
+   :END:
+
+| Key                             | Purpose                   |
+|---------------------------------+---------------------------|
+| 【Ctrl+Alt+→】 【Ctrl+Alt+←】   | Next/Previous workspace   |
+| 【Ctrl+Alt+↑】                  | upper workspace           |
+| 【Ctrl+Alt+↓】                  | bottom workspace          |
+| 【Ctrl+Alt+←】                  | left workspace            |
+| 【Ctrl+Alt+→】                  | right workspace           |
+| 【Ctrl+F1】                     | goto workspace 1          |
+| 【Ctrl+F2】                     | goto workspace 2          |
+| 【Alt+Insert】                  | Add a workspace           |
+| 【Alt+⌦ Delete】                | Delete last workspace     |
+| 【Ctrl+Alt+⌦ Delete】           | Lock the screen           |
+
+** Misc
+   :PROPERTIES:
+   :CUSTOM_ID: misc
+   :END:
+
+| Key                           | Purpose                                 |
+|-------------------------------+-----------------------------------------|
+| 【Super+p】 【XF86Display】   | =xfce4-display-settings --minimal=      |
+| 【Ctrl+Escape】               | Show Context Menu. =xfdesktop --menu=   |
+| 【Ctrl+Alt+⌦ Delete】         | lock screen. =xflock4=                  |
+| 【Alt+F2】                    | Start prompt to run command. =xfrun4=   |
+
+** How to Change Keys
+   :PROPERTIES:
+   :CUSTOM_ID: how-to-change-keys
+   :END:
+
+You can change the keys in Settings control panel. Launch it by
+=xfce4-settings-manager=.
+
+- Window Manager panel → keys related to general manipulation of windows
+  and virtual screen.
+- Keyboard panel → keys related to launching app, etc.
+
+#+CAPTION: xfce window manager keys panel 2017-02-04.
+[[file:i/xfce_window_manager_keys_panel_2017-02-04.png]]
+
+#+CAPTION: xfce keyboard setting panel, default keys. 2017-02-04
+[[file:i/xfce_keyboard_setting_panel_2017-02-04.png]]
+
+** Mouse Wheel
+   :PROPERTIES:
+   :CUSTOM_ID: mouse-wheel
+   :END:
+
+- Hover your mouse over the taskbar, then scroll mouse wheel to cycle
+  windows.
+- Hover your mouse over empty space on desktop, then scroll mouse wheel
+  to cycle workspaces.
+
+You can set mouse so that hover will activate the window (put focus on
+it and bring it to front). Set in the Window Manager preference pane.
+
+** Tip: One Workspace
+   :PROPERTIES:
+   :CUSTOM_ID: tip-one-workspace
+   :END:
+
+To make it simpler, set workspace to just 1, and turn off all keys about
+workspace. And just define a few, single-key, function keys, to close
+window or switch to your most frequently used app. Example:
+
+- 【F5】 → switch to last window
+- 【F6】 → cycle window
+- 【F7】 → cycle window within a app
+- 【F8】 → close window
+
+- 【F9】 → switch to Firefox
+- 【F10】 → switch to emacs
+- 【F11】 → switch to terminal
+
+For how to switch to a app, see:
+[[../kbd/set_single_key_to_switch_app.html][How to Set Key to Switch to
+Browser]].
+
+See also:
+
+- [[../kbd/keyboard_function_keys.html][Why Function Keys F1 F2 Are
+  Useful]]
+- [[file:linux_keyboard_tools.html][Linux: Keyboard Software Guide]]
+- [[file:linux_set_default_app.html][Linux: Setting Default App]]
+
+**** Linux Shell Basics
+     :PROPERTIES:
+     :CUSTOM_ID: linux-shell-basics
+     :END:
+
+1.  [[file:linux_info.html][Get System Info]]
+2.  [[file:linux_common_commands.html][Shell Basics]]
+3.  [[file:linux_shell_text_processing.html][grep, cat, awk, uniq]]
+4.  [[file:linux_command_sort.html][sort]]
+5.  [[file:linux_shell_find_example.html][find, xargs]]
+6.  [[file:linux_diff_comparing_files_and_dirs.html][diff Files/Dir]]
+7.  [[file:linux_du_command.html][dir size: du]]
+8.  [[file:linux_view_dir_as_tree.html][dir tree]]
+9.  [[file:linux_gzip_bzip2_xz_7zip.html][tar gzip bzip2 xz 7zip rar
+    zip]]
+10. [[file:wget_curl_tutorial.html][wget, curl, GET, HEAD]]
+11. [[file:linux_rsync.html][rsync]]
+12. [[file:linux_package_system.html][Install Packages]]
+
+**** Sys Admin
+     :PROPERTIES:
+     :CUSTOM_ID: sys-admin
+     :END:
+
+1. [[file:linux_job_control.html][Job Control]]
+2. [[file:linux_ps_command.html][ps]]
+3. [[file:linux_monitor_processes.html][top]]
+4. [[file:linux_monitor_processes_htop.html][htop]]
+5. [[file:linux_free_memory.html][RAM stat]]
+6. [[file:linux_users_groups_admin.html][Users and Groups]]
+7. [[file:linux_file_perm_system.html][File Permission]]
+8. [[file:linux_lsof_show_open_files.html][Opened Files: lsof]]
+9. [[file:linux_command_line_to_sleep_hibernate.html][shutdown, sleep]]
+
+**** Bash/Terminal
+     :PROPERTIES:
+     :CUSTOM_ID: bashterminal
+     :END:
+
+1.  [[file:bash_keybinding.html][Bash Keys, Terminal Keys, Man Page
+    Keys]]
+2.  [[file:bash_prompt_setup.html][Bash Prompt Setup]]
+3.  [[file:shell_color_prompt.html][Bash Color Prompt]]
+4.  [[file:dot_bash_profile_bashrc_etc_difference.html][.bashrc,
+    .profile, .bash\_profile]]
+5.  [[file:linux_virtual_console.html][Virtual Console]]
+6.  [[file:linux_terminal_control_sequence_keys.html][Terminal Control
+    Sequence Keys]]
+7.  [[file:linux_reset_clear_terminal.html][Reset Terminal]]
+8.  [[file:tmux_screen_tutorial.html][tmux]]
+9.  [[file:linux_man_page_tutorial.html][man page]]
+10. [[file:bash_doc_info_basic_keys.html][Bash Manual in Chapters]]
+11. [[file:unix_bash_misc_tips.html][BASH Shell Misc Tips]]
+12. [[file:linux_log_terminal.html][Log Terminal Session]]
+
+**** Linux Desktop
+     :PROPERTIES:
+     :CUSTOM_ID: linux-desktop
+     :END:
+
+1.  [[file:linux_common_apps.html][Most Useful GUI Apps]]
+2.  [[file:linux_set_default_app.html][Set Default App]]
+3.  [[file:linux_gui_command_line_names.html][Shell Commands for GUI
+    Apps]]
+4.  [[file:linux_image_viewers.html][Image Viewers]]
+5.  [[file:linux_music_players.html][Music Players]]
+6.  [[file:linux_trash_location.html][Move File to Trash by Command]]
+7.  [[file:linux_sync_x11_primary_selection_and_clipboard.html][X11
+    Selection and Clipboard]]
+8.  [[file:linux_install_new_windows_manager.html][How to Switch to
+    LXDE, Xfce]]
+9.  [[file:linux_lxde_keybinding.html][LXDE Keyboard Shortcuts]]
+10. [[file:linux_lxde_add_key_shortcuts.html][LXDE/Openbox, Change
+    Keyboard Shortcuts]]
+11. [[file:linux_lxde_key_repeat_rate.html][LXDE Set Key Repeat Rate]]
+12. [[file:linux_disable_mouse_wheel_hide_window.html][LXDE/OpenBox,
+    Disable Mouse Scroll Wheel Hide Window]]
+13. [[file:linux_xfce_keyboard_shortcuts.html][Xfce Keyboard Shortcuts]]
+14. [[file:linux_xfce_good_themes.html][Xfce Good Themes]]
+15. [[file:xmonad_keys.html][xmonad Keybinding]]
+16. [[file:linux_restart_x11.html][How to Restart X11]]
+17. [[file:why_tiling_window_manager_sucks.html][Why Tiling Window
+    Manager Sucks]]
+18. [[file:linux_fonts.html][Standard Fonts]]
+19. [[file:linux_install_fonts.html][How to Install Font]]
+
+If you have a question, put $5 at
+[[https://www.patreon.com/xahlee][patreon]] and message me.
+
+- [[../comp/unicode_index.html][Unicode 💖]]
+- [[../kbd/keyboarding.html][Keyboard ⌨]]
+- [[../talk_show/xah_talk_show_index.html][Talk Show 📺]]
+- [[../comp/comp_lang_tutorials_index.html][Lang tutorials 𝝺]]
+- [[../linux/linux_index.html][Linux 🐧]]
+- [[../linux/computer_networking_index.html][TCP/IP 🖧]]
+- [[../comp/lisp_index.html][❨On Lisp❩]]
+- [[../comp/syntax_soup_index.html][Syntax Soup]]
+- [[../comp/semantic_noodle_index.html][Semantic Noodle]]
+- [[../comp/comp_lang_doc_problems.html][doc by dummies]]
+- [[../comp/python_problems.html][Python Suck 🐍]]
+- [[../comp/comp_jargons_index.html][Jargons 💬]]
+- [[../js/web_design_index.html][Web Design]]
+- [[../js/web_html_validation_index.html][HTML History]]
+- [[../w/spam_index.html][Web Spam]]
+- [[../UnixResource_dir/writ/anti_hacker_2k_index.html][Anti Hacker
+  y2k]]
+- [[../comp/technological_musing.html][Tech Review]]
+
+∑XAH
+
+© 1995, 2019 Xah Lee.

@@ -1,0 +1,19 @@
+# -*- mode: snippet -*-
+# name: Classic latex preamble
+# key: hdr
+# --
+\documentclass{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[francais]{babel}
+\usepackage{amsmath,amssymb}
+\usepackage[a4paper]{geometry}
+\usepackage{graphicx}
+\usepackage{microtype}
+
+\begin{document}
+
+$0
+
+\end{document}

@@ -1,0 +1,17 @@
+# -*- mode: snippet -*-
+# name: interface
+# key: interface
+# --
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ${1:Namespace}
+{
+    interface ${2:IName}
+    {
+        $0
+    }
+}

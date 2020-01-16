@@ -1,0 +1,266 @@
+
+
+Introduction to Linux (LFS101)
+
+Chapter 1. The Linux Foundation
+Chapter 2. Linux Philosophy and Concepts
+Chapter 3. Linux Basics and System Startup
+Chapter 4. Graphical Interface
+Chapter 5. System Configuration from the Graphical Interface
+Chapter 6. Common Applications
+Chapter 7. Command Line Operations
+Chapter 8. Finding Linux Documentation
+Chapter 9. Processes
+Chapter 10. File Operations
+Chapter 11. Text Editors
+Chapter 12. User Environment
+Chapter 13. Manipulating Text
+Chapter 14. Network Operations
+Chapter 15. The Bash Shell and Basic Scripting
+Chapter 16. More on Bash Shell Scripting
+Chapter 17. Printing
+Chapter 18. Local Security Principles
+
+
+
+
+Essentials of Linux System Administration (LFS201)
+
+Chapter 1. Course Introduction
+Chapter 2. Linux Filesystem Tree Layout
+Chapter 3. Processes
+Chapter 4. Signals
+Chapter 5. Package Management Systems
+Chapter 6. RPM
+Chapter 7. DPKG
+Chapter 8. yum
+Chapter 9. zypper
+Chapter 10. APT
+Chapter 11. System Monitoring
+Chapter 12. Process Monitoring
+Chapter 13. Memory: Monitoring Usage and Tuning
+Chapter 14. I/O Monitoring and Tuning
+Chapter 15. I/O Scheduling
+Chapter 16. Linux Filesystems and the VFS
+Chapter 17. Disk Partitioning
+Chapter 18. Filesystem Features: Attributes, Creating, Checking, Mounting
+Chapter 19. Filesystem Features: Swap, Quotas, Usage
+Chapter 20. Th ext2/ext3/ext4 Filesystems
+Chapter 21. The XFS and btrfs Filesystems
+Chapter 22. Encrypting Disks
+Chapter 23. Logical Volume Management (LVM)
+Chapter 24. RAID
+Chapter 25. Kernel Services and Configuration
+Chapter 26. Kernel Modules
+Chapter 27. Devices and udev
+Chapter 28. Virtualization Overview
+Chapter 29. Containers Overview
+Chapter 30. User Account Management
+Chapter 31. Group Management
+Chapter 32. File Permissions and Ownership
+Chapter 33. Pluggable Authentication Modules (PAM)
+Chapter 34. Network Addresses
+Chapter 35. Network Devices and Configuration
+Chapter 36. Firewalls
+Chapter 37. System Startup and Shutdown
+Chapter 38. GRUB
+Chapter 39. System Init: systemd, SystemV and Upstart
+Chapter 40. Backup and Recovery Methods
+Chapter 41. Linux Security Modules
+Chapter 42. Local System Security
+Chapter 43. Basic Troubleshooting
+Chapter 44. System Rescue
+
+
+Linux Foundation Certified Engineer (LFCE)
+
+
+LFCE Domains and Competencies V3.18
+Essential Commands – 5%
+
+Use version control tools
+Manipulate file content programmatically
+Run commands on many systems simultaneously
+Install Linux Distribution
+Operation of Running Systems – 18%
+
+Monitor, tune and troubleshoot system performance
+Update operating systems to provide required functionality and security
+Update the kernel and ensure the system is bootable
+Script automation tools to make work faster and more accurate
+Train team members on new technology or changes to existing systems
+Maintain systems via configuration management tools
+Maintain the integrity and availability of hardware
+Develop and test disaster recovery plans
+Support incident management for outages/trouble
+Produce and deliver reports on system use (processor, memory, disk, and network), outages, and user requests
+Monitor security and conduct audits
+Manipulate Linux system during the recovery process
+Use udev for device detection and management
+Configure and modify SELinux/AppArmor policies
+User and Group Management – 10%
+
+Connect to an external authentication source
+Configure advanced PAM
+Networking – 15%
+
+Monitor, tune and troubleshoot network performance
+Configure network traffic tunneling
+Configure a system to perform Network Address Translation
+Dynamically route IP traffic
+Implement advanced packet filtering
+Service Configuration – 17%
+
+Implement and configure an HTTP server
+Implement and configure time synchronization server
+Implement and configure network logging server
+Configure a DHCP server
+Implement and configure an SMTP service
+Implement and configure the HTTP proxy server
+Configure host-based and user-based security for a service
+Implement and configure a centralized authentication server
+Implement and configure a PXE Boot server
+Implement and configure an authoritative DNS server
+Storage Management – 10%
+
+Manage advanced LVM configuration
+Identify storage devices using block device attributes
+Manage Linux file system features and flags
+Implement and configure remote block storage devices
+Implement and configure network shares
+System Design and Deployment – 25%
+
+Define a capacity planning strategy
+Conduct post deployment verifications
+Create and maintain software packages
+Create, configure and maintain containers
+Deploy, configure, and maintain high availability/clustering/replication
+
+
+
+Linux Foundation Certified SysAdmin (LFCS)
+
+
+Essential Commands – 25%
+
+Log into local & remote graphical and text mode consoles
+Search for files
+Evaluate and compare the basic file system features and options
+Compare and manipulate file content
+Use input-output redirection (e.g. >, >>, |, 2>)
+Analyze text using basic regular expressions
+Archive, backup, compress, unpack, and uncompress files
+Create, delete, copy, and move files and directories
+Create and manage hard and soft links
+List, set, and change standard file permissions
+Read, and use system documentation
+Manage access to the root account
+Operation of Running Systems – 20%
+
+Boot, reboot, and shut down a system safely
+Boot or change system into different operating modes
+Install, configure and troubleshoot bootloaders
+Diagnose and manage processes
+Locate and analyze system log files
+Schedule tasks to run at a set date and time
+Verify completion of scheduled jobs
+Update software to provide required functionality and security
+Verify the integrity and availability of resources
+Verify the integrity and availability of key processes
+Change kernel runtime parameters, persistent and non-persistent
+Use scripting to automate system maintenance tasks
+Manage the startup process and services (In Services Configuration)
+List and identify SELinux/AppArmor file and process contexts
+Manage Software
+Identify the component of a Linux distribution that a file belongs to
+User and Group Management – 10%
+
+Create, delete, and modify local user accounts
+Create, delete, and modify local groups and group memberships
+Manage system-wide environment profiles
+Manage template user environment
+Configure user resource limits
+Manage user privileges
+Configure PAM
+Networking – 12%
+
+Configure networking and hostname resolution statically or dynamically
+Configure network services to start automatically at boot
+Implement packet filtering
+Start, stop, and check the status of network services
+Statically route IP traffic
+Synchronize time using other network peers
+Service Configuration – 20%
+
+Configure a caching DNS server
+Maintain a DNS zone
+Configure email aliases
+Configure SSH servers and clients
+Restrict access to the HTTP proxy server
+Configure an IMAP and IMAPS service
+Query and modify the behavior of system services at various operating modes
+Configure an HTTP server
+Configure HTTP server log files
+Configure a database server
+Restrict access to a web page
+Manage and configure containers
+Manage and configure Virtual Machines
+Storage Management – 13%
+
+List, create, delete, and modify physical storage partitions
+Manage and configure LVM storage
+Create and configure encrypted storage
+Configure systems to mount file systems at or during boot
+Configure and manage swap space
+Create and manage RAID devices
+Configure systems to mount file systems on demand
+Create, manage and diagnose advanced file system permissions
+Setup user and group disk quotas for filesystems
+Create and configure file systems
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

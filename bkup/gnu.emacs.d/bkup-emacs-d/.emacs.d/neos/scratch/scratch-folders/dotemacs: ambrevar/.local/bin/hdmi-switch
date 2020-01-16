@@ -1,0 +1,37 @@
+#!/bin/sh
+
+usage () {
+	cat <<EOF>&2
+Usage: ${0##*/} [OPTIONS]
+
+This script will enable all HDMI videos, passing xrandr OPTIONS to each one of
+them.
+
+To do this automatically when the cable is plugged, add the following
+udev rule (Linux only):
+
+  $ cat /etc/udev/rules.d/hdmi.rules
+  SUBSYSTEM=="drm", ACTION=="change", RUN+="/bin/sh $0"
+EOF
+}
+
+XRANDR_OPTIONS="$@"
+[ -z "$XRANDR_OPTIONS" ] && XRANDR_OPTIONS="--auto --noprimary"
+
+XRANDR_BUF=$(xrandr)
+PRIMARY=$(echo "$XRANDR_BUF" | awk '$1 !~ "HDMI" && $2 == "connected" {print $1; exit}')
+HDMI_OUTPUTS=$(echo "$XRANDR_BUF" | awk '$1 ~ "HDMI" && $2 == "connected" {printf $1 " "}')
+set -- $HDMI_OUTPUTS
+
+if [ $# -eq 0 ]; then
+	echo xrandr --output $PRIMARY --auto --primary
+	xrandr --output $PRIMARY --auto --primary
+else
+	for i; do
+		echo xrandr --output $i $XRANDR_OPTIONS
+		xrandr --output $i $XRANDR_OPTIONS
+	done
+	echo
+	echo "## Run this to turn off primary screen:"
+	echo "# xrandr --output $PRIMARY --off"
+fi

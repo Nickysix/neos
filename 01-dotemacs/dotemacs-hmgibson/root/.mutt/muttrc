@@ -1,0 +1,39 @@
+set sidebar_visible = yes
+set sidebar_delim_chars = '/.'
+set sidebar_folder_indent = no
+set sidebar_indent_string = '  '
+set sidebar_format="%B%?F? [%F]?%* %?N?%N/?%S"
+set mail_check_stats
+
+
+set realname = "Hugo Gibson"
+set header_cache = "~/.cache/mutt"
+
+# Can be the same folder as header_cache.
+# This will cost important disk usage according to your e-mail amount.
+set message_cachedir = "~/.cache/mutt"
+
+
+source ~/.mutt/gibsonhugo.com.gmail
+# source ~/.mutt/zohomail.com
+
+set mail_check = 120
+unset imap_passive
+set imap_keepalive = 300
+set editor = "nvim"
+set charset = "utf-8"
+set record = ''
+set send_charset = "us-ascii:utf-8"
+set text_flowed
+
+
+bind index G imap-fetch-mail
+bind pager n next-line
+bind pager e previous-line
+bind index n next-undeleted
+bind index e previous-undeleted
+macro index A "<save-message>=Archive<enter>" "Archive Message"
+macro index C "<save-message>=HWMG\ Receipts<enter>" "Move to Receipts"
+
+auto_view text/html
+set mailcap_path = "~/.mutt/mailcap"

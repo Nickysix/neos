@@ -1,0 +1,18 @@
+[user]
+	email = joshuafwolfe@gmail.com
+	name = Josh Wolfe
+	signingkey = joshuafwolfe@gmail.com
+[push]
+	default = simple
+[magit]
+	hideCampaign = true
+[github]
+	user = WolfeCub
+[commit]
+	gpgsign = true
+[alias]
+	c = commit
+	co = checkout
+    s = status
+    p = pull
+    po = push origin

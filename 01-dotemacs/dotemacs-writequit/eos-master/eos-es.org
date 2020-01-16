@@ -1,0 +1,246 @@
+#+TITLE: EOS: Elasticsearch Module
+#+AUTHOR: Lee Hinman
+#+EMAIL: lee@writequit.org
+#+SETUPFILE: ~/eos/setupfiles/eos.setup
+
+#+BEGIN_SRC emacs-lisp
+(provide 'eos-es)
+#+END_SRC
+
+* Elasticsearch
+:PROPERTIES:
+:CUSTOM_ID: elasticsearch
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(use-package es-mode
+  :ensure t
+  :init
+  (add-to-list 'auto-mode-alist '("\\.es$" . es-mode))
+  (add-hook 'es-mode-hook 'auto-indent-mode)
+  (add-hook 'es-result-mode-hook 'hs-minor-mode)
+  :config
+  (setq es-warn-on-delete-query nil
+        es-always-pretty-print t))
+#+END_SRC
+
+Some setup for the Java-specific ES project, with EDE
+
+#+BEGIN_SRC emacs-lisp
+;; Enable EDE globally
+(global-ede-mode 1)
+(when (fboundp 'ede-java-root-project)
+  (ede-java-root-project "elasticsearch"
+                         :file "/home/hinmanm/es/elasticsearch/build.gradle"
+                         :srcroot '("core/src")))
+#+END_SRC
+
+* Logstash
+:PROPERTIES:
+:CUSTOM_ID: logstash
+:END:
+
+There's a nice mode for logstash configurations that seems to work pretty well,
+so I install that
+
+#+BEGIN_SRC emacs-lisp
+(use-package logstash-conf
+  :ensure t)
+#+END_SRC
+
+* ES Services started and Run from Emacs (prodigy)
+:PROPERTIES:
+:CUSTOM_ID: prodigy
+:END:
+
+I basically use this to start up ES when I need to test something really quickly
+
+I have been trying out [[https://www.npmjs.com/package/esvm][esvm]] for this lately also, check out my ESVM
+configuration elsewhere in my dotfiles
+
+So I configure prodigy like so:
+
+#+BEGIN_SRC emacs-lisp
+(use-package prodigy
+  :ensure t
+  :defer t
+  :config
+  (setq prodigy-services '())
+  (prodigy-define-service
+    :name "Elasticsearch 1.7.6"
+    :cwd "~/ies/elasticsearch-1.7.6"
+    :command "~/ies/elasticsearch-1.7.6/bin/elasticsearch"
+    :tags '(work test es)
+    :port 9200)
+  (prodigy-define-service
+    :name "Elasticsearch 2.3.5"
+    :cwd "~/ies/elasticsearch-2.3.5"
+    :command "~/ies/elasticsearch-2.3.5/bin/elasticsearch"
+    :tags '(work test es)
+    :port 9200)
+  (prodigy-define-service
+    :name "Elasticsearch 2.4.6"
+    :cwd "~/ies/elasticsearch-2.4.6"
+    :command "~/ies/elasticsearch-2.4.6/bin/elasticsearch"
+    :tags '(work test es)
+    :port 9200)
+  (prodigy-define-service
+    :name "Elasticsearch 5.0.1"
+    :cwd "~/ies/elasticsearch-5.0.1"
+    :command "~/ies/elasticsearch-5.0.1/bin/elasticsearch"
+    :tags '(work test es)
+    :port 9200)
+  (prodigy-define-service
+    :name "Elasticsearch 5.1.2"
+    :cwd "~/ies/elasticsearch-5.1.2"
+    :command "~/ies/elasticsearch-5.1.2/bin/elasticsearch"
+    :tags '(work test es)
+    :port 9200)
+  (prodigy-define-service
+    :name "Elasticsearch 5.2.2"
+    :cwd "~/ies/elasticsearch-5.2.2"
+    :command "~/ies/elasticsearch-5.2.2/bin/elasticsearch"
+    :tags '(work test es)
+    :port 9200)
+  (prodigy-define-service
+    :name "Elasticsearch 5.3.3"
+    :cwd "~/ies/elasticsearch-5.3.3"
+    :command "~/ies/elasticsearch-5.3.3/bin/elasticsearch"
+    :tags '(work test es)
+    :port 9200)
+  (prodigy-define-service
+    :name "Elasticsearch 5.4.3"
+    :cwd "~/ies/elasticsearch-5.4.3"
+    :command "~/ies/elasticsearch-5.4.3/bin/elasticsearch"
+    :tags '(work test es)
+    :port 9200)
+  (prodigy-define-service
+    :name "Elasticsearch 5.5.3"
+    :cwd "~/ies/elasticsearch-5.5.3"
+    :command "~/ies/elasticsearch-5.5.3/bin/elasticsearch"
+    :tags '(work test es)
+    :port 9200)
+  (prodigy-define-service
+    :name "Elasticsearch 5.6.9"
+    :cwd "~/ies/elasticsearch-5.6.9"
+    :command "~/ies/elasticsearch-5.6.9/bin/elasticsearch"
+    :tags '(work test es)
+    :port 9200)
+  (prodigy-define-service
+    :name "Elasticsearch 6.0.1"
+    :cwd "~/ies/elasticsearch-6.0.1"
+    :command "~/ies/elasticsearch-6.0.1/bin/elasticsearch"
+    :tags '(work test es)
+    :port 9200)
+  (prodigy-define-service
+    :name "Elasticsearch 6.1.4"
+    :cwd "~/ies/elasticsearch-6.1.4"
+    :command "~/ies/elasticsearch-6.1.4/bin/elasticsearch"
+    :tags '(work test es)
+    :port 9200)
+  (prodigy-define-service
+    :name "Elasticsearch 6.2.4"
+    :cwd "~/ies/elasticsearch-6.2.4"
+    :command "~/ies/elasticsearch-6.2.4/bin/elasticsearch"
+    :tags '(work test es)
+    :port 9200)
+  (prodigy-define-service
+    :name "Elasticsearch 6.3.0"
+    :cwd "~/ies/elasticsearch-6.3.0"
+    :command "~/ies/elasticsearch-6.3.0/bin/elasticsearch"
+    :tags '(work test es)
+    :port 9200)
+  (prodigy-define-service
+    :name "Elasticsearch 6.3.0 OSS"
+    :cwd "~/ies/elasticsearch-6.3.0-oss"
+    :command "~/ies/elasticsearch-6.3.0-oss/bin/elasticsearch"
+    :tags '(work test es)
+    :port 9200)
+  (prodigy-define-service
+    :name "ES gradle run"
+    :cwd "~/es/elasticsearch"
+    :command "gradlew"
+    :args '("run")
+    :tags '(work es)
+    :port 9200)
+  (prodigy-define-service
+    :name "ES x-pack gradle run"
+    :cwd "~/es/elasticsearch-extra/x-pack-elasticsearch"
+    :command "gradle"
+    :args '("run")
+    :tags '(work es)
+    :port 9200)
+  (prodigy-define-service
+    :name "Simple HTTP server"
+    :cwd "~/"
+    :command "python"
+    :args '("-m" "SimpleHTTPServer" "8000")
+    :port 8000
+    :tags '(http)))
+#+END_SRC
+
+* ESVM configuration
+:PROPERTIES:
+:CUSTOM_ID: esvm
+:END:
+
+I've been using [[https://github.com/simianhacker/esvm][esvm]] for managing starting up multiple ES nodes when I need to
+test something using the rest API. Here's my configuration for it that tangles
+and installs into =~/.esvmrc=
+
+Here is the branch with the latest release I use:
+
+#+NAME: es-branch
+#+BEGIN_SRC js :tangle no
+5.x
+#+END_SRC
+
+#+BEGIN_SRC js :tangle out/esvmrc
+{
+  "clusters": {
+    "<<es-branch>>": {
+      "branch": "<<es-branch>>",
+      "nodes": 1
+    },
+    "2node": {
+      "branch": "<<es-branch>>",
+      "nodes": 2
+    },
+    "3node": {
+      "branch": "<<es-branch>>",
+      "nodes": 3
+    },
+    "master": {
+      "branch": "master",
+      "nodes": 1
+    }
+  },
+  "defaults": {
+    "config": {
+      "cluster.name": "es-lee",
+      "node.add_id_to_custom_path": false,
+      "path.repo": "/tmp",
+      "path.shared_data": "/tmp",
+      "script.indexed": "on",
+      "script.inline": "on"
+    },
+    "plugins": []
+  }
+}
+#+END_SRC
+
+And to install it:
+
+#+BEGIN_SRC sh :tangle sh/install-esvmrc.sh
+ln -sfv $PWD/out/esvmrc ~/.esvmrc
+#+END_SRC
+
+And, unfortunately, esvm needs node, so I have been using nvm for that
+
+#+BEGIN_SRC emacs-lisp
+(when (file-exists-p "~/.nvm")
+  (use-package nvm
+    :ensure t
+    :commands (nvm-use nvm-use-for)
+    :init (nvm-use "v6.4.0")))
+#+END_SRC

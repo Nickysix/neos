@@ -1,0 +1,19 @@
+# Emacs
+.custom.el
+.secret.el
+dotemacs.el
+auto-save-list/
+elpa/
+eshell/
+games/
+semanticdb/
+server/
+transient/
+url/
+
+# Third-party packages
+.emacs.desktop*
+.multiple-cursors.el
+.projectile-bookmarks
+.projectile-cache
+.vimish-fold/

@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: ends here comment
+# key: eh
+# --
+;;; `(file-name-nondirectory (buffer-file-name))`$0 ends here

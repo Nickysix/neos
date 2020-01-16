@@ -1,0 +1,122 @@
+#+TITLE: EOS: Music Module
+#+AUTHOR: Lee Hinman
+#+EMAIL: lee@writequit.org
+#+SETUPFILE: ~/eos/setupfiles/eos.setup
+
+#+BEGIN_SRC emacs-lisp
+(provide 'eos-music)
+#+END_SRC
+
+I use MPD to stream music, not only because if uses far less CPU, but also
+because there is a nice Emacs interface to it.
+
+Ensure that Emacs knows where MPD is listening
+
+#+BEGIN_SRC emacs-lisp
+(setenv "MPD_HOST" "localhost")
+(setenv "MPD_PORT" "6600")
+#+END_SRC
+
+* MPD configuration
+:PROPERTIES:
+:CUSTOM_ID: mpd
+:END:
+
+Configure MPD to be pointing to our local machine
+
+#+BEGIN_SRC conf :tangle out/mpd.conf
+music_directory "/home/hinmanm/Music"
+playlist_directory "/home/hinmanm/.mpd/playlists"
+db_file "/home/hinmanm/.mpd/mpd.db"
+log_file "/home/hinmanm/.mpd/mpd.log"
+state_file "/home/hinmanm/.mpd/mpdstate"
+port "6600"
+bind_to_address "127.0.0.1"
+#+END_SRC
+
+Configure the address and port in Bash
+
+#+BEGIN_SRC sh :tangle out/bashrc.d/mpd.sh
+export MPD_HOST=localhost
+export MPD_PORT=6600
+#+END_SRC
+
+We also need to set up the systemd service for MPD
+
+#+BEGIN_SRC conf :tangle out/mpd.service
+[Unit]
+Description=MPD
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/mpd --no-daemon /home/hinmanm/.mpd.conf
+ExecStop=/usr/bin/pkill mpd
+Environment=DISPLAY=:0
+Restart=always
+
+[Install]
+WantedBy=default.target
+#+END_SRC
+
+Install the required software
+
+#+BEGIN_SRC sh :tangle sh/install-mpd.sh
+deb-install mpd
+deb-install mpc
+rpm-install mpd
+rpm-install mpc
+mkdir -p ~/Music
+mkdir -p ~/.mpd/playlists
+ln -svf $PWD/out/mpd.conf ~/.mpd.conf
+cp -fv $PWD/out/mpd.service ~/.config/systemd/user/mpd.service
+systemctl --user daemon-reload
+systemctl --user enable mpd
+systemctl --user start mpd
+#+END_SRC
+
+* Mingus MPD frontend
+:PROPERTIES:
+:CUSTOM_ID: mingus
+:END:
+
+I haven't actually used this, but we can install it to try it out...
+
+#+BEGIN_SRC emacs-lisp
+(use-package mingus
+  :ensure t)
+#+END_SRC
+
+* Hydra Music Controller
+:PROPERTIES:
+:CUSTOM_ID: music-hydra
+:END:
+
+Mingus is a nifty little minimalist MPD frontend, but it doesn't ship with any
+keybindings out of the box. I'd like global MPD bindings, and this goes a long
+way to get there.
+
+#+begin_src emacs-lisp
+(defhydra eos/hydra-mpd nil
+  "MPD Actions"
+  ("p" (progn (save-window-excursion
+                (async-shell-command "mpc toggle" (get-buffer-create "*tmp*"))))
+   "Play/Pause")
+  ("/" mingus-search "Search" :exit t)
+  ("c" (message "Currently Playing: %s"
+                (shell-command-to-string "mpc status")) "Currently Playing")
+  ("s" mingus "Show Mingus" :exit t)
+  ("m" mingus "Mingus" :exit t)
+  ("<" (progn (require 'mpc) (mpc-prev)
+              (message "Currently Playing: %s"
+                (shell-command-to-string "mpc status"))) "Previous")
+  (">" (progn (require 'mpc) (mpc-next)
+              (message "Currently Playing: %s"
+                (shell-command-to-string "mpc status"))) "Next")
+  ("+" (dotimes (i 5) (mingus-vol-up)) "Louder")
+  ("-" (dotimes (i 5) (mingus-vol-down)) "Quieter")
+  ("n" (ansi-term (executable-find "ncmpcpp"))
+   "ncmpcpp" :exit t)
+  ("q" nil "Quit"))
+#+end_src
+
+This actually gets bound in [[file:eos-core.org::*Binding%20the%20EOS%20mega-map%20with%20Hydra][eos-core.org]]

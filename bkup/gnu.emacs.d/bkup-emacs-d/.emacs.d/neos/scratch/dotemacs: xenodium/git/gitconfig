@@ -1,0 +1,11 @@
+[core]
+	editor = emacsclient -t
+
+[rerere]
+	enabled = true
+
+[color]
+	ui = auto
+
+[merge]
+	conflictStyle = diff3

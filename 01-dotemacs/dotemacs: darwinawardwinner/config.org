@@ -1,0 +1,2424 @@
+* Introductory Notes
+This is my Emacs configuration. Most of it is stored as Emacs Lisp
+source blocks in in this Org-mode file.
+
+This file is called "config.org" and not "init.org" because during the
+loading process, it creates a correspondingly-named ".el" file, and
+there already is an "init.el" here. Note also that "README.org" is a
+link here.
+
+** How to install this config
+In order to install this config, simply clone this repository into
+=~/.emacs.d/=:
+
+#+BEGIN_SRC sh
+  git clone https://github.com/DarwinAwardWinner/dotemacs.git ~/.emacs.d
+#+END_SRC
+
+If you have an old =.emacs= file or =.emacs.d= directory that you want
+to save, move them out of the way first so that they don't interfere
+with the new config.
+
+** First run slow startup
+The first time you start up Emacs after installing this configuration,
+the code in ~init.el~ will install org-mode and then use that to run
+the Emacs lisp code in this file, which will in turn install the many
+packages used by this config. This could take quite a while.
+Subsequent startups will skip the install process and should be
+relatively fast.
+
+* Enable Lexical Binding
+In order to enable lexical binding in the config, this must be the
+first line of Emacs Lisp:
+
+#+BEGIN_SRC emacs-lisp
+  ;; -*- lexical-binding: t -*-
+#+END_SRC
+
+* Bootstrappping
+The =init.el= file does all the bootstrapping necessary to load the
+configuration in this Org-mode file. It is required as a separate
+non-Org-mode file because this config does not use the version of
+Org-mode included with Emacs, so the proper version of Org mode must
+be installed /before/ loading this file. Otherwise, loading this file
+first would auto-load the built-in version of Org-mode and prevent use
+of the newly-installed version until Emacs was restarted.
+
+* Initial Quelpa setup
+
+This config uses [[https://github.com/quelpa/quelpa-use-package][quelpa-use-package]] to implement declarative package
+configuration with [[https://github.com/quelpa/quelpa][Quelpa]] and [[https://github.com/jwiegley/use-package][use-package]]. This section installs those
+packages so that they can be used to set up all other packages.
+
+** Don't ask about file locks in non-interactive sessions
+Quelpa briefly locks its cache file during startup. If multiple
+Emacsen are starting up at the same time, one of them may encounter
+the other's file lock. Normally, it would prompt the user about what
+to do, but if it is running in batch mode, this will not work. This
+advice tells Emacs to instead simply wait for up to 30 seconds for the
+file to become unlocked.
+
+Naturally, this advice it is only effective it is evaluated before
+setting up Quelpa.
+
+#+BEGIN_SRC emacs-lisp
+  ;; userlock.el doesn't provide a feature
+  (load "userlock")
+
+  (defvar lock-file-noninteractive-wait-time 30
+    "Seconds to wait for a file lock before signaling `file-locked'.
+
+  If Emacs is running in batch mode, instead of asking the user
+  whether it should edit a locked file, it will simply wait up to
+  this long for the file to become unlocked.
+
+  If this variable is nil, Emacs will wait forever for a locked file
+  to become unlocked.")
+
+  (define-advice ask-user-about-lock
+      (:around (oldfun file opponent) wait-when-noninteractive)
+    "When running in batch mode, always wait for file locks to clear.
+
+  Normally, when Emacs attempts to open a file that is currently
+  locked by another Emacs process, it will ask the user how to
+  handle the conflict. However, this is not an option in batch
+  mode. Instead, in batch mode, Emacs will simply wait until the
+  file becomes unlocked and then continue. If the file is still
+  locked after waiting for `lock-file-noninteractive-wait-time'
+  seconds, a `file-locked' error will be signalled."
+    (if noninteractive
+        (cl-loop
+         initially do (message "Waiting for %S to be unlocked." file)
+         with still-locked = t
+         with wait-time = lock-file-noninteractive-wait-time
+         while still-locked
+         ;; This function is only called after a lock was detected, so
+         ;; start() by waiting 1 second before checking again.
+         do (sit-for 1)
+         ;; Count down from wait-time to zero, if it's non-nil
+         while (or (null wait-time)
+                   (< 0 (setq wait-time (1- wait-time))))
+         ;; Check if the file is still locked
+         for still-locked = (file-locked-p file)
+         finally return
+         (if still-locked
+             (signal 'file-locked (list FILE OPPONENT))
+           ;; `t' means "steal the file", which should be fine since
+           ;; it's no longer locked. But first we wait one more second.
+           ;; (sit-for 1)
+           t)
+         )
+      (funcall oldfun file opponent)))
+#+END_SRC
+
+** Install Quelpa
+First, we try to load Quelpa, and install it if it isn't already
+installed. This uses the standard [[https://github.com/quelpa/quelpa#installation][Quelpa bootstrapping code]], with
+adaptations to suppress auto-update when running in batch mode and to
+avoid throwing an error if the auto-update fails (e.g. due to a lack
+of a network connection.)
+
+#+BEGIN_SRC emacs-lisp
+  (eval-and-compile
+    (if (require 'quelpa nil t)
+        (when (not noninteractive)
+          (ignore-errors
+            (quelpa-self-upgrade)))
+      (with-temp-buffer
+        (url-insert-file-contents
+         "https://raw.github.com/quelpa/quelpa/master/bootstrap.el")
+        (eval-buffer))))
+  (require 'quelpa)
+#+END_SRC
+
+** (Don't) Prefer MELPA stable
+Next, we tell Quelpa to use the stable version of each package by
+default.
+
+#+BEGIN_SRC emacs-lisp
+  (setq quelpa-stable-p nil)
+#+END_SRC
+
+** Install quelpa-use-package
+Finally we use Quelpa to install ~quelpa-use-package~, which allows
+~use-package~ to install packages using Quelpa.
+
+#+BEGIN_SRC emacs-lisp
+  (quelpa
+   '(quelpa-use-package
+     :fetcher github
+     :repo "quelpa/quelpa-use-package")
+   :stable nil)
+  (require 'quelpa-use-package)
+#+END_SRC
+
+* Preliminary environment setup
+This section sets up a functions and other aspects of the environment
+that will be needed later in the configuration, so they need to be
+defined/prepared up front.
+
+** Install and load basic libraries
+This installs the ~s~ and ~f~ packages for string and filename
+manipulation.
+
+#+BEGIN_SRC emacs-lisp
+  (use-package f :quelpa)
+  (use-package s :quelpa)
+#+END_SRC
+
+** Fixing Default Directory
+Regardless of which directory Emacs is started from, I want the
+initial non-file buffers such as =*scratch*= and =*Messages*= to have
+their ~default-directory~ set to my home directory. This code goes
+through all non-file buffers whose default directories are the emacs
+starting directory or the root directory, and changes their default
+directories to my home directory.
+
+This code only runs during init. If the config is reloaded later after
+init, this will not run again.
+
+#+BEGIN_SRC emacs-lisp
+  (unless after-init-time
+    (let ((startup-dir default-directory))
+      (unless (f-same? default-directory "~")
+        (dolist (buf (buffer-list))
+          (ignore-errors
+            (with-current-buffer buf
+              (when (and (null (buffer-file-name buf))
+                         (not (bound-and-true-p dired-directory))
+                         (or (f-same? default-directory startup-dir)
+                             (f-root? default-directory)))
+                (message "Changing default dir from %s to ~/ in %s"
+                         default-directory (buffer-name buf))
+                (cd "~"))))))))
+#+END_SRC
+
+** Define eval after init function
+We define a function to defer evaluation until the end of
+initialization.
+
+#+BEGIN_SRC emacs-lisp
+  (defun eval-after-init (form)
+    "Like `eval', but waits until after init.
+
+  During emacs initialization, this registers FORM to be evaluated
+  in `after-init-hook'. After initialization, this is equivalent
+  to `(eval FORM)'."
+    (if after-init-time
+        (eval form)
+      (add-to-list 'after-init-hook `(lambda () ,form))))
+#+END_SRC
+
+** Define macro to protect buffer modified status
+This defines a macro that saves the modified status of current buffer
+and restores it after evaluating body.
+
+#+BEGIN_SRC emacs-lisp
+  (defmacro preserve-buffer-modified-p (&rest body)
+    "Evaluate BODY, then restore buffer modified status.
+
+  This can be used to edit the contents of a buffer while telling
+  Emacs that the buffer is still not modified."
+    (declare (indent 0))
+    `(let ((bmp (buffer-modified-p)))
+       (prog1
+           (progn ,@body)
+         (set-buffer-modified-p bmp))))
+#+END_SRC
+
+** Ensure persistence directory exists
+
+For any code that wants to save some state to disk (e.g. undo-tree), I
+configure it to save its state somewhere in this directory.
+
+#+BEGIN_SRC emacs-lisp
+  (make-directory (f-join user-emacs-directory "persistence") 'recursive)
+#+END_SRC
+
+** Set PATH and MANPATH from shell
+My shell configuration adds a lot of things to PATH dynamically
+(pyenv, perlbrew, etc.), so rather than emulate that in Emacs, we
+simply run a shell and tell it to print out the environment variables
+we care about. Then we set them in Emacs. For PATH, we also set the
+Elisp variable ~exec-path~, which is not auto-updated when you modify
+the environment variable.
+
+This step needs to be done early, because some later configuration
+items depend on having the full PATH available.
+
+#+BEGIN_SRC emacs-lisp
+  (use-package exec-path-from-shell
+    :quelpa
+    :demand t
+    :config (exec-path-from-shell-initialize))
+#+END_SRC
+
+** Set up and load a separate custom file
+This is the file where everything set via =M-x customize= goes.
+
+#+BEGIN_SRC emacs-lisp
+  (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
+  (when (f-exists? custom-file)
+    (load custom-file))
+#+END_SRC
+
+** Install req-package
+~req-package~ is an extension of ~use-package~ that automatically
+loads all packages in the correct order, based on dependencies
+declared in the config. So if the setup code for one package depends
+on having another package loaded, ~req-package~ can handle that.
+
+#+BEGIN_SRC emacs-lisp
+  ;; Install undeclared dependency el-get first
+  ;; https://github.com/edvorg/req-package/pull/53
+  (use-package el-get :quelpa)
+  (use-package req-package :quelpa)
+#+END_SRC
+* Package configuration
+This section declares all the packages required by the config and sets
+up variables, key bindings, and such for some of them.
+
+Eval the following Elisp code to re-sort the below entries (this code
+line is not in a source block because it is not part of the actual
+configuration and should not be executed upon init):
+
+=CODE (mapc (apply-partially #'org-sort-entries nil) (nreverse '(?O ?a))) CODE=
+** adjust-parens
+This allows TAB and S-TAB to increase and decrease the nesting depth
+(and corresponding indentation) of the current lisp expression.
+
+#+BEGIN_SRC emacs-lisp
+  (req-package adjust-parens
+    :demand t
+    :commands adjust-parens-mode
+    :init (progn
+            (defun turn-on-adjust-parens-mode ()
+              (adjust-parens-mode 1))
+            (dolist (hook '(lisp-interaction-mode-hook
+                            emacs-lisp-mode-hook))
+              (add-hook hook #'turn-on-adjust-parens-mode)))
+    :ensure t)
+#+END_SRC
+
+** amx
+amx is an enhanced M-x.
+
+#+BEGIN_SRC emacs-lisp
+  (req-package amx
+    :quelpa)
+#+END_SRC
+
+** anzu
+Anzu mode displays the total number of matches and which one is
+currently highlighted while doing an isearch.
+
+#+BEGIN_SRC emacs-lisp
+  (req-package anzu :quelpa)
+#+END_SRC
+** apache-mode
+This loads apache-mode and sets it up to detect the vim
+"syntax=apache" declaration.
+
+#+BEGIN_SRC emacs-lisp
+  (req-package apache-mode
+    :mode ("/apache2/.*\\.conf\\'" . apache-mode)
+    :init (progn
+            (defun apache-magic-mode-detect ()
+              (string-match-p "^\\s-*#.*\\bsyntax=apache\\b" (buffer-string)))
+            (add-to-list 'magic-mode-alist '(apache-magic-mode-detect . apache-mode)))
+    :quelpa)
+#+END_SRC
+
+** apt-sources-list
+#+BEGIN_SRC emacs-lisp
+  (req-package apt-sources-list :quelpa)
+#+END_SRC
+
+** auto-complete
+Auto-complete mode provides IDE-style popup completions while editing.
+
+#+BEGIN_SRC emacs-lisp
+  (req-package auto-complete
+    :init (global-auto-complete-mode 1)
+    :quelpa)
+#+END_SRC
+
+** auto-dim-other-buffers
+This package slightly dims the background of inactive windows so as to
+highlight which window is currently active.
+
+#+BEGIN_SRC emacs-lisp
+  (req-package auto-dim-other-buffers :quelpa)
+#+END_SRC
+
+** autopair
+
+#+BEGIN_SRC emacs-lisp
+  (req-package autopair
+    :config
+    (progn
+      (autopair-global-mode 1)
+      (setq autopair-skip-whitespace 'chomp)
+      (setq autopair-skip-criteria 'always)
+      (define-advice autopair--post-command-handler
+          (:after (&rest args) realign-org-tags)
+        "Re-align org-mode headline tags after doing autopair."
+        (when (and (eq major-mode 'org-mode)
+                   (org-at-heading-p))
+          (org-align-tags))))
+    :defer nil
+    :quelpa)
+#+END_SRC
+
+** bar-cursor
+This changes the cursor from a 1-character block to a bar in between
+characters.
+
+#+BEGIN_SRC emacs-lisp
+  (req-package bar-cursor
+    :quelpa)
+#+END_SRC
+
+** beacon
+Beacon mode causes the "spotlight" to shine on the cursor whenever the
+window scrolls, in order to highlight the new position of the cursor.
+
+#+BEGIN_SRC emacs-lisp
+  (req-package beacon :quelpa)
+#+END_SRC
+
+** bind-key
+
+#+BEGIN_SRC emacs-lisp
+  (req-package bind-key :quelpa)
+#+END_SRC
+** browse-url
+This binds Shift+click to open a link
+
+#+BEGIN_SRC emacs-lisp
+  (req-package browse-url
+    :bind ("<s-mouse-1>" . browse-url-at-mouse)
+    :quelpa)
+#+END_SRC
+
+** bs (Buffer Show)
+
+#+BEGIN_SRC emacs-lisp
+  (req-package bs
+    :bind ("C-x C-b" . bs-show)
+    :quelpa)
+#+END_SRC
+
+** buttercup
+Buttercup is a testing framework that I use to test several of my
+Emacs Lisp packages.
+
+#+BEGIN_SRC emacs-lisp
+  (req-package buttercup
+    :quelpa (buttercup
+             :fetcher github
+             :repo "DarwinAwardWinner/emacs-buttercup"))
+#+END_SRC
+
+** cask
+
+#+BEGIN_SRC emacs-lisp
+  (req-package cask :quelpa)
+  (req-package cask-mode :quelpa)
+#+END_SRC
+
+** cl-lib
+
+#+BEGIN_SRC emacs-lisp
+  (req-package cl-lib)
+#+END_SRC
+
+** cl-lib-highlight
+This package higlights cl-lib functions and macros, and also higlights
+old-styls cl functions and macros in orange as a reminder not to use
+them.
+
+#+BEGIN_SRC emacs-lisp
+  (req-package cl-lib-highlight
+    :quelpa
+    :demand t
+    :config
+    (cl-lib-highlight-initialize)
+    (cl-lib-highlight-warn-cl-initialize))
+#+END_SRC
+
+** cperl-mode
+Replace ~perl-mode~ with ~cperl-mode~ in ~auto-mode-alist~ and
+~interpreter-mode-alist~. Also associate the ".t" extension with perl
+(perl test files). Last, define a keyboard shortcut for
+~cperl-perldoc~.
+
+#+BEGIN_SRC emacs-lisp
+  (req-package cperl-mode
+    :init
+    (progn
+      (mapc
+       (lambda (x)
+         (when (eq (cdr x) 'perl-mode)
+           (setcdr x 'cperl-mode)))
+       auto-mode-alist)
+      (mapc
+       (lambda (x)
+         (when (eq (cdr x) 'perl-mode)
+           (setcdr x 'cperl-mode)))
+       interpreter-mode-alist))
+    :bind (:map cperl-mode-map
+                ("C-c C-d". cperl-perldoc))
+    :mode ("\\.[tT]\\'" . cperl-mode))
+#+END_SRC
+
+** creole-mode
+
+#+BEGIN_SRC emacs-lisp
+  (req-package creole-mode
+    :quelpa
+    :mode (".creole\\'" . creole-mode))
+#+END_SRC
+
+** crux
+This provides some useful utility functions, many of which are more
+advanced versions of existing commands.
+
+#+BEGIN_SRC emacs-lisp
+  (req-package crux
+    :quelpa
+    :bind (("C-k" . crux-smart-kill-line)
+           ("C-c C-e" . crux-eval-and-replace)
+           ("C-x 4 t" . crux-transpose-windows)
+           ([remap move-beginning-of-line] . crux-move-beginning-of-line)))
+#+END_SRC
+
+** dpkg-dev-el
+This is a series of elisp provided by the Debian package dpkg-dev-el.
+Some of them have uses outside Debian, so it's nice to have a way to
+install them without dpkg.
+
+https://packages.debian.org/sid/dpkg-dev-el
+https://salsa.debian.org/debian/emacs-goodies-el/tree/master/elisp/dpkg-dev-el
+
+#+BEGIN_SRC emacs-lisp
+  (req-package debian-changelog-mode
+    :quelpa (debian-changelog-mode
+             :fetcher git :url "https://salsa.debian.org/emacsen-team/dpkg-dev-el.git"
+             :files ("debian-changelog-mode.el")))
+  (req-package debian-control-mode
+    :quelpa (debian-control-mode
+             :fetcher git :url "https://salsa.debian.org/emacsen-team/dpkg-dev-el.git"
+             :files ("debian-control-mode.el")))
+  (req-package debian-copyright
+    :quelpa (debian-copyright
+             :fetcher git :url "https://salsa.debian.org/emacsen-team/dpkg-dev-el.git"
+             :files ("debian-copyright.el")))
+  (req-package readme-debian
+    :quelpa (readme-debian
+             :fetcher git :url "https://salsa.debian.org/emacsen-team/dpkg-dev-el.git"
+             :files ("readme-debian.el")))
+#+END_SRC
+
+** decide
+Decide provides functions for dice rolling and similar tasks.
+
+#+BEGIN_SRC emacs-lisp
+  (req-package decide
+    :quelpa)
+#+END_SRC
+
+** diminish
+This hides or shortens the names of minor modes in the modeline.
+
+The below code sets up a custom variable ~diminished-minor-modes~ to
+control the diminishing of modes.
+#+BEGIN_SRC emacs-lisp
+  (req-package diminish
+    :quelpa
+    :demand t
+    :config
+    (defun diminish-undo (mode)
+      "Restore mode-line display of diminished mode MODE to its minor-mode value.
+  Do nothing if the arg is a minor mode that hasn't been diminished.
+
+  Interactively, enter (with completion) the name of any diminished mode (a
+  mode that was formerly a minor mode on which you invoked M-x diminish).
+  To restore all diminished modes to minor status, answer `all'.
+  The response to the prompt shouldn't be quoted.  However, in Lisp code,
+  the arg must be quoted as a symbol, as in (diminish-undo 'all)."
+      (interactive
+       (if diminished-mode-alist
+           (list (read (completing-read
+                        "Restore what diminished mode: "
+                        (cons (list "all")
+                              (mapcar (lambda (x) (list (symbol-name (car x))))
+                                      diminished-mode-alist))
+                        nil t nil 'diminish-history-symbols)))
+         (error "No minor modes are currently diminished.")))
+      (if (eq mode 'all)
+          (cl-loop for dmode in diminished-mode-alist
+                   for mode-name = (car dmode)
+                   do (diminish-undo mode-name))
+        (let ((minor      (assq mode      minor-mode-alist))
+              (diminished (assq mode diminished-mode-alist)))
+          (or minor
+              (error "%S is not currently registered as a minor mode" mode))
+          (when diminished
+            (setq diminished-mode-alist (remove diminished diminished-mode-alist))
+            (setcdr minor (cdr diminished))))))
+
+    (defun diminish-setup (symbol newlist)
+      ;; Replace symbols with one-element lists, so that each element of
+      ;; NEWLIST is a valid arglist for `diminish'.
+      (setq newlist
+            (mapcar (lambda (x) (if (listp x) x (list x)))
+                    newlist))
+      (set-default symbol newlist)
+      ;; Un-diminish all modes
+      (diminish-undo 'all)
+      ;; Diminish each mode the new list
+      (mapc (lambda (x)
+              (unless (listp x)
+                (setq x (list x)))
+              (when (assq (car x) minor-mode-alist)
+                (message "Diminishing %S" x)
+                (diminish (car x) (cdr x))))
+            newlist))
+
+    (defcustom diminished-minor-modes '()
+      "Minor modes to be diminished, and their diminished text, if any."
+      :group 'diminish
+      :type '(alist :key-type (symbol :tag "Mode")
+                    :value-type (choice :tag "To What"
+                                        (const :tag "Hide completely" "")
+                                        (string :tag "Abbreviation")))
+      :set 'diminish-setup)
+
+    (defun diminish-init ()
+      (diminish-setup 'diminished-minor-modes diminished-minor-modes))
+
+    (eval-after-init
+     '(diminish-init)))
+#+END_SRC
+
+** editorconfig
+This allows Emacs to support EditorConfig files. See
+http://editorconfig.org/
+
+#+BEGIN_SRC emacs-lisp
+  (req-package editorconfig
+    :quelpa
+    :demand t
+    :config
+    (editorconfig-mode 1))
+#+END_SRC
+
+** elsa
+
+#+BEGIN_SRC emacs-lisp
+  (req-package elsa :quelpa)
+  (req-package flycheck-elsa :quelpa
+    :require flycheck elsa)
+#+END_SRC
+
+** ess
+
+#+BEGIN_SRC emacs-lisp
+  (req-package ess
+    :init
+    ;; Ensure that TRAMP is loaded before ESS, since loading ESS before
+    ;; TRAMP causes problems
+    (require 'tramp)
+    :config
+    (setq ess-default-style 'OWN)
+    (customize-set-variable
+     'ess-own-style-list
+     ;; Based on (cdr (assoc 'C++ ess-style-alist))
+     '((ess-indent-offset . 4)
+       (ess-offset-arguments . open-delim)
+       (ess-offset-arguments-newline . prev-line)
+       (ess-offset-block . prev-line)
+       (ess-offset-continued . straight)
+       (ess-align-nested-calls "ifelse")
+       (ess-align-arguments-in-calls "function[ 	]*(")
+       (ess-align-continuations-in-calls . t)
+       (ess-align-blocks control-flow)
+       (ess-indent-from-lhs arguments)
+       (ess-indent-from-chain-start . t)
+       (ess-indent-with-fancy-comments)))
+    (define-advice ess-smart-S-assign
+        (:around (orig-fun &rest args) underscore-unless-space)
+      "Always insert underscores unless point is after a space.
+
+  This advice is only active if `ess-smart-S-assign-key' is \"_\"."
+      (if (and (looking-back "[^[:space:]]" 1)
+               (string= ess-smart-S-assign-key "_"))
+          (insert ess-smart-S-assign-key)
+        (apply orig-fun args)))
+    (add-to-list 'auto-mode-alist '("\\.Rprofile\\'" . R-mode))
+    ;; TODO: Put this function in a more appropriate location
+    (defun twiddle-mode (mode)
+      "If MODE is activated, then deactivate it and then activate it again.
+  If MODE is not active, do nothing."
+      (when (eval mode)
+        (funcall mode 0)
+        (funcall mode 1)))
+    :quelpa)
+#+END_SRC
+
+** esup
+
+#+BEGIN_SRC emacs-lisp
+  (req-package esup
+    :defer t
+    :quelpa)
+#+END_SRC
+
+** filelock
+
+#+BEGIN_SRC emacs-lisp
+  (req-package filelock
+    :quelpa (filelock
+             :fetcher github
+             :repo DarwinAwardWinner/emacs-filelock))
+#+END_SRC
+
+** flycheck
+
+#+BEGIN_SRC emacs-lisp
+  (req-package flycheck :quelpa)
+#+END_SRC
+
+
+** git-gutter
+This package puts change indicators in the buffer fringe to indicate
+what parts of the file have been added, deleted, or modified since the
+last Git commit.
+
+#+BEGIN_SRC emacs-lisp
+  (req-package git-gutter
+    :quelpa)
+  (req-package git-gutter-fringe
+    :quelpa)
+#+END_SRC
+
+** git-wip
+Git-wip saves a hidden commit after each file is saved, thus saving a
+full history of all your edits since the last real commit. We need a
+special config to install the ~git-wip~ command-line script along with
+the Emacs Lisp file, and to tell Emacs where to find the script.
+
+#+BEGIN_SRC emacs-lisp
+  (req-package git-wip-mode
+    :quelpa (git-wip-mode
+             :fetcher github :repo bartman/git-wip
+             :files ("emacs/git-wip-mode.el" "git-wip"))
+    :config
+    (setq git-wip-path
+          (f-join (f-dirname (locate-library "git-wip-mode"))
+                  "git-wip")))
+#+END_SRC
+
+** header2
+This automatically inserts a header into any new elisp file.
+
+#+BEGIN_SRC emacs-lisp
+  (req-package header2
+    :config
+    (progn
+      (define-advice make-header (:after (&rest args) add-lexbind-variable)
+        "Add `lexical-binding: t' to header."
+        (when (eq major-mode 'emacs-lisp-mode)
+          (save-excursion
+            (add-file-local-variable-prop-line 'lexical-binding t))))
+      (defsubst header-not-part-of-emacs ()
+        "Insert line declaring that this file is not part of Emacs."
+        (when (eq major-mode 'emacs-lisp-mode)
+          (insert header-prefix-string "This file is NOT part of GNU Emacs.\n")))
+      (defsubst header-completely-blank ()
+        "Insert an empty line to file header (not even `header-prefix-string')."
+        (insert "\n"))
+      (setq header-copyright-notice
+            (format-time-string "Copyright (C) %Y Ryan C. Thompson\n"))
+      ;; Set up headers when creating an elisp file
+      (add-hook 'emacs-lisp-mode-hook #'auto-make-header)
+      ;; Update headers on save
+      (add-hook 'write-file-hooks #'auto-update-file-header)
+      ;; Override `header-eof' to not insert a separator line
+      (defun header-eof ()
+        "Insert comment indicating end of file."
+        (goto-char (point-max))
+        (insert "\n")
+        (insert comment-start
+                (concat (and (= 1 (length comment-start)) header-prefix-string)
+                        (if (buffer-file-name)
+                            (file-name-nondirectory (buffer-file-name))
+                          (buffer-name))
+                        " ends here"
+                        (or (nonempty-comment-end) "\n"))))
+      ;; Function to insert `provide' statement at end of file; This is
+      ;; used in `make-header-hook'.
+      (defun header-provide-statement ()
+        "Insert `provide' statement."
+        (save-excursion
+          (goto-char (point-max))
+          (insert
+           (format "\n%s"
+                   (pp-to-string `(provide ',(intern (f-base (buffer-file-name)))))))))
+      ;; Prevent `auto-make-header' from setting the buffer modified flag
+      (define-advice auto-make-header
+          (:around (orig-fun &rest args) dont-set-buffer-modified)
+        "Don't set the buffer modified flag."
+        (preserve-buffer-modified-p
+          (apply orig-fun args))))
+    :demand t
+    :quelpa (header2
+             :fetcher github :repo emacsmirror/header2
+             :files ("header2.el")))
+#+END_SRC
+
+** highlight-defined
+This mode highlights all defined Emacs Lisp symbols instead of just
+built-in ones.
+
+#+BEGIN_SRC emacs-lisp
+  (req-package highlight-defined
+    :init (progn
+            (defun turn-on-highlight-defined-mode ()
+              (highlight-defined-mode 1))
+            (add-hook 'emacs-lisp-mode-hook 'turn-on-highlight-defined-mode)
+            (add-hook 'lisp-interaction-mode-hook 'turn-on-highlight-defined-mode)
+            (eval-after-load 'ielm
+              (add-hook 'inferior-emacs-lisp-mode-hook 'turn-on-highlight-defined-mode)))
+    :quelpa)
+#+END_SRC
+
+** highlight-stages
+
+#+BEGIN_SRC emacs-lisp
+  (req-package highlight-stages :quelpa)
+#+END_SRC
+
+** htmlize
+This is needed for ~org-html-fontify-code~.
+
+#+BEGIN_SRC emacs-lisp
+  (req-package htmlize :quelpa)
+#+END_SRC
+
+** ido-complete-space-or-hyphen
+My personal fork of ido-complete-space-or-hyphen. It converts the
+package into a full-fledged minor mode.
+
+TODO: Switch back to stock version after this is merged:
+https://github.com/doitian/ido-complete-space-or-hyphen/pull/2
+
+#+BEGIN_SRC emacs-lisp
+  (req-package ido-complete-space-or-hyphen
+    :quelpa (ido-complete-space-or-hyphen
+             :fetcher github
+             :repo DarwinAwardWinner/ido-complete-space-or-hyphen))
+#+END_SRC
+
+** ido-completing-read+
+This uses my bleeding-edge branch of ido-completing-read+.
+
+#+BEGIN_SRC emacs-lisp
+  (req-package ido-completing-read+
+    :quelpa (ido-completing-read+
+             :fetcher github
+             :repo DarwinAwardWinner/ido-completing-read-plus))
+#+END_SRC
+
+** ido-yes-or-no
+
+#+BEGIN_SRC emacs-lisp
+  (req-package ido-yes-or-no :quelpa)
+#+END_SRC
+
+** image+
+
+#+BEGIN_SRC emacs-lisp
+  (req-package image+
+    :quelpa
+    :after image)
+#+END_SRC
+
+** iqa
+This package provides shortcuts to quickly open the user's init file for editing.
+
+#+BEGIN_SRC emacs-lisp
+  (req-package iqa
+    :quelpa
+    :demand t
+    :config
+    (iqa-setup-default)
+    (setq iqa-user-init-file (f-join user-emacs-directory "config.org")))
+#+END_SRC
+
+** lexbind-mode
+This indicates in the mode-line for each Emacs Lisp file whether
+lexical binding is enabled for that file.
+
+#+BEGIN_SRC emacs-lisp
+  (req-package lexbind-mode
+    :init (add-hook 'emacs-lisp-mode-hook (apply-partially #'lexbind-mode 1))
+    :quelpa)
+#+END_SRC
+
+** mac-pseudo-daemon
+This package allows Emacs to emulate the Mac OS behavior of staying
+open after the last window is closed, by creating a new window and
+hiding it until Emacs is reactivated.
+
+#+BEGIN_SRC emacs-lisp
+  (req-package mac-pseudo-daemon
+    :quelpa)
+#+END_SRC
+
+** magit
+This sets up magit, the Emacs Git interface.
+
+*** Magit itself
+The defvar suppresses Magit upgrade instructions. The magit-init
+advice causes Magit to display the status buffer for an new repository
+immediately after a ~git init~ (but only when called interactively).
+
+It's nice to have the added features of GitHub's ~hub~ command, but
+magit makes a lot of calls to git, and so redirectig it to hub all the
+time slows it down considerably. So we use advice to tell only
+~magit-git-command~ to use hub if it is available. This allows the
+user to interactively invoke hub commands without slowing down Magit
+in normal operation.
+#+BEGIN_SRC emacs-lisp
+  (req-package magit
+    :bind (("C-c g" . magit-status))
+    :init
+    ;; This needs to be set or else magit will warn about things.
+    (defvar magit-last-seen-setup-instructions "1.4.0")
+    :config
+    (define-advice magit-init (:after (&rest args) show-status)
+      "Show the status buffer after initialization if interactive."
+      (when (called-interactively-p 'interactive)
+        (magit-status-internal directory)))
+    ;; Redirect "git" command to "hub" for interactive use only
+    (defvar magit-hub-executable (when (executable-find "hub") "hub"))
+    (define-advice magit-git-command (:around (orig-fun &rest args) use-hub)
+      "Use `hub' instead of `git' if available."
+      (let ((magit-git-executable
+             (or magit-hub-executable magit-git-executable)))
+        (apply orig-fun args)))
+    :quelpa)
+
+  ;; Magit is apparently missing an autoload for `magit-process-file',
+  ;; which is called by a function in `post-command-hook', resulting in
+  ;; an unusable emacs unless the autoload is added manually.
+  (req-package magit-process
+    :require magit
+    :commands (magit-process-file))
+#+END_SRC
+*** magit-filenotify
+This package allows magit to refresh the status buffer whenever a file
+is modified. This mode causes problems on remote (TRAMP) files, so we
+only enable it for local files.
+
+#+BEGIN_SRC emacs-lisp
+  (req-package magit-filenotify
+    :require magit
+    :init
+    (defun turn-on-magit-filenotify-mode-if-local ()
+      (magit-filenotify-mode
+       (if (file-remote-p default-directory)
+           0
+         1)))
+    (add-hook 'magit-status-mode-hook
+              'turn-on-magit-filenotify-mode-if-local)
+    :quelpa)
+#+END_SRC
+
+** markdown-mode
+This mode is for editing Markdown files.
+
+#+BEGIN_SRC emacs-lisp
+  (req-package markdown-mode
+    :mode ("\\.\\(md\\|mkdn\\)$" . markdown-mode)
+    :quelpa)
+#+END_SRC
+
+*** edit-indirect
+This is an optional dependency of markdown-mode.
+
+#+BEGIN_SRC emacs-lisp
+  (req-package edit-indirect
+    :defer t)
+#+END_SRC
+
+** mode-line-bell
+Ring the bell by flashing the mode line of the active window.
+
+#+BEGIN_SRC emacs-lisp
+  (req-package mode-line-bell
+    :quelpa (mode-line-bell
+             :fetcher github
+             :repo purcell/mode-line-bell))
+#+END_SRC
+
+** noflet
+Noflet provides an enhanced version of ~flet~, and more importantly,
+provides proper indentation support for flet-like macros.
+
+#+BEGIN_SRC emacs-lisp
+  (req-package noflet
+    :quelpa)
+#+END_SRC
+
+** occur-context-resize
+This package allows the user to dynamically change the number of
+context lines around matches in an ~occur-mode~ buffer using the plus
+and minus keys (and 0 key to reset)
+
+#+BEGIN_SRC emacs-lisp
+  (req-package occur-context-resize
+    :init (add-hook 'occur-mode-hook 'occur-context-resize-mode)
+    :quelpa)
+#+END_SRC
+
+** org-mode
+The default implementation of the ~org-in-src-block-p~ function is
+broken and always returns nil, so we reimplement it correctly here. We
+also add a function to insert a new src block into an org-mode buffer.
+
+Note that there's no ~:ensure t~ or ~:quelpa~ here, since org-mode
+must already be installed if this code is running.
+
+Org-mode supports asynchronous export functionality. By default, each
+async process loads the user's full init file, but we don't want that,
+because that would be too slow, and because Quelpa runs into problems
+when multiple Emacsen try to start up at the same time. So instead,
+whenever we run an async Org export job, we generate a minimal init
+file that just sets the ~load-path~ from this Emacs, disables backup &
+lock files, and then loads the appropriate Org-mode functionality.
+Then we tell the export process to use this file instead or the usual
+init file.
+#+BEGIN_SRC emacs-lisp
+  (req-package org
+    :commands org-clocking-buffer
+    :config
+    (require 'ox-extra)
+    (ox-extras-activate '(latex-header-blocks ignore-headlines))
+    ;; Custom src-block behaviors
+    (progn
+      (defun org-in-src-block-p (&optional inside)
+        "Whether point is in a code source block.
+
+  When INSIDE is non-nil, don't consider we are within a src block
+  when point is at #+BEGIN_SRC or #+END_SRC."
+        (save-match-data
+          (let* ((elem (org-element-at-point))
+                 (elem-type (car elem))
+                 (props (cadr elem))
+                 (end (plist-get props :end))
+                 (pb (plist-get props :post-blank))
+                 (content-end
+                  (save-excursion
+                    (goto-char end)
+                    (forward-line (- pb))
+                    (point)))
+                 (case-fold-search t))
+            (and
+             ;; Elem is a src block
+             (eq elem-type 'src-block)
+             ;; Make sure point is not on one of the blank lines after the
+             ;; element.
+             (< (point) content-end)
+             ;; If INSIDE is non-nil, then must not be at block delimiter
+             (not
+              (and
+               inside
+               (save-excursion
+                 (beginning-of-line)
+                 (looking-at ".*#\\+\\(begin\\|end\\)_src"))))))))
+      (defun org-insert-src-block (src-code-type)
+        "Insert a `SRC-CODE-TYPE' type source code block in org-mode."
+        (interactive
+         (let ((src-code-types
+                '("emacs-lisp" "python" "C" "sh" "java" "js" "clojure" "C++" "css"
+                  "calc" "asymptote" "dot" "gnuplot" "ledger" "lilypond" "mscgen"
+                  "octave" "oz" "plantuml" "R" "sass" "screen" "sql" "awk" "ditaa"
+                  "haskell" "latex" "lisp" "matlab" "ocaml" "org" "perl" "ruby"
+                  "scheme" "sqlite")))
+           (list (ido-completing-read "Source code type: " src-code-types))))
+        (progn
+          (newline-and-indent)
+          (insert (format "#+BEGIN_SRC %s\n" src-code-type))
+          (newline-and-indent)
+          (insert "#+END_SRC\n")
+          (forward-line -2)
+          (org-edit-src-code)))
+      (defun org-insert-or-edit-src-block (src-code-type &optional interactive-call)
+        "Insert a source code block in org-mode or edit an existing one."
+        (interactive (list nil t))
+        (if (org-in-src-block-p)
+            (org-edit-src-code)
+          (if interactive-call
+              (call-interactively 'org-insert-src-block)
+            (org-insert-src-block src-code-type)))))
+    ;; Allow an emphasized expression to extend over 15 lines
+    (progn
+      (setcar (nthcdr 2 org-emphasis-regexp-components) " \t\r\n\"'")
+      (setcar (nthcdr 4 org-emphasis-regexp-components) 15)
+      (org-set-emph-re 'org-emphasis-regexp-components org-emphasis-regexp-components))
+    ;; Enable org links that roll dice
+    (progn
+      (defvar roll-dice-command "roll")
+      (defun roll-dice (&rest args)
+        (interactive "sRoll dice: ")
+        (let ((result
+               (s-trim
+                (shell-command-to-string
+                 (mapconcat #'shell-quote-argument (cons roll-dice-command args) " ")))))
+          (when (called-interactively-p)
+            (message result))
+          result))
+      (defun org-rolldice-open (path)
+        (let ((spec (read-string "Roll dice: " path)))
+          (message (roll-dice spec))))
+      (org-link-set-parameters
+       "roll"
+       :follow #'org-rolldice-open
+       ;; This must be a lambda so it is self-contained
+       :export (lambda (link desc format) (or desc link))))
+    ;; Use a minimal init file for org exporting
+    (progn
+      (require 'gnus)
+      (setq org-export-async-init-file (f-join user-emacs-directory ".temp-org-export-async-init.el"))
+      (let ((init-form
+             `(progn
+                ,@(cl-loop
+                   for binding in
+                   '(load-path
+                     (create-lockfiles nil)
+                     (make-backup-files nil)
+                     org-emphasis-regexp-components)
+                   if (symbolp binding)
+                   collect (list 'setq binding (list 'quote (symbol-value binding)))
+                   else
+                   collect (cons 'setq binding))
+                ;; Bring all customized org variables along
+                ,@(cl-loop
+                   for sym being the symbols
+                   for symname = (symbol-name sym)
+                   if (and (s-matches-p "^org\\(?:tbl\\)?-" (symbol-name sym))
+                           (eq sym (indirect-variable sym))
+                           (custom-variable-p sym)
+                           (not (eq 'standard (custom-variable-state
+                                               sym (symbol-value sym)))))
+                   collect (list 'setq sym (list 'quote (symbol-value sym))))
+                (require 'ox))))
+        (with-temp-file org-export-async-init-file
+          (insert (gnus-pp-to-string init-form) "\n"))))
+    :bind (("C-c l" . org-store-link)
+           :map org-mode-map
+           ("C-c C-'" . org-insert-or-edit-src-block)
+           :map org-src-mode-map
+           ("C-c C-'" . org-edit-src-exit)
+           ("C-c C-c" . org-edit-src-exit)))
+#+END_SRC
+
+*** Org-bullets
+This provides pretty-looking bullets for org-mode.
+
+#+BEGIN_SRC emacs-lisp
+  (req-package org-bullets
+    :quelpa
+    :init (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
+#+END_SRC
+
+*** Stable-ish HTML anchors for org export
+This code makes the anchors IDs generated when exporting org files to
+HTML less random. It sets the seed to a specific value before
+executing the export, which means that it should always generate the
+same anchors IDs given the same set of headlines.
+#+BEGIN_SRC emacs-lisp
+  (defmacro with-reproducible-rng (seed &rest body)
+    "Execute BODY with reproducible RNG.
+
+  Before executing BODY, the random number generator will be
+  initialized with SEED, which should be a string (see `random').
+  Hence, the sequence of random numbers returned by `random' within
+  BODY will be reproducible. After BODY finishes, the random number
+  generatore will be reinitialized from system entropy, and will
+  therefore no longer be predictable.
+
+  \(There does not seem to be a way to save and restore a specific
+  RNG state, so the RNG state after executing this macro will not
+  be the same as it was prior.)"
+    (declare (indent 1))
+    `(unwind-protect
+         (progn
+           (random (or ,seed ""))
+           ,@body)
+       (random t)))
+
+  (define-advice org-html-export-to-html (:around (orig-fun &rest args) reproducible-rng)
+    "Use a reproducible RNG stream for HTML export.
+
+  This results in the same pseudo-random anchor IDs for
+  the same set of headlines every time."
+    (with-reproducible-rng "org-html-export"
+      (apply orig-fun args)))
+#+END_SRC
+
+** package-lint
+This is used to check packages for package.el compliance.
+
+#+BEGIN_SRC emacs-lisp
+  (req-package package-lint :quelpa)
+#+END_SRC
+
+** paradox
+Paradox provides an improved interface to package.el.
+
+#+BEGIN_SRC emacs-lisp
+  (req-package paradox :quelpa)
+#+END_SRC
+
+** pointback
+This package saves a per-window buffer point when switching buffers.
+This is mainly important when two windows are displaying the same
+buffer. Without this package, switching away and back to the buffer in
+one window will reset the point to its position in the other one.
+
+#+BEGIN_SRC emacs-lisp
+  (req-package pointback :quelpa)
+#+END_SRC
+
+** polymode
+This mode allows editing files with multiple major modes, such as
+Rmarkdown files, where some parts of the file are Markdown and others
+are R code.
+
+#+BEGIN_SRC emacs-lisp
+  (req-package polymode :quelpa)
+  (req-package poly-R
+    :quelpa
+    :mode ("\\.Rmd\\'" . poly-markdown+r-mode))
+#+END_SRC
+
+** pretty-symbols
+This package allows replacing certain words with symbols, for example
+replacing "lambda" with λ in Lisp code. The replacement is purely
+visual, and the files are saved with the original words.
+
+#+BEGIN_SRC emacs-lisp
+  (req-package pretty-symbols
+    :config
+    (progn
+      (defun pretty-symbols-enable-if-available ()
+        "Enable pretty-symbols in buffer if applicable.
+
+  If current buffer's `major-mode' has any pretty symbol
+     substitution rules associated with it, then enable
+     `pretty-symbols-mode', otherwise do nothing."
+        (when (apply #'derived-mode-p
+                    (delete-dups
+                     (cl-mapcan (lambda (x) (cl-copy-list (nth 3 x)))
+                                pretty-symbol-patterns)))
+          (pretty-symbols-mode 1)))
+      (add-hook 'after-change-major-mode-hook #'pretty-symbols-enable-if-available))
+    :quelpa)
+#+END_SRC
+
+** python-mode
+".pyi" is the file extension for the Python typeshed's type
+annotations. These files are valid (but incomplete) Python syntax, so
+regular ~python-mode~ is just fine.
+
+#+BEGIN_SRC emacs-lisp
+  (req-package python
+    :mode ("\\.pyi" . python-mode))
+#+END_SRC
+
+** rainbow-delimiters
+
+#+BEGIN_SRC emacs-lisp
+  (req-package rainbow-delimiters
+    :quelpa
+    :init
+    (add-hook 'prog-mode-hook #'rainbow-delimiters-mode-enable))
+#+END_SRC
+
+** reveal-in-osx-finder
+#+BEGIN_SRC emacs-lisp
+  (req-package reveal-in-osx-finder
+    :quelpa)
+#+END_SRC
+
+** shrink-whitespace
+
+#+BEGIN_SRC emacs-lisp
+  (req-package shrink-whitespace
+    :quelpa
+    :commands shrink-whitespace)
+#+END_SRC
+
+** SLIME
+
+#+BEGIN_SRC emacs-lisp
+  (req-package slime
+    :quelpa)
+#+END_SRC
+
+** sml-modeline
+
+#+BEGIN_SRC emacs-lisp
+  (req-package sml-modeline
+    :quelpa (sml-modeline
+             :fetcher github
+             :repo emacsmirror/sml-modeline))
+#+END_SRC
+
+** smooth-scrolling
+
+#+BEGIN_SRC emacs-lisp
+  (req-package smooth-scrolling
+    :quelpa
+    (smooth-scrolling
+     :fetcher github
+     :repo "DarwinAwardWinner/smooth-scrolling"))
+#+END_SRC
+
+** snakemake
+
+#+BEGIN_SRC emacs-lisp
+  (req-package snakemake-mode
+    :quelpa)
+#+END_SRC
+
+** system-specific-settings
+
+#+BEGIN_SRC emacs-lisp
+  (req-package system-specific-settings :quelpa)
+#+END_SRC
+
+** tempbuf
+#+BEGIN_SRC emacs-lisp
+  (req-package tempbuf
+    :quelpa (tempbuf
+             :fetcher github
+             :repo emacsattic/tempbuf)
+    :config
+    (defun mode-symbol (sym)
+      "Append \"-mode\" to SYM unless it already ends in it."
+      (let ((symname (symbol-name sym)))
+        (intern
+         (concat symname
+                 (unless (s-suffix? "-mode" symname)
+                   "-mode")))))
+
+    (defun tempbuf-protect ()
+      "Prevent tempbuf from killing visible or unsaved buffers."
+      (when (or (get-buffer-window)
+                (buffer-modified-p))
+        (throw 'tempbuf-skip-kill nil)))
+    (add-hook 'tempbuf-kill-hook 'tempbuf-protect)
+
+    (defun tempbuf-major-mode-hook ()
+      "Turn on `tempbuf-mode' in current buffer if buffer's `major-mode' is in `tempbuf-temporary-major-modes'.
+
+  Else turn off `tempbuf-mode'."
+      (if (apply #'derived-mode-p tempbuf-temporary-major-modes)
+          (turn-on-tempbuf-mode)
+        (turn-off-tempbuf-mode)))
+
+    (defun tempbuf-setup-temporary-major-modes (symbol newval)
+      (set-default symbol (mapcar 'mode-symbol newval))
+      ;; Set tempbuf-mode correctly in existing buffers.
+      (mapc (lambda (buf)
+              (with-current-buffer buf
+                (tempbuf-major-mode-hook)))
+            (buffer-list)))
+
+    (defcustom tempbuf-temporary-major-modes nil
+      "Major modes in which `tempbuf-mode' should be activated.
+
+  This will cause buffers of these modes to be automatically killed
+  if they are inactive for a short while."
+      :group 'tempbuf
+      :set 'tempbuf-setup-temporary-major-modes
+      :type '(repeat (symbol :tag "Mode")))
+
+    (add-hook 'after-change-major-mode-hook 'tempbuf-major-mode-hook)
+    ;; This mode requires special handling because it somehow avoids
+    ;; using `after-change-major-mode-hook', I think.
+    (eval-after-load 'ess-custom
+      '(add-hook 'ess-help-mode-hook 'tempbuf-major-mode-hook)))
+#+END_SRC
+
+** undo-tree
+
+#+BEGIN_SRC emacs-lisp
+  (req-package undo-tree :ensure)
+#+END_SRC
+
+** volatile-highlight
+
+#+BEGIN_SRC emacs-lisp
+  (req-package volatile-highlights
+    :quelpa
+    :config
+    (put 'vhl/define-extension 'lisp-indent-function 1)
+    (vhl/define-extension 'adjust-parens
+      'lisp-indent-adjust-parens
+      'lisp-dedent-adjust-parens)
+    (vhl/install-extension 'adjust-parens)
+    (vhl/define-extension 'undo-tree
+      'undo-tree-yank 'undo-tree-move)
+    (vhl/install-extension 'undo-tree)
+    ;; Clear volatile highlights after 1 second
+    (setq vhl/idle-clear-timer
+          (run-with-idle-timer 1 t #'vhl/clear-all)))
+
+  (define-advice vhl/add-range (:before-while (&rest args) disable-in-read-only-buffers)
+    "Don't do volatile highlights in read-only buffers"
+    (not buffer-read-only))
+#+END_SRC
+
+** which-key
+
+#+BEGIN_SRC emacs-lisp
+  (req-package which-key
+    :quelpa
+    :defer t)
+#+END_SRC
+
+** with-simulated-input
+
+#+BEGIN_SRC emacs-lisp
+  (req-package with-simulated-input
+    :quelpa)
+#+END_SRC
+
+** ws-butler
+
+#+BEGIN_SRC emacs-lisp
+  (req-package ws-butler :quelpa)
+#+END_SRC
+
+** yaml-mode
+
+#+BEGIN_SRC emacs-lisp
+  (req-package yaml-mode :quelpa)
+#+END_SRC
+
+* Install and load all configured packages
+The ~req-package~ forms above only declare the set of packages to be
+installed and loaded. They don't actually do anything until the line
+of code below is run. At this time, ~req-package~ resolves any
+dependencies between packages and then installs and loads them in the
+correct order to satisfy those dependencies.
+
+#+BEGIN_SRC emacs-lisp
+  (req-package-finish)
+#+END_SRC
+* Tweaks
+This section contains a set of tweaks to Emacs behavior that are not
+specific to a single package and cannot be accomplished by customizing
+variables.
+
+** Fixes for packages
+(Currently none)
+
+** Environment tweaks
+*** Use GNU ls for ~insert-directory~ if possible
+On OS X (and probably other platforms), "ls" may not refer to GNU
+ls. If GNU ls is installed on these platforms, it is typically
+installed under the name "gls" instead. So if "gls" is available, we
+prefer to use it.
+
+#+BEGIN_SRC emacs-lisp
+  (if (executable-find "gls")
+      (setq insert-directory-program "gls"))
+#+END_SRC
+*** Use external mailer for bug reports
+   This calls ~report-emacs-bug~, then ~report-emacs-insert-to-mailer~,
+   then cleans up the bug buffers.
+
+   The backquoting interpolation is used to copy the interactive form
+   from ~report-emacs-bug~.
+
+#+BEGIN_SRC emacs-lisp
+  (eval
+   `(defun report-emacs-bug-via-mailer (&rest args)
+      "Report a bug in GNU Emacs.
+
+  Prompts for bug subject. Opens external mailer."
+      ,(interactive-form 'report-emacs-bug)
+      (save-window-excursion
+        (apply 'report-emacs-bug args)
+        (report-emacs-bug-insert-to-mailer)
+        (mapc (lambda (buf)
+                (with-current-buffer buf
+                  (let ((buffer-file-name nil))
+                    (kill-buffer (current-buffer)))))
+              (list "*Bug Help*" (current-buffer))))))
+#+END_SRC
+
+*** Tell Emacs where to find its C source code
+This is where I keep Emacs, but you'll probably need to edit this if
+you want look at the definitions of Emacs primitive functions.
+
+#+BEGIN_SRC emacs-lisp
+  (setq find-function-C-source-directory "~/Projects/emacs/src")
+#+END_SRC
+
+** Fix OSX movement keys (unswap some Command/Option shortcuts)
+I map Option -> Super and Command -> Meta in Emacs on Mac OS, which is
+the opposite of what it is by default, because I need Emacs' meta key
+to be directly below X. However, there are a handful of shortcuts
+involving Command/Option that I don't want swapped, so I need to swap
+their Super/Meta bindings to cancel out the swapping of Super and Meta
+themselves.
+
+#+BEGIN_SRC emacs-lisp
+  ;; Use `eval-after-load' to ensure that this always happens after
+  ;; loading custom.el, since that sets the Command/Option modifiers.
+  (eval-after-init
+   ;; Only swap on Mac OS
+   '(when (or (featurep 'ns)
+              (eq system-type 'darwin))
+      ;; Only swap bindings if keys were actually swapped
+      (when (and (eq ns-command-modifier 'meta)
+                 (eq ns-option-modifier 'super))
+        ;; Super is the Alt/option key
+        (bind-key "s-<left>" 'left-word)
+        (bind-key "s-<right>" 'right-word)
+        (bind-key "s-<backspace>" 'backward-kill-word)
+        (bind-key "s-<kp-delete>" 'kill-word)
+        (bind-key "s-`" 'tmm-menubar)
+        ;; Meta is the command key
+        (bind-key "M-<left>" 'move-beginning-of-line)
+        (bind-key "M-<right>" 'move-end-of-line)
+        (bind-key "M-<backspace>" 'ignore)
+        (bind-key "M-<kp-delete>" 'ignore)
+        (bind-key "M-`" 'other-frame)
+        (require 'cl)
+        ;; Need to fix `org-meta(left|right)' as well. TODO: switch to
+        ;; noflet after this is merged:
+        ;; https://github.com/nicferrier/emacs-noflet/pull/17
+        (define-advice org-metaleft (:around (orig-fun &rest args) osx-command)
+          (flet ((backward-word (&rest args)))
+            (defun backward-word (&rest args)
+              (interactive)
+              (call-interactively #'move-beginning-of-line))
+            (apply orig-fun args)))
+        (define-advice org-metaright (:around (orig-fun &rest args) osx-command)
+          (flet ((forward-word (&rest args)))
+            (defun forward-word (&rest args)
+              (interactive)
+              (call-interactively #'move-end-of-line))
+            (apply orig-fun args))))))
+#+END_SRC
+
+** Have ~indent-region~ indent containing defun if mark is inactive
+
+#+BEGIN_SRC emacs-lisp
+  (define-advice indent-region
+      (:around (orig-fun &rest args) indent-defun)
+    "Indent containing defun if mark is not active."
+    (if (and transient-mark-mode
+             (not mark-active))
+        (save-excursion
+          (mark-defun)
+          (call-interactively #'indent-region))
+      (apply orig-fun args)))
+#+END_SRC
+
+** Always indent after newline
+
+#+BEGIN_SRC emacs-lisp
+  (bind-key "RET" #'newline-and-indent)
+#+END_SRC
+
+** Turn off ~electric-indent-mode~ in markdown buffers
+
+~electric-indent-mode~ has a bad interaction with ~markdown-mode~, so
+we disable it in markdown buffers only.
+
+#+BEGIN_SRC emacs-lisp
+  (add-hook 'markdown-mode-hook
+            (apply-partially #'electric-indent-local-mode 0))
+#+END_SRC
+
+** Turn on eldoc mode in elisp modes
+
+#+BEGIN_SRC emacs-lisp
+  (loop for hook in
+        '(lisp-interaction-mode-hook emacs-lisp-mode-hook)
+        do (add-hook hook #'eldoc-mode))
+#+END_SRC
+
+** TRAMP
+*** Tramp remote sudo
+This allows TRAMP to use sudo on remote hosts.
+
+#+BEGIN_SRC emacs-lisp
+  (require 'tramp)
+  (add-to-list 'tramp-default-proxies-alist
+               '(nil "\\`root\\'" "/ssh:%h:"))
+  (add-to-list 'tramp-default-proxies-alist
+               (list (regexp-quote (system-name)) nil nil))
+#+END_SRC
+
+*** Tramp remote backup files
+This ensures that backup files for remote files are created on the
+same host as the file.
+
+#+BEGIN_SRC emacs-lisp
+  (setq tramp-backup-directory-alist backup-directory-alist)
+#+END_SRC
+
+** Use conf-mode for .gitignore files
+
+#+BEGIN_SRC emacs-lisp
+  (add-to-list 'auto-mode-alist '("\\.gitignore\\'" . conf-mode))
+#+END_SRC
+
+** Macros for running a function without user input
+This code builds up the ~without-user-input~ macro, which is like
+~progn~ except that if BODY makes any attempt to read user input, all
+further execution is canceled and the form returns nil (note that it
+does /not/ signal an error, it simply returns).
+
+#+BEGIN_SRC emacs-lisp
+  (require 'cl-macs)
+
+  (defmacro without-minibuffer (&rest body)
+    "Like `progn', but stop and return nil if BODY tries to use the minibuffer.
+
+  Also disable dialogs while evaluating BODY forms, since dialogs
+  are just an alternative to the minibuffer."
+    (declare (indent 0))
+    `(catch 'tried-to-use-minibuffer
+       (minibuffer-with-setup-hook
+           (lambda (&rest args) (throw 'tried-to-use-minibuffer nil))
+         (let ((use-dialog-box))          ; No cheating by using dialogs instead of minibuffer
+           ,@body))))
+
+  (defmacro without-functions (flist &rest body)
+    "Evaluate BODY, but stop and return nil if BODY calls any of the functions named in FLIST."
+    (declare (indent 1))
+    (let* (;; Functions are disabled by setting their body to this
+           ;; temporarily.
+           (fbody
+            '((&rest args) (throw 'forbidden-function nil)))
+           ;; This will form the first argument to `flet'
+           (function-redefinitions
+            (mapcar (lambda (fname) (cons fname fbody)) flist)))
+      `(catch 'forbidden-function
+         (cl-flet ,function-redefinitions
+           ,@body))))
+
+  (defmacro without-user-input (&rest body)
+    "Like `progn', but prevent any user interaction in BODY."
+    (declare (indent 0))
+    `(without-functions (read-event)
+       (without-minibuffer
+         ,@body)))
+#+END_SRC
+
+** Macro for suppressing messages
+
+#+BEGIN_SRC emacs-lisp
+  (defmacro without-messages (&rest body)
+    "Evaluate BODY but ignore all messages.
+
+  This temporarily binds the `message' function to `ignore' while
+  executing BODY."
+    (declare (indent 0))
+    `(noflet ((message (&rest ignore) nil))
+       ,@body))
+#+END_SRC
+
+** Emacs desktop additions
+The following additions ensure that the saved desktop file is always
+up-to-date.
+
+*** Add a desktop-save function that gives up if user input is required
+When running in hooks, it's not disastrous if we can't save the
+desktop for some reason, and we don't want to bother the user, so we
+wrap the normal saving function to force it to do nothing instead of
+asking for user input.
+
+#+BEGIN_SRC emacs-lisp
+  (defun desktop-autosave-in-desktop-dir ()
+    "Like `desktop-save-in-desktop-dir' but aborts if input is required.
+
+  If `desktop-save-in-desktop-dir' tries to solicit user input,
+  this aborts and returns nil instead. Also, it disables all
+  messages during desktop saving. This is intended for use in place
+  of `desktop-save-in-desktop-dir' in hooks where you don't want to
+  bother the user if something weird happens."
+    (interactive)
+    (without-user-input
+      (without-messages
+       (desktop-save-in-desktop-dir))))
+#+END_SRC
+
+*** Save desktop with every autosave
+
+#+BEGIN_SRC emacs-lisp
+  (add-hook 'auto-save-hook 'desktop-autosave-in-desktop-dir)
+#+END_SRC
+
+*** Save desktop after opening or closing a file
+This will ensure that all open files are saved in the desktop. An idle
+timer and tripwire variable are used used to avoid saving the desktop
+multiple times when multiple files are opened or closed in rapid
+succession.
+
+#+BEGIN_SRC emacs-lisp
+  (defvar desktop-mode-desktop-is-stale nil
+    "This is set to non-nil when a file is opened or closed.")
+
+  (defun desktop-mode-set-stale ()
+    "If current buffer has a file, set the stale desktop flag."
+    (when buffer-file-name
+      (setq desktop-mode-desktop-is-stale t)))
+  (defun desktop-mode-set-current ()
+    "Unconditionally clear the stale desktop flag."
+    (setq desktop-mode-desktop-is-stale nil))
+  (add-hook 'kill-buffer-hook #'desktop-mode-set-stale)
+  (add-hook 'find-file-hook #'desktop-mode-set-stale)
+  (add-hook 'desktop-after-read-hook #'desktop-mode-set-current)
+
+  (defun desktop-mode-save-if-stale ()
+    (when desktop-mode-desktop-is-stale
+      (desktop-autosave-in-desktop-dir)
+      (desktop-mode-set-current)))
+
+  ;; Desktop will be saved 0.1 seconds after any file is opened or
+  ;; closed.
+  (run-with-idle-timer 0.1 t #'desktop-mode-save-if-stale)
+#+END_SRC
+
+*** Auto-steal desktop if current owner is dead
+The ~desktop-owner~ function should only ever return the PID of an
+Emacs process that's currently running. This advice replaces the PID
+of a dead or non-Emacs process with nil, thus allowing the current
+Emacs to pry the desktop file from the cold dead hands of the previous
+one without asking permisssion.
+
+#+BEGIN_SRC emacs-lisp
+  (defun pid-command-line (pid)
+    "Return the command line for process with the specified PID.
+
+  If PID is not a currently running process, returns nil."
+    (ignore-errors
+        (car (process-lines "ps" "-p" (format "%s" pid) "-o" "args="))))
+
+  (define-advice desktop-owner (:filter-return (retval) pry-from-cold-dead-hands)
+    "Only return the PID of an Emacs process or nil.
+
+  If the return value is not the PID of a currently running Emacs
+  owned by the current user, it is replaced with nil on the
+  assumption that the previous owner died an untimely death, so
+  that the current emacs can cleanly claim its inheritence."
+    (ignore-errors
+      (let ((owner-cmd (pid-command-line retval)))
+        (unless (and owner-cmd
+                     (string-match-p
+                      "emacs"
+                      (downcase (file-name-base owner-cmd))))
+          (setq retval nil))))
+    retval)
+#+END_SRC
+
+*** Prevent recursive invocations of ~desktop-save~
+If ~desktop-save~ needs to ask a question and Emacs is idle for a long
+time (multiple auto-save intervals), it is possible to get multiple
+nested calls to save the desktop. This is obviously undesirable. The
+below code turns any recursive call to ~desktop-save~ with the same
+=DIRNAME= into a no-op.
+
+#+BEGIN_SRC emacs-lisp
+  (defvar desktop-save-recursion-guard-dirname nil)
+
+  (define-advice desktop-save (:around (orig-fun dirname &rest args) prevent-recursion)
+    "Prevent recursive calls to `desktop-save'.
+
+  Recursive calls will only be prevented when they have the same
+  DIRNAME."
+    (if (string= dirname desktop-save-recursion-guard-dirname)
+        (message "Preventing recursive call to `desktop-save' for %S" dirname)
+      (let ((desktop-save-recursion-guard-dirname dirname))
+        (apply orig-fun dirname args))))
+#+END_SRC
+
+** Put enabled/disabled commands in =custom.el=
+By default, ~enable-command~ and ~disable-command~ append their
+declarations to =user-init-file=. But I want them appended to =custom.el=
+instead.
+
+#+BEGIN_SRC emacs-lisp
+  (define-advice en/disable-command (:around (orig-fun &rest args) put-in-custom-file)
+    "Put declarations in `custom-file'."
+    (let ((user-init-file custom-file))
+      (apply orig-fun args)))
+#+END_SRC
+
+** Fix ~diff~ behavior when backup file is not in same directory
+My settings put all backup files in one directory. So when ~diff~
+prmopts for the second file, it starts in that backup directory. I
+would rather have it start in the same directory as the first file.
+
+
+#+BEGIN_SRC emacs-lisp
+  (define-advice diff (:before (&rest args) same-dir-for-both-files)
+    "Only prompt with backup file in same directory.
+
+  When called interactively, `diff' normally offers to compare
+  against the latest backup file of the selected file. But this
+  isn't great if that backup file is in a dedicated backup
+  directory far away from the original directory. So this advice
+  only allows it to offer backup files from the same directory.
+
+  This advice doesn't actually modify the function's behavior in
+  any way. It simply overrides the interactive form."
+    (interactive
+     (let* ((newf (if (and buffer-file-name (file-exists-p buffer-file-name))
+                      (read-file-name
+                       (concat "Diff new file (default "
+                               (file-name-nondirectory buffer-file-name) "): ")
+                       nil buffer-file-name t)
+                    (read-file-name "Diff new file: " nil nil t)))
+            (oldf (file-newest-backup newf)))
+       (setq oldf (if (and oldf (file-exists-p oldf)
+                           (f-same? (f-dirname newf) (f-dirname oldf)))
+                      (read-file-name
+                       (concat "Diff original file (default "
+                               (file-name-nondirectory oldf) "): ")
+                       (file-name-directory oldf) oldf t)
+                    (read-file-name "Diff original file: "
+                                    (file-name-directory newf) nil t)))
+       (list oldf newf (diff-switches)))))
+#+END_SRC
+
+*** TODO Report this as a bug in Emacs
+** Fix value of ~x-colors~
+For some reason the ~x-colors~ variable has started to get the wrong
+value, so I've copied the code to set it correctly out of
+common-win.el.
+
+#+BEGIN_SRC emacs-lisp
+  (setq x-colors
+    (if (featurep 'ns) (funcall #'ns-list-colors)
+      (purecopy
+       '("gray100" "grey100" "gray99" "grey99" "gray98" "grey98" "gray97"
+         "grey97" "gray96" "grey96" "gray95" "grey95" "gray94" "grey94"
+         "gray93" "grey93" "gray92" "grey92" "gray91" "grey91" "gray90"
+         "grey90" "gray89" "grey89" "gray88" "grey88" "gray87" "grey87"
+         "gray86" "grey86" "gray85" "grey85" "gray84" "grey84" "gray83"
+         "grey83" "gray82" "grey82" "gray81" "grey81" "gray80" "grey80"
+         "gray79" "grey79" "gray78" "grey78" "gray77" "grey77" "gray76"
+         "grey76" "gray75" "grey75" "gray74" "grey74" "gray73" "grey73"
+         "gray72" "grey72" "gray71" "grey71" "gray70" "grey70" "gray69"
+         "grey69" "gray68" "grey68" "gray67" "grey67" "gray66" "grey66"
+         "gray65" "grey65" "gray64" "grey64" "gray63" "grey63" "gray62"
+         "grey62" "gray61" "grey61" "gray60" "grey60" "gray59" "grey59"
+         "gray58" "grey58" "gray57" "grey57" "gray56" "grey56" "gray55"
+         "grey55" "gray54" "grey54" "gray53" "grey53" "gray52" "grey52"
+         "gray51" "grey51" "gray50" "grey50" "gray49" "grey49" "gray48"
+         "grey48" "gray47" "grey47" "gray46" "grey46" "gray45" "grey45"
+         "gray44" "grey44" "gray43" "grey43" "gray42" "grey42" "gray41"
+         "grey41" "gray40" "grey40" "gray39" "grey39" "gray38" "grey38"
+         "gray37" "grey37" "gray36" "grey36" "gray35" "grey35" "gray34"
+         "grey34" "gray33" "grey33" "gray32" "grey32" "gray31" "grey31"
+         "gray30" "grey30" "gray29" "grey29" "gray28" "grey28" "gray27"
+         "grey27" "gray26" "grey26" "gray25" "grey25" "gray24" "grey24"
+         "gray23" "grey23" "gray22" "grey22" "gray21" "grey21" "gray20"
+         "grey20" "gray19" "grey19" "gray18" "grey18" "gray17" "grey17"
+         "gray16" "grey16" "gray15" "grey15" "gray14" "grey14" "gray13"
+         "grey13" "gray12" "grey12" "gray11" "grey11" "gray10" "grey10"
+         "gray9" "grey9" "gray8" "grey8" "gray7" "grey7" "gray6" "grey6"
+         "gray5" "grey5" "gray4" "grey4" "gray3" "grey3" "gray2" "grey2"
+         "gray1" "grey1" "gray0" "grey0"
+         "LightPink1" "LightPink2" "LightPink3" "LightPink4"
+         "pink1" "pink2" "pink3" "pink4"
+         "PaleVioletRed1" "PaleVioletRed2" "PaleVioletRed3" "PaleVioletRed4"
+         "LavenderBlush1" "LavenderBlush2" "LavenderBlush3" "LavenderBlush4"
+         "VioletRed1" "VioletRed2" "VioletRed3" "VioletRed4"
+         "HotPink1" "HotPink2" "HotPink3" "HotPink4"
+         "DeepPink1" "DeepPink2" "DeepPink3" "DeepPink4"
+         "maroon1" "maroon2" "maroon3" "maroon4"
+         "orchid1" "orchid2" "orchid3" "orchid4"
+         "plum1" "plum2" "plum3" "plum4"
+         "thistle1" "thistle2" "thistle3" "thistle4"
+         "MediumOrchid1" "MediumOrchid2" "MediumOrchid3" "MediumOrchid4"
+         "DarkOrchid1" "DarkOrchid2" "DarkOrchid3" "DarkOrchid4"
+         "purple1" "purple2" "purple3" "purple4"
+         "MediumPurple1" "MediumPurple2" "MediumPurple3" "MediumPurple4"
+         "SlateBlue1" "SlateBlue2" "SlateBlue3" "SlateBlue4"
+         "RoyalBlue1" "RoyalBlue2" "RoyalBlue3" "RoyalBlue4"
+         "LightSteelBlue1" "LightSteelBlue2" "LightSteelBlue3" "LightSteelBlue4"
+         "SlateGray1" "SlateGray2" "SlateGray3" "SlateGray4"
+         "DodgerBlue1" "DodgerBlue2" "DodgerBlue3" "DodgerBlue4"
+         "SteelBlue1" "SteelBlue2" "SteelBlue3" "SteelBlue4"
+         "SkyBlue1" "SkyBlue2" "SkyBlue3" "SkyBlue4"
+         "LightSkyBlue1" "LightSkyBlue2" "LightSkyBlue3" "LightSkyBlue4"
+         "LightBlue1" "LightBlue2" "LightBlue3" "LightBlue4"
+         "CadetBlue1" "CadetBlue2" "CadetBlue3" "CadetBlue4"
+         "azure1" "azure2" "azure3" "azure4"
+         "LightCyan1" "LightCyan2" "LightCyan3" "LightCyan4"
+         "PaleTurquoise1" "PaleTurquoise2" "PaleTurquoise3" "PaleTurquoise4"
+         "DarkSlateGray1" "DarkSlateGray2" "DarkSlateGray3" "DarkSlateGray4"
+         "aquamarine1" "aquamarine2" "aquamarine3" "aquamarine4"
+         "SeaGreen1" "SeaGreen2" "SeaGreen3" "SeaGreen4"
+         "honeydew1" "honeydew2" "honeydew3" "honeydew4"
+         "DarkSeaGreen1" "DarkSeaGreen2" "DarkSeaGreen3" "DarkSeaGreen4"
+         "PaleGreen1" "PaleGreen2" "PaleGreen3" "PaleGreen4"
+         "DarkOliveGreen1" "DarkOliveGreen2" "DarkOliveGreen3" "DarkOliveGreen4"
+         "OliveDrab1" "OliveDrab2" "OliveDrab3" "OliveDrab4"
+         "ivory1" "ivory2" "ivory3" "ivory4"
+         "LightYellow1" "LightYellow2" "LightYellow3" "LightYellow4"
+         "khaki1" "khaki2" "khaki3" "khaki4"
+         "LemonChiffon1" "LemonChiffon2" "LemonChiffon3" "LemonChiffon4"
+         "LightGoldenrod1" "LightGoldenrod2" "LightGoldenrod3" "LightGoldenrod4"
+         "cornsilk1" "cornsilk2" "cornsilk3" "cornsilk4"
+         "goldenrod1" "goldenrod2" "goldenrod3" "goldenrod4"
+         "DarkGoldenrod1" "DarkGoldenrod2" "DarkGoldenrod3" "DarkGoldenrod4"
+         "wheat1" "wheat2" "wheat3" "wheat4"
+         "NavajoWhite1" "NavajoWhite2" "NavajoWhite3" "NavajoWhite4"
+         "burlywood1" "burlywood2" "burlywood3" "burlywood4"
+         "AntiqueWhite1" "AntiqueWhite2" "AntiqueWhite3" "AntiqueWhite4"
+         "bisque1" "bisque2" "bisque3" "bisque4"
+         "tan1" "tan2" "tan3" "tan4"
+         "PeachPuff1" "PeachPuff2" "PeachPuff3" "PeachPuff4"
+         "seashell1" "seashell2" "seashell3" "seashell4"
+         "chocolate1" "chocolate2" "chocolate3" "chocolate4"
+         "sienna1" "sienna2" "sienna3" "sienna4"
+         "LightSalmon1" "LightSalmon2" "LightSalmon3" "LightSalmon4"
+         "salmon1" "salmon2" "salmon3" "salmon4"
+         "coral1" "coral2" "coral3" "coral4"
+         "tomato1" "tomato2" "tomato3" "tomato4"
+         "MistyRose1" "MistyRose2" "MistyRose3" "MistyRose4"
+         "snow1" "snow2" "snow3" "snow4"
+         "RosyBrown1" "RosyBrown2" "RosyBrown3" "RosyBrown4"
+         "IndianRed1" "IndianRed2" "IndianRed3" "IndianRed4"
+         "firebrick1" "firebrick2" "firebrick3" "firebrick4"
+         "brown1" "brown2" "brown3" "brown4"
+         "magenta1" "magenta2" "magenta3" "magenta4"
+         "blue1" "blue2" "blue3" "blue4"
+         "DeepSkyBlue1" "DeepSkyBlue2" "DeepSkyBlue3" "DeepSkyBlue4"
+         "turquoise1" "turquoise2" "turquoise3" "turquoise4"
+         "cyan1" "cyan2" "cyan3" "cyan4"
+         "SpringGreen1" "SpringGreen2" "SpringGreen3" "SpringGreen4"
+         "green1" "green2" "green3" "green4"
+         "chartreuse1" "chartreuse2" "chartreuse3" "chartreuse4"
+         "yellow1" "yellow2" "yellow3" "yellow4"
+         "gold1" "gold2" "gold3" "gold4"
+         "orange1" "orange2" "orange3" "orange4"
+         "DarkOrange1" "DarkOrange2" "DarkOrange3" "DarkOrange4"
+         "OrangeRed1" "OrangeRed2" "OrangeRed3" "OrangeRed4"
+         "red1" "red2" "red3" "red4"
+         "lavender blush" "LavenderBlush" "ghost white" "GhostWhite"
+         "lavender" "alice blue" "AliceBlue" "azure" "light cyan"
+         "LightCyan" "mint cream" "MintCream" "honeydew" "ivory"
+         "light goldenrod yellow" "LightGoldenrodYellow" "light yellow"
+         "LightYellow" "beige" "floral white" "FloralWhite" "old lace"
+         "OldLace" "blanched almond" "BlanchedAlmond" "moccasin"
+         "papaya whip" "PapayaWhip" "bisque" "antique white"
+         "AntiqueWhite" "linen" "peach puff" "PeachPuff" "seashell"
+         "misty rose" "MistyRose" "snow" "light pink" "LightPink" "pink"
+         "hot pink" "HotPink" "deep pink" "DeepPink" "maroon"
+         "pale violet red" "PaleVioletRed" "violet red" "VioletRed"
+         "medium violet red" "MediumVioletRed" "violet" "plum" "thistle"
+         "orchid" "medium orchid" "MediumOrchid" "dark orchid"
+         "DarkOrchid" "purple" "blue violet" "BlueViolet" "medium purple"
+         "MediumPurple" "light slate blue" "LightSlateBlue"
+         "medium slate blue" "MediumSlateBlue" "slate blue" "SlateBlue"
+         "dark slate blue" "DarkSlateBlue" "midnight blue" "MidnightBlue"
+         "navy" "navy blue" "NavyBlue" "dark blue" "DarkBlue"
+         "light steel blue" "LightSteelBlue" "cornflower blue"
+         "CornflowerBlue" "dodger blue" "DodgerBlue" "royal blue"
+         "RoyalBlue" "light slate gray" "light slate grey"
+         "LightSlateGray" "LightSlateGrey" "slate gray" "slate grey"
+         "SlateGray" "SlateGrey" "dark slate gray" "dark slate grey"
+         "DarkSlateGray" "DarkSlateGrey" "steel blue" "SteelBlue"
+         "cadet blue" "CadetBlue" "light sky blue" "LightSkyBlue"
+         "sky blue" "SkyBlue" "light blue" "LightBlue" "powder blue"
+         "PowderBlue" "pale turquoise" "PaleTurquoise" "turquoise"
+         "medium turquoise" "MediumTurquoise" "dark turquoise"
+         "DarkTurquoise"  "dark cyan" "DarkCyan" "aquamarine"
+         "medium aquamarine" "MediumAquamarine" "light sea green"
+         "LightSeaGreen" "medium sea green" "MediumSeaGreen" "sea green"
+         "SeaGreen" "dark sea green" "DarkSeaGreen" "pale green"
+         "PaleGreen" "lime green" "LimeGreen" "dark green" "DarkGreen"
+         "forest green" "ForestGreen" "light green" "LightGreen"
+         "green yellow" "GreenYellow" "yellow green" "YellowGreen"
+         "olive drab" "OliveDrab" "dark olive green" "DarkOliveGreen"
+         "lemon chiffon" "LemonChiffon" "khaki" "dark khaki" "DarkKhaki"
+         "cornsilk" "pale goldenrod" "PaleGoldenrod" "light goldenrod"
+         "LightGoldenrod" "goldenrod" "dark goldenrod" "DarkGoldenrod"
+         "wheat" "navajo white" "NavajoWhite" "tan" "burlywood"
+         "sandy brown" "SandyBrown" "peru" "chocolate" "saddle brown"
+         "SaddleBrown" "sienna" "rosy brown" "RosyBrown" "dark salmon"
+         "DarkSalmon" "coral" "tomato" "light salmon" "LightSalmon"
+         "salmon" "light coral" "LightCoral" "indian red" "IndianRed"
+         "firebrick" "brown" "dark red" "DarkRed" "magenta"
+         "dark magenta" "DarkMagenta" "dark violet" "DarkViolet"
+         "medium blue" "MediumBlue" "blue" "deep sky blue" "DeepSkyBlue"
+         "cyan" "medium spring green" "MediumSpringGreen" "spring green"
+         "SpringGreen" "green" "lawn green" "LawnGreen" "chartreuse"
+         "yellow" "gold" "orange" "dark orange" "DarkOrange" "orange red"
+         "OrangeRed" "red" "white" "white smoke" "WhiteSmoke" "gainsboro"
+         "light gray" "light grey" "LightGray" "LightGrey" "gray" "grey"
+         "dark gray" "dark grey" "DarkGray" "DarkGrey" "dim gray"
+         "dim grey" "DimGray" "DimGrey" "black"))))
+#+END_SRC
+
+** Associate "*.latex" with latex-mode
+By default ".ltx" is assoiated with LaTeX files, but not ".latex".
+
+#+BEGIN_SRC emacs-lisp
+  (add-to-list 'auto-mode-alist '("\\.latex\\'" . latex-mode))
+#+END_SRC
+
+** Use conf-mode for git config files
+
+#+BEGIN_SRC emacs-lisp
+  (add-to-list 'auto-mode-alist
+               '("\\.gitconfig\\'" . conf-mode))
+  (add-to-list 'auto-mode-alist
+               (cons (concat (regexp-quote (f-join ".git" "config")) "\\'")
+                     'conf-mode))
+#+END_SRC
+
+** Fix ~report-emacs-bug-insert-to-mailer~
+For some unknown reason, on my system ~xdg-email~ does nothing (but
+still exits successfully) when started through ~start-process~. So we
+use ~call-process~ instead.
+
+#+BEGIN_SRC emacs-lisp
+  (define-advice report-emacs-bug-insert-to-mailer
+      (:around (orig-fun &rest args) use-call-process)
+    "Use `call-process' instead of `start-process'.
+
+  For some reason \"xdg-email\" doesn't work from `start-process',
+  so we use `call-process' instead. This is fine because both the
+  OS X \"open\" and unix \"xdg-email\" commands exit
+  immediately."
+    (noflet ((start-process (name buffer program &rest program-args)
+                            (apply #'call-process program nil buffer nil program-args)))
+      (apply orig-fun args)))
+#+END_SRC
+
+** Define functions for initiating external mailer composition
+
+*** Function to send en email to external mailer
+#+BEGIN_SRC emacs-lisp
+  (defun insert-to-mailer (&optional arg-ignored)
+    "Send the message to your preferred mail client.
+  This requires either the macOS \"open\" command, or the freedesktop
+  \"xdg-email\" command to be available.
+
+  This function accepts a prefix argument for consistency with
+  `message-send', but the prefix argument has no effect."
+    (interactive)
+    (save-excursion
+      ;; FIXME? use mail-fetch-field?
+      (let* ((to (progn
+                   (goto-char (point-min))
+                   (forward-line)
+                   (and (looking-at "^To: \\(.*\\)")
+                        (match-string-no-properties 1))))
+             (subject (progn
+                        (forward-line)
+                        (and (looking-at "^Subject: \\(.*\\)")
+                             (match-string-no-properties 1))))
+             (body (progn
+                     (forward-line 2)
+                     (buffer-substring-no-properties (point) (point-max)))))
+        (if (and to subject body)
+            (if (report-emacs-bug-can-use-osx-open)
+                (start-process "/usr/bin/open" nil "open"
+                               (concat "mailto:" to
+                                       "?subject=" (url-hexify-string subject)
+                                       "&body=" (url-hexify-string body)))
+              (start-process "xdg-email" nil "xdg-email"
+                             "--subject" subject
+                             "--body" body
+                             (concat "mailto:" to)))
+          (error "Subject, To or body not found")))))
+
+  (defun insert-to-mailer-and-exit (&optional arg)
+    "Send message like `insert-to-mailer', then, if no errors, exit from mail buffer.
+
+  This function accepts a prefix argument for consistency with
+  `message-send-and-exit', but the prefix argument has no effect."
+    (interactive "P")
+    (let ((buf (current-buffer))
+          (actions message-exit-actions))
+      (when (and (insert-to-mailer arg)
+                 (buffer-name buf))
+        (message-bury buf)
+        (if message-kill-buffer-on-exit
+            (kill-buffer buf))
+        (message-do-actions actions)
+        t)))
+#+END_SRC
+
+*** Define mail-user-agent for external mailer
+
+#+BEGIN_SRC emacs-lisp
+  (define-mail-user-agent 'external-mailer-user-agent
+    (get 'message-user-agent 'composefunc)
+    #'insert-to-mailer-and-exit
+    (get 'message-user-agent 'abortfunc)
+    (get 'message-user-agent 'hookvar))
+#+END_SRC
+
+** Eliminate trailing semicolon in propline variable list
+
+Emacs functions that modify the local variables in the propline also
+add an extraneous trailing semicolon. This advice deletes it.
+
+#+BEGIN_SRC emacs-lisp
+  (define-advice modify-file-local-variable-prop-line
+      (:around (orig-fun &rest args) cleanup-semicolon)
+    "Delete the trailing semicolon."
+    (atomic-change-group
+      (apply orig-fun args)
+      (save-excursion
+        (goto-char (point-min))
+        (let ((replace-lax-whitespace t))
+          (replace-string "; -*-" " -*-" nil
+                          (point) (progn (end-of-line) (point)))))))
+#+END_SRC
+
+** Associate .zsh files with zshell in sh-mode
+Emacs sh-mode doesn't automatically associate ~*.zsh~ with zsh. This
+enables that. It also enables it for a few other zsh-related files.
+
+#+BEGIN_SRC emacs-lisp
+  ;; Files ending in .zsh
+  (add-to-list 'auto-mode-alist '("\\.zsh\\'" . sh-mode))
+  ;; zsh startup files
+  (add-to-list 'auto-mode-alist '("\\.\\(zshrc\\|zshenv\\|zprofile\\|zlogin\\|zlogout\\)\\>" . sh-mode))
+  ;; Ensure that sh-mode uses zsh as shell for these files
+  (defun sh-mode-set-zsh-by-file-name ()
+    (when (and buffer-file-name
+               (string-match-p "\\.zsh\\(rc\\|env\\|\\'\\)" buffer-file-name))
+      (sh-set-shell "zsh")))
+  (add-hook 'sh-mode-hook 'sh-mode-set-zsh-by-file-name)
+#+END_SRC
+
+** Add ~sort-words~ command
+Emacs has a command to sort lines, but not to sort words in a region.
+
+#+BEGIN_SRC emacs-lisp
+  (defun sort-words (reverse beg end)
+    "Sort words in region alphabetically, in REVERSE if negative.
+  Prefixed with negative \\[universal-argument], sorts in reverse.
+
+  The variable `sort-fold-case' determines whether alphabetic case
+  affects the sort order.
+
+  See `sort-regexp-fields'."
+    (interactive "*P\nr")
+    (sort-regexp-fields reverse "\\w+" "\\&" beg end))
+#+END_SRC
+
+** Only enable git-gutter in local files
+Git-gutter doesn't play nice with TRAMP remotes
+
+#+BEGIN_SRC emacs-lisp
+  (defun git-gutter-find-file-hook ()
+    (git-gutter-mode
+     (if (file-remote-p (buffer-file-name))
+         0
+       1)))
+  (add-hook 'find-file-hook #'git-gutter-find-file-hook)
+#+END_SRC
+
+** Make scripts executable on save
+If a file begins with a shebang (i.e. "#!"), make it executable after
+saving it.
+
+#+BEGIN_SRC emacs-lisp
+  (add-hook 'after-save-hook
+    'executable-make-buffer-file-executable-if-script-p)
+#+END_SRC
+
+** Make electric-indent-mode and python-mode play nice
+
+#+BEGIN_SRC emacs-lisp
+  (defun python-newline-and-indent ()
+    "Custom python indentation function.
+
+    This works like normal, except that if point is in the
+    indentation of the current line, the newly created line will
+    not be indented any further than the current line. This fixes
+    the annoying tendency of python-mode to always indent to the
+    maximum possible indentation level on every new line."
+    (interactive)
+    (let* ((starting-column (current-column))
+           (starting-indentation (current-indentation))
+           (started-in-indentation (<= starting-column starting-indentation)))
+      (newline-and-indent)
+      (when (and started-in-indentation
+                 (> (current-indentation) starting-indentation))
+        (save-excursion
+          (back-to-indentation)
+          (delete-region (point) (progn (forward-line 0) (point)))
+          (indent-to-column starting-indentation))
+        (back-to-indentation))))
+  (define-key python-mode-map (kbd "RET") #'python-newline-and-indent)
+  (defun turn-off-electric-indent-local-mode ()
+      (electric-indent-local-mode 0))
+  (add-hook 'python-mode-hook #'turn-off-electric-indent-local-mode)
+#+END_SRC
+
+** ESS default directory fix
+
+When an R script is in a directory named "scripts", suggest the parent
+directory as the starting directory.
+
+#+BEGIN_SRC emacs-lisp
+  (require 'f)
+  (defun my-ess-directory-function ()
+    (cond (ess-directory)
+          ((string= "scripts" (f-filename (f-full default-directory)))
+           (f-parent default-directory))
+          (t nil)))
+  (setq ess-directory-function #'my-ess-directory-function)
+#+END_SRC
+
+** Call ~req-package-finish~ when evaluating ~req-package~ forms interactively
+When I use "C-x C-e" on a ~req-package~ declaration, I usually want
+the package to be installed immediately without having to call
+~req-package-finish~ manually. This advice does that.
+
+#+BEGIN_SRC emacs-lisp
+  (define-advice eval-last-sexp (:around (orig-fun &rest args) req-package-eagerly)
+    "Call `req-package-finish' afterward if evaluating a `req-package' form."
+    (let ((is-req-package
+           (eq (car-safe (elisp--preceding-sexp))
+               'req-package)))
+      (prog1 (apply orig-fun args)
+        (ignore-errors
+          (when is-req-package
+            (req-package-finish))))))
+#+END_SRC
+
+** TODO Enable Fira Code font ligatures
+These are disabled for now due to the error documented here:
+
+- https://github.com/tonsky/FiraCode/issues/42#issuecomment-154921580
+- https://lists.gnu.org/archive/html/emacs-devel/2015-08/msg00572.html
+
+Update: These are now disabled because they have started messing up
+the spacing of things, which is weird because they're /supposed/ to
+take up the same space as the normal characters they replace.
+#+BEGIN_SRC emacs-lisp
+  ;; ;;; Fira code
+  ;; ;; This works when using emacs --daemon + emacsclient
+  ;; (add-hook 'after-make-frame-functions (lambda (frame) (set-fontset-font t '(#Xe100 . #Xe16f) "Fira Code Symbol")))
+  ;; ;; This works when using emacs without server/client
+  ;; (set-fontset-font t '(#Xe100 . #Xe16f) "Fira Code Symbol")
+  ;; ;; I haven't found one statement that makes both of the above situations work, so I use both for now
+
+  ;; (defconst fira-code-font-lock-keywords-alist
+  ;;   (mapcar (lambda (regex-char-pair)
+  ;;             `(,(car regex-char-pair)
+  ;;               (0 (prog1 ()
+  ;;                    (compose-region (match-beginning 1)
+  ;;                                    (match-end 1)
+  ;;                                    ;; The first argument to concat is a string containing a literal tab
+  ;;                                    ,(concat "	" (list (decode-char 'ucs (cadr regex-char-pair)))))))))
+  ;;           '(("\\(www\\)"                   #Xe100)
+  ;;             ("[^/]\\(\\*\\*\\)[^/]"        #Xe101)
+  ;;             ("\\(\\*\\*\\*\\)"             #Xe102)
+  ;;             ("\\(\\*\\*/\\)"               #Xe103)
+  ;;             ("\\(\\*>\\)"                  #Xe104)
+  ;;             ("[^*]\\(\\*/\\)"              #Xe105)
+  ;;             ("\\(\\\\\\\\\\)"              #Xe106)
+  ;;             ("\\(\\\\\\\\\\\\\\)"          #Xe107)
+  ;;             ("\\({-\\)"                    #Xe108)
+  ;;             ("\\(\\[\\]\\)"                #Xe109)
+  ;;             ("\\(::\\)"                    #Xe10a)
+  ;;             ("\\(:::\\)"                   #Xe10b)
+  ;;             ("[^=]\\(:=\\)"                #Xe10c)
+  ;;             ("\\(!!\\)"                    #Xe10d)
+  ;;             ("\\(!=\\)"                    #Xe10e)
+  ;;             ("\\(!==\\)"                   #Xe10f)
+  ;;             ("\\(-}\\)"                    #Xe110)
+  ;;             ("\\(--\\)"                    #Xe111)
+  ;;             ("\\(---\\)"                   #Xe112)
+  ;;             ("\\(-->\\)"                   #Xe113)
+  ;;             ("[^-]\\(->\\)"                #Xe114)
+  ;;             ("\\(->>\\)"                   #Xe115)
+  ;;             ("\\(-<\\)"                    #Xe116)
+  ;;             ("\\(-<<\\)"                   #Xe117)
+  ;;             ("\\(-~\\)"                    #Xe118)
+  ;;             ("\\(#{\\)"                    #Xe119)
+  ;;             ("\\(#\\[\\)"                  #Xe11a)
+  ;;             ("\\(##\\)"                    #Xe11b)
+  ;;             ("\\(###\\)"                   #Xe11c)
+  ;;             ("\\(####\\)"                  #Xe11d)
+  ;;             ("\\(#(\\)"                    #Xe11e)
+  ;;             ("\\(#\\?\\)"                  #Xe11f)
+  ;;             ("\\(#_\\)"                    #Xe120)
+  ;;             ("\\(#_(\\)"                   #Xe121)
+  ;;             ("\\(\\.-\\)"                  #Xe122)
+  ;;             ("\\(\\.=\\)"                  #Xe123)
+  ;;             ("\\(\\.\\.\\)"                #Xe124)
+  ;;             ("\\(\\.\\.<\\)"               #Xe125)
+  ;;             ("\\(\\.\\.\\.\\)"             #Xe126)
+  ;;             ("\\(\\?=\\)"                  #Xe127)
+  ;;             ("\\(\\?\\?\\)"                #Xe128)
+  ;;             ("\\(;;\\)"                    #Xe129)
+  ;;             ("\\(/\\*\\)"                  #Xe12a)
+  ;;             ("\\(/\\*\\*\\)"               #Xe12b)
+  ;;             ("\\(/=\\)"                    #Xe12c)
+  ;;             ("\\(/==\\)"                   #Xe12d)
+  ;;             ("\\(/>\\)"                    #Xe12e)
+  ;;             ("\\(//\\)"                    #Xe12f)
+  ;;             ("\\(///\\)"                   #Xe130)
+  ;;             ("\\(&&\\)"                    #Xe131)
+  ;;             ("\\(||\\)"                    #Xe132)
+  ;;             ("\\(||=\\)"                   #Xe133)
+  ;;             ("[^|]\\(|=\\)"                #Xe134)
+  ;;             ("\\(|>\\)"                    #Xe135)
+  ;;             ("\\(\\^=\\)"                  #Xe136)
+  ;;             ("\\(\\$>\\)"                  #Xe137)
+  ;;             ("\\(\\+\\+\\)"                #Xe138)
+  ;;             ("\\(\\+\\+\\+\\)"             #Xe139)
+  ;;             ("\\(\\+>\\)"                  #Xe13a)
+  ;;             ("\\(=:=\\)"                   #Xe13b)
+  ;;             ("[^!/]\\(==\\)[^>]"           #Xe13c)
+  ;;             ("\\(===\\)"                   #Xe13d)
+  ;;             ("\\(==>\\)"                   #Xe13e)
+  ;;             ("[^=]\\(=>\\)"                #Xe13f)
+  ;;             ("\\(=>>\\)"                   #Xe140)
+  ;;             ("\\(<=\\)"                    #Xe141)
+  ;;             ("\\(=<<\\)"                   #Xe142)
+  ;;             ("\\(=/=\\)"                   #Xe143)
+  ;;             ("\\(>-\\)"                    #Xe144)
+  ;;             ("\\(>=\\)"                    #Xe145)
+  ;;             ("\\(>=>\\)"                   #Xe146)
+  ;;             ("[^-=]\\(>>\\)"               #Xe147)
+  ;;             ("\\(>>-\\)"                   #Xe148)
+  ;;             ("\\(>>=\\)"                   #Xe149)
+  ;;             ("\\(>>>\\)"                   #Xe14a)
+  ;;             ("\\(<\\*\\)"                  #Xe14b)
+  ;;             ("\\(<\\*>\\)"                 #Xe14c)
+  ;;             ("\\(<|\\)"                    #Xe14d)
+  ;;             ("\\(<|>\\)"                   #Xe14e)
+  ;;             ("\\(<\\$\\)"                  #Xe14f)
+  ;;             ("\\(<\\$>\\)"                 #Xe150)
+  ;;             ("\\(<!--\\)"                  #Xe151)
+  ;;             ("\\(<-\\)"                    #Xe152)
+  ;;             ("\\(<--\\)"                   #Xe153)
+  ;;             ("\\(<->\\)"                   #Xe154)
+  ;;             ("\\(<\\+\\)"                  #Xe155)
+  ;;             ("\\(<\\+>\\)"                 #Xe156)
+  ;;             ("\\(<=\\)"                    #Xe157)
+  ;;             ("\\(<==\\)"                   #Xe158)
+  ;;             ("\\(<=>\\)"                   #Xe159)
+  ;;             ("\\(<=<\\)"                   #Xe15a)
+  ;;             ("\\(<>\\)"                    #Xe15b)
+  ;;             ("[^-=]\\(<<\\)"               #Xe15c)
+  ;;             ("\\(<<-\\)"                   #Xe15d)
+  ;;             ("\\(<<=\\)"                   #Xe15e)
+  ;;             ("\\(<<<\\)"                   #Xe15f)
+  ;;             ("\\(<~\\)"                    #Xe160)
+  ;;             ("\\(<~~\\)"                   #Xe161)
+  ;;             ("\\(</\\)"                    #Xe162)
+  ;;             ("\\(</>\\)"                   #Xe163)
+  ;;             ("\\(~@\\)"                    #Xe164)
+  ;;             ("\\(~-\\)"                    #Xe165)
+  ;;             ("\\(~=\\)"                    #Xe166)
+  ;;             ("\\(~>\\)"                    #Xe167)
+  ;;             ("[^<]\\(~~\\)"                #Xe168)
+  ;;             ("\\(~~>\\)"                   #Xe169)
+  ;;             ("\\(%%\\)"                    #Xe16a)
+  ;;            ;; ("\\(x\\)"                   #Xe16b) This ended up being hard to do properly so i'm leaving it out.
+  ;;             ("[^:=]\\(:\\)[^:=]"           #Xe16c)
+  ;;             ("[^\\+<>]\\(\\+\\)[^\\+<>]"   #Xe16d)
+  ;;             ("[^\\*/<>]\\(\\*\\)[^\\*/<>]" #Xe16f))))
+
+  ;; (defun add-fira-code-symbol-keywords ()
+  ;;   (font-lock-add-keywords nil fira-code-font-lock-keywords-alist))
+
+  ;; (add-hook 'prog-mode-hook
+  ;;           #'add-fira-code-symbol-keywords)
+#+END_SRC
+
+** Ignore left/right scroll events
+If wheel-left and wheel-right are left unbound, Emacs rings the bell
+when they are used, which can easily happen when scrolling on a
+touchpad.
+
+#+BEGIN_SRC emacs-lisp
+  (bind-key "<wheel-left>" 'ignore)
+  (bind-key "<wheel-right>" 'ignore)
+#+END_SRC
+
+* Environment-specific settings
+This section uses the macros defined in ~system-specific-settings~ to
+set options that should vary depending on which system Emacs is
+running on.
+
+** Set up tool-bars
+Normally we want the scroll bar and menu bar disabled for maximum text
+space. But in Mac OS, disabling them causes various things to break,
+so we want to enabled them there.
+
+#+BEGIN_SRC emacs-lisp
+  (let ((mode-arg (if-system-type-match 'darwin 1 -1)))
+    (menu-bar-mode mode-arg)
+    (scroll-bar-mode mode-arg))
+#+END_SRC
+
+** Use system trash bin
+
+#+BEGIN_SRC emacs-lisp
+  (when-system-type-match 'darwin
+    (defvar trash-command "trash")
+
+    (defun system-move-file-to-trash (filename)
+      "Move file to OS X trash.
+
+  This assumes that a program called `trash' is in your $PATH and
+  that this program will, when passed a single file path as an
+  argument, move that file to the trash."
+      (call-process trash-command nil nil nil filename)))
+#+END_SRC
+
+** Use GNU df (gdf) on OSX if available
+On OSX, the standard df command (BSD version, I think) is
+insufficient, and we want GNU df instead, which is typically installed
+as ~gdf~. And we may as well use gdf over df on any other system which
+provides both as well. This implementation uses ~/opt/local/bin/gdf~
+preferentially, since that is the version installed by Macports.
+
+#+BEGIN_SRC emacs-lisp
+  (when (executable-find "gdf")
+    (setq directory-free-space-program "gdf"))
+#+END_SRC
+
+* Start emacs server
+This allows ~emacsclient~ to connect. We avoid starting the server in
+batch mode since there is no point in that case.
+
+Errors are ignored in case there are two instances of Emacs running,
+or in case the current Emacs is already running a server. The first
+will start the server, and the second will silently fail, since a
+server is already running.
+
+#+BEGIN_SRC emacs-lisp
+  (unless noninteractive
+    (ignore-errors (server-start)))
+#+END_SRC

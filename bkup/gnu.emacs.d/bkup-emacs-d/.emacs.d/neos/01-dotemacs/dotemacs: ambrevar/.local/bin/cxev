@@ -1,0 +1,30 @@
+#!/bin/sh
+
+compat=""
+if awk --version | grep -q GNU; then
+	# This is for hex-to-decimal conversion.
+	compat="--non-decimal"
+fi
+xev "$@" | awk $compat '/KeyPress|KeyRelease/ {
+	if ($1 == "KeyPress")
+		event="pressed";
+	else
+		event="released";
+
+	getline; getline;
+	state = substr($2,1,length($2)-2);
+	keycode = $4;
+	keysym = substr($7, 1, length($7)-2);
+
+	printf "%-16s code=%-3s state=%s event=%-8s", keysym, keycode, state, event
+
+	getline;
+	gsub(/\(|\)/, "", $5)
+	code=int(sprintf("%d", "0x" $5))
+	if (code > 32 && code != 127) {
+		/* Ignore non-printable characters" */
+		gsub(/"/, "", $NF)
+		printf " string=%s", $NF
+	}
+	print ""
+}'

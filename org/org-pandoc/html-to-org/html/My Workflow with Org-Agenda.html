@@ -1,0 +1,517 @@
+<!doctype html>
+<html class="no-js" lang="">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>My Workflow with Org-Agenda</title>
+    <meta name="description" content="I use Emacs&#39; &quot;org-mode&quot; to organize my life. Here&#39;s a snippet of how I get it all working.">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    
+    
+
+<link rel="apple-touch-icon" sizes="57x57" href="/static/c2c_icons/apple-touch-icon-57x57.png">
+<link rel="apple-touch-icon" sizes="60x60" href="/static/c2c_icons/apple-touch-icon-60x60.png">
+<link rel="apple-touch-icon" sizes="72x72" href="/static/c2c_icons/apple-touch-icon-72x72.png">
+<link rel="apple-touch-icon" sizes="76x76" href="/static/c2c_icons/apple-touch-icon-76x76.png">
+<link rel="apple-touch-icon" sizes="114x114" href="/static/c2c_icons/apple-touch-icon-114x114.png">
+<link rel="apple-touch-icon" sizes="120x120" href="/static/c2c_icons/apple-touch-icon-120x120.png">
+<link rel="apple-touch-icon" sizes="144x144" href="/static/c2c_icons/apple-touch-icon-144x144.png">
+<link rel="apple-touch-icon" sizes="152x152" href="/static/c2c_icons/apple-touch-icon-152x152.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/static/c2c_icons/apple-touch-icon-180x180.png">
+<link rel="icon" type="image/png" href="/static/c2c_icons/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/static/c2c_icons/favicon-194x194.png" sizes="194x194">
+<link rel="icon" type="image/png" href="/static/c2c_icons/favicon-96x96.png" sizes="96x96">
+<link rel="icon" type="image/png" href="/static/c2c_icons/android-chrome-192x192.png" sizes="192x192">
+<link rel="icon" type="image/png" href="/static/c2c_icons/favicon-16x16.png" sizes="16x16">
+<link rel="manifest" href="/static/c2c_icons/manifest.json">
+<link rel="mask-icon" href="/static/c2c_icons/safari-pinned-tab.svg" color="#773333">
+<link rel="shortcut icon" href="/static/c2c_icons/favicon.ico">
+<meta name="msapplication-TileColor" content="#773333">
+<meta name="msapplication-TileImage" content="/static/c2c_icons/mstile-144x144.png">
+<meta name="msapplication-config" content="/static/c2c_icons/browserconfig.xml">
+<meta name="theme-color" content="#ffffff">
+
+    <!-- 25th November 2019 15:05 -->
+    <!-- Fonts -->    
+    <link href='http://fonts.googleapis.com/css?family=Unica+One' rel='stylesheet' type='text/css'>
+    <script src="https://use.typekit.net/qeu2zlf.js"></script>
+    <script>try{Typekit.load({ async: false });}catch(e){}</script>
+    <noscript>
+      <!-- Fallback fonts (if no JS) -->
+      <link href='http://fonts.googleapis.com/css?family=Dosis:400|Anonymous+Pro' rel='stylesheet' type='text/css'>
+    </noscript>
+
+    <!-- Styles / Scripts -->
+    
+    <link rel="stylesheet" href="/static/styles/css/cachestocaches.min.css"/>
+    <script src="/static/styles/js/modernizr-2.8.3.min.js"></script>
+
+    
+
+  
+  
+  
+  <meta name="twitter:card"
+          content="summary_large_image" />
+  <meta prefix="og: http://ogp.me/ns#"
+          name="twitter:title"
+          property="og:title"
+          content="My Workflow with Org-Agenda" />
+  <meta name="twitter:site"
+          content="@CachesToCaches">
+  <meta prefix="og: http://ogp.me/ns#"
+          property="og:type"
+          content="website" />
+  
+  
+    <meta prefix="og: http://ogp.me/ns#"
+            name="twitter:image:src"
+            property="og:image"
+            content="http://cachestocaches.com/media/photologue/photos/cache/org-agenda-cover_display.png" />
+    <meta name="thumbnail"
+            content="http://cachestocaches.com/media/photologue/photos/cache/org-agenda-cover_thumbnail.png" />
+  
+  
+  <meta prefix="og: http://ogp.me/ns#"
+          name="twitter:description"
+          property="og:description"
+          content="I use Emacs&#39; &quot;org-mode&quot; to organize my life. Here&#39;s a snippet of how I get it all working." />
+  <meta prefix="og: http://ogp.me/ns#"
+          property="og:url"
+          content="http://cachestocaches.com/2016/9/my-workflow-org-agenda/" />
+
+  </head>
+
+  <body
+      itemscope
+      itemtype="http://schema.org/WebPage"
+      data-spy="scroll"
+      data-target="#side-nav">
+    
+    <nav class="sidebar">
+      <div class="content">
+        
+  <div><a href="/"><img src="/static/logos/c2c_logo_2.png" class="img-responsive center-block" style="width:240px;"/></a></div>
+  <br/>
+  <div class="center-text narrow-font">
+    <span><a href="/">home</a></span>
+    <span class="center-dot"></span>
+    <span><a href="/archive/">archive</a></span>
+    <span class="center-dot"></span>
+    <span><a href="/contributors/">about</a></span>
+  </div>
+  <div class="social-icon-container">
+    <a class="social-icon light-border twitter" href="https://twitter.com/intent/follow?screen_name=CachesToCaches"></a>
+    <a class="social-icon light-border facebook" href="https://www.facebook.com/CachesToCaches"></a>
+    <a class="social-icon light-border googleplus" href="https://www.google.com/+Cachestocaches_c2c" rel="publisher"></a>
+    <a class="social-icon light-border github" href="https://github.com/CachesToCaches"></a>
+    <a class="social-icon light-border rss-feed" href="/feed"></a>
+  </div>
+
+  <img class="bottom-art" src="/static/art/c2c_triangles.svg"></img>
+  <div class="center-text floating-description"><a href="http://gjstein.com">designed and maintained by<br/>Gregory J Stein</a></div>
+
+        <br/>
+        
+  <div class="title"><a href="#">My Workflow with Org-Agenda</a></div>
+  <hr/>
+  <div id="nav-sidebar">
+    <ul class="nav" id="toc"></ul>
+  </div>
+  <hr/>
+  
+    <br/>
+    <div class="title">
+      <div><small>part 2 of</small></div>
+      <a href="/series/emacs-productivity/" class="nav-title">Emacs For Productivity</a>
+    </div>
+    <hr/>
+    <div class="description">A collection of tips and guides for using Emacs to master your life.</div>
+    <hr/>
+  
+
+      </div>
+    </nav>
+    <nav class="header">
+      
+  <div class="content">
+  <span class="heading-font"><a href="/">Caches to Caches</a> | </span><span><a href="/">home</a></span><span class="center-dot"></span><span><a href="/archive/">archive</a></span><span class="center-dot"></span><span><a href="/contributors/">about</a></span>
+  </div>
+
+    </nav>
+    <div class="page"
+         itemsope
+         itemtype="http://schema.org/Blog">
+      <div class="content-top">
+        
+  <div class="unit-line-height">
+  
+  <!-- Series Details -->
+
+  <!-- Post Image -->
+    <div class="marginnote invisible-sm post-detail">
+      <div>
+      
+        <p><div class="unit-line-height"><small class="heading-font">
+          Part 2 of
+        </small></div>
+        <div><a class="series heading-font" href="/series/emacs-productivity/">Emacs For Productivity</a></div>
+        </p>
+      
+
+        <p><div class="date heading-font">Sun 4 Sep 2016</div>
+          <a href="/contributors/#gregory-j-stein"><span class="author" itemprop="name">Gregory J Stein</span></a>
+          
+        </p>
+
+        
+          <p><div class="heading-font">Category</div>
+            <a class="category" href="/category/general-computing/">
+              General Computing
+            </a>
+          </p>
+        
+
+        
+          <p><div class="heading-font">Tags</div>
+            
+              <a class="tag" href="/tag/emacs/">Emacs</a>
+            
+              <a class="tag" href="/tag/productivity/">Productivity</a>
+            
+          </p>
+        
+      </div>
+    </div>
+
+    
+      <h1 class="title">
+        <div>
+          <span itemprop="name">My Workflow with Org-Agenda</span>
+        </div>
+      </h1>
+    
+
+    
+
+
+    <div class="note visible-sm post-detail">
+      <div>
+
+      <div>
+        <span class="date heading-font">Sun 4 Sep 2016</span>
+          <a href="/contributors/#gregory-j-stein"><span class="author" itemprop="name">Gregory J Stein</span></a>
+          
+      </div>
+
+        
+          <div>
+          <span class="heading-font">Category</span>
+            <a class="category" href="/category/general-computing/">
+              General Computing
+            </a>
+          </div>
+        
+
+        
+          <div><span class="heading-font">Tags</span>
+            
+              <a class="tag" href="/tag/emacs/">Emacs</a>
+            
+              <a class="tag" href="/tag/productivity/">Productivity</a>
+            
+          </div>
+        
+
+
+        
+        <div style="height: 10px"></div>
+            <div><span class="unit-line-height"><span class="heading-font">
+              Part 2 of
+            </span></span>
+            <span><a class="series heading-font" href="/series/emacs-productivity/">Emacs For Productivity</a></span>
+            </div>
+          
+      </div>
+    </div>
+
+
+</div>
+
+
+      </div>
+      <div class="content">
+        
+  
+  <div class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <!-- Post Title -->
+  
+  
+
+  <!-- Post Content -->
+  
+    <div class="justify word-break" itemprop="articleBody">
+      
+        <p>I'm sure we've all had the same experience with "fully-featured" todo-list and project management programs: each had their own niceties, but none quite delivered on their promise. I've been using the built-in <code>org-mode</code> within Emacs for quite some time now, so I figured it was high time that I really made it my own.</p>
+<p>I'm glad I did.</p>
+<p>For the last year, many of my customization options were taken directly from the unbelievably detailed <a href="http://doc.norang.ca/org-mode.html">Guide by Bernt Hansen</a> and remained unchanged for some time<span class="sidenote note no-word-break invisible-sm">Even if you don't use this post for your own configurations, I highly recommend looking at Bernt's exhaustive guide. </span>. However, the guide contained an overwhelming amount of information, which made it difficult to determine precisely what features I would find most useful.
+<p class="note no-word-break visible-sm">Even if you don't use this post for your own configurations, I highly recommend looking at Bernt's exhaustive guide. </p></p>
+<p>I'm writing this short guide in an effort to introduce the features in org-mode which I've found I can't live without. I'll go over how I use org-mode, and it's powerful built-in summary/calendar view known as <code>org-agenda</code>, in both my work<span class="sidenote note no-word-break invisible-sm">Org also has some nice export tools built in, so that I can easily share my notes with colleagues. </span> and in my hobby projects. I also include some details about how everything was implemented, or at the very least provide the reader with references to understand my code. This guide is only an introduction to my workflow and is by no means self-contained (unlike Bernt's)! Feel free to comment below or get in touch with me if you have any questions.
+<p class="note no-word-break visible-sm">Org also has some nice export tools built in, so that I can easily share my notes with colleagues. </p></p>
+<p></p>
+<h2>Org-Mode Basics</h2>
+<p>I use org-mode (or simply "Org") for pretty much everything. I rely on it to keep track of my notes for work and hobby projects. I keep track of my upcoming tasks. It serves me with reminders for things like upcoming meetings and people I need to send emails to. It allows me to effectively log my time and provides an easy plain-text interface to quickly jot down notes and organize my thoughts. And it acts as a nice medium in which to implement many of the principles by the well-known productivity book <a href="http://gettingthingsdone.com">Getting Things Done</a>.</p>
+<p>At first glance, Org looks to be a just a system for syntax highlighting with some extra features built-in for creating a hierarchy of headings and collapsing their contents<span class="sidenote note no-word-break invisible-sm">In fact, Org is build on top of <a href="https://www.emacswiki.org/emacs/OutlineMode">the Outline minor mode</a> which it relies on for folding the different sections </span> for easy viewing and navigation:
+<p class="note no-word-break visible-sm">In fact, Org is build on top of <a href="https://www.emacswiki.org/emacs/OutlineMode">the Outline minor mode</a> which it relies on for folding the different sections </p></p>
+<p><div class="out-img-wrapper"><div><note class="marginnote img-caption invisible-sm"><p>This shows how Org highlights a plain-text document and enables features such as section folding, built-in code highlighting, automatic/interactive clocking, and more.</p></note><img src="/media/photologue/photos/cache/org-mode-features_display.png" class="img-responsive center-block" title="Org Uses Plain Text" style="max-height:597px"/><note class="img-caption visible-sm"><p>This shows how Org highlights a plain-text document and enables features such as section folding, built-in code highlighting, automatic/interactive clocking, and more.</p></note></div></div></p>
+<p>However, there are a number of additional features which make Org a fully functional productivity tool. In particular, the built in <a href="#the-agenda">calendar/agenda view</a> will list outstanding TODO items, and collect scheduled tasks or tasks with deadlines and present them in a quickly readable form. If you really commit to working on projects within Org, it will help ensure that you never miss an outstanding task.</p>
+<h2>TODO Keywords</h2>
+<p>At its core, my workflow with Org is build around the idea of working through projects, which are set up as a series of "todo" items. Without any customization, Org allows you to assign a "TODO" or a "DONE" status to any heading <span class="sidenote note no-word-break invisible-sm">Keywords can be typed manually or added using the <code>C-c C-t</code> key binding. </span>, which you can see I've done in the image above. However, I've found that these aren't typically expressive enough for handling very large projects. Following Bernt Hansen's lead, I use the following keywords for my documents:
+<p class="note no-word-break visible-sm">Keywords can be typed manually or added using the <code>C-c C-t</code> key binding. </p></p>
+<ul>
+<li><code>TODO</code> Used to indicated tasks and projects which need to get done (a "project" is any "TODO" heading with other "TODO/NEXT/DONE" headings underneath it).</li>
+<li><code>NEXT</code> This is for tasks which are to be done "next" within a particular project. Following the Getting Things Done principles, a project without a task marked as "NEXT" is considered "stuck" (but more on that in the next section).</li>
+<li><code>WAITING</code> Whenever I have a task that is waiting on someone else, I'll assign it this keyword.</li>
+<li><code>INACTIVE</code> As an academic, I will occasionally have ideas or projects that I'll want to get done eventually, but won't have time to work on them at the moment. I typically use the INACTIVE keyword to signify that I'd like to come back to it eventually and I'll occasionally search my files for "INACTIVE" projects when I have time.</li>
+<li><code>CANCELLED</code> This is self-explanatory. If I'm working on something for a while, but it fizzles, it's sometimes useful to mark it as cancelled.</li>
+<li><code>MEETING</code> Used to indicate that I was meeting with someone. I'll put meeting notes in headings with this keyword.</li>
+<li><code>DONE</code> Again, this is self-explanatory.</li>
+</ul>
+<p>When changing between these states using <code>C-c C-t</code>, it's possible to automatically prompt the user for clarification on what prompted the change. For example, whenever a task is set to WAITING, I have an opportunity to enter a short message detailing who I'm currently waiting on, and any additional information I may want to add. In addition, this command may also automatically add "tags" (e.g. <code>:CANCELLED:</code>) to the heading (tags provide some additional functionality for searching and organizing tasks). Tags are extremely useful for searching through <code>.org</code> files, and for using the agenda view.</p>
+<h2>The Agenda</h2>
+<p>My favorite thing by far about using Org to collect my thoughts and keep track of my active projects is the agenda view:</p>
+<p><div class="out-img-wrapper"><div><note class="marginnote img-caption invisible-sm"><p>A demo agenda view with some sample content. As you can imagine (if you're even half as busy as I am), my full agenda view contains tasks from a host of different projects and files and my clock-view (at the top of the agenda) will often fill my screen by the end of the day. The agenda makes it easy to see what tasks or meetings I have coming up for the rest of the day and provides an easy interface for choosing what task to tackle next. Scrolling down to the item of interest and pressing return will automatically take you to it, adding to the convenience.</p></note><img src="/media/photologue/photos/cache/org-agenda-features_display.jpg" class="img-responsive center-block" title="Org-Agenda View" style="max-height:499px"/><note class="img-caption visible-sm"><p>A demo agenda view with some sample content. As you can imagine (if you're even half as busy as I am), my full agenda view contains tasks from a host of different projects and files and my clock-view (at the top of the agenda) will often fill my screen by the end of the day. The agenda makes it easy to see what tasks or meetings I have coming up for the rest of the day and provides an easy interface for choosing what task to tackle next. Scrolling down to the item of interest and pressing return will automatically take you to it, adding to the convenience.</p></note></div></div></p>
+<p>The agenda view scans your <code>.org</code> files (set by customizing the <code>org-agenda-files</code> variable) and collects all of the headings with a TODO (or related) keyword. Without the agenda view, keeping track of projects, which I ensure are top-level TODO items, is difficult. The agenda provides a convenient way of tracking your projects and managing your calendar.</p>
+<p>I've put quite a bit of work into getting the agenda to behave the way I want. At the top of the agenda is my "Today" view, which shows all of my appointments and deadlines for the day, as well as all of my clocked tasks (which I'll talk more about in the <a href="#automatic-clocking">next section</a>. Then, I include all tasks marked as "NEXT", which, once I've worked through all my items with deadlines, gives me other high priority tasks to chose from. I also have additional views for seeing my different active projects and other tasks associated with those projects.</p>
+<p>I mentioned in the previous section that tags were useful, but its really in the agenda that this feature shines through. Pressing <code>/</code> in the agenda enables "filtering by tag", so that only certain tags are shown (or excluded using <code>-</code>). Furthermore, there are ways (see Bernt's guide for more info) to ensure that your "personal" tags are automatically filtered out during the work day, so that you don't have to worry about pruning them yourself<span class="sidenote note no-word-break invisible-sm">A similar sort of search of the text using regular expressions can be performed by pressing <code>=</code>. </span>.
+<p class="note no-word-break visible-sm">A similar sort of search of the text using regular expressions can be performed by pressing <code>=</code>. </p></p>
+<h2>Automatic Clocking</h2>
+<p>Certainly having a way of viewing one's appointments is nice, but what's an agenda without some way of logging one's time? Fortunately, Org has you covered once again, which has some extremely useful clocking functionality built-in. Using it is relatively straightforward, with only a couple of key bindings to remember for clocking in (<code>C-c C-x C-i</code>) and clocking out (<code>C-c C-x C-o</code>).</p>
+<p>There are a few additional niceties which make this all worth doing. First, changing the state of the currently clocked task will clock out the time, which saves you from having to worry about it when you close out a task. As you might expect, the clocked entries will appear in your agenda view (as in the image above). The agenda view will also include the currently clocked task in the time-grid, allowing you to quickly change its state or clock out.</p>
+<p>The last useful feature is the ability to view the total amount of time that you've clocked on a task using the Org "column view". The built-in column view allows you to see certain properties of your tasks at a glance. My configuration file contains the following line of code to ensure that the time is shown in column view:</p>
+<p><pre class="pre-scrollable"><code class="lang-lisp">;; Set default column view headings: Task Total-Time Time-Stamp
+(setq org-columns-default-format "%50ITEM(Task) %10CLOCKSUM %16TIMESTAMP_IA")
+</code></pre></p>
+<p>Once you've included this, activate <code>org-columns</code> with <code>C-c C-x C-c</code> while on a top-level heading, which will allow you to view the time you've spent at the different levels (you can exit the view by pressing <code>q</code>):</p>
+<p><div class="out-img-wrapper"><img src="/media/photologue/photos/cache/org-column-view_gM8J8xu_display.jpg" class="img-responsive center-block" title="Org Column View" style="max-height:268px"/></div></p>
+<h2>Capture &amp; Refile</h2>
+<p>Putting everything together at this point may seem a bit daunting, especially during a traditional day, in which interruptions may be common, and scattered ideas punctuate work on any individual task. This is where <code>org-capture</code> comes in. Capture is extremely useful for quickly creating new headings and reminders when they arise. I typically bind it to <code>C-c c</code>.</p>
+<p>The choices from the capture menu are set via "templates" stored in the <code>org-capture-templates</code> variable. In addition, one of the most convenient features about Capture is that it can automatically stop and restart the clock on your current task while you're away (and log the intermediate time within the new heading).</p>
+<p>My capture templates are as follows:</p>
+<ul>
+<li><code>TODO</code> This is the basic task creation, and simply creates a new heading with a TODO keyword and a time stamp.</li>
+<li><code>Meeting</code> The ever-important meeting template, used whenever I have a meeting with someone. This can include scheduled meetings or, more commonly, whenever someone drops by my desk and wants to discuss something. Even if I don't end up writing anything down during the conversation, this still automatically stops the clock on my current task, which I find extremely helpful.</li>
+<li><code>Diary</code> - Inspired by the "Journal" template from Bernt Hansen's guide, I use this template for one-off and unscheduled personal tasks. This includes my daily lunch break or whenever I go get coffee with a friend. Unlike the other templates, this created heading is placed within the <code>diary.org</code> file, and beneath headings corresponding to the year-month-day. I typically just leave this open while I'm away from my desk, and it's rare that I look at these directly after they're created.</li>
+<li><code>Idea</code> I often have random thoughts throughout the day that have nothing to do with what I'm currently working on and likely aren't time sensitive. Whenever I have one of these ideas (whether it be inspiration for a blog post, or an idea for my work), I use this capture template.</li>
+<li><code>Next Task</code> Whenever I have something I quickly need to get done, including a one-off errand or responding to an email, I use this. It creates a heading with the NEXT keyword and (if that weren't enough) a deadline for the end of the day. I try to ensure that all of these are done before I go to bed if possible.</li>
+</ul>
+<p>This is all done with a few lines of emacs-lisp:</p>
+<p><pre class="pre-scrollable"><code class="lang-lisp">;; Define the custum capture templates
+(setq org-capture-templates
+       '(("t" "todo" entry (file org-default-notes-file)
+	  "* TODO %?\n%u\n%a\n" :clock-in t :clock-resume t)
+	 ("m" "Meeting" entry (file org-default-notes-file)
+	  "* MEETING with %? :MEETING:\n%t" :clock-in t :clock-resume t)
+	 ("d" "Diary" entry (file+datetree "~/org/diary.org")
+	  "* %?\n%U\n" :clock-in t :clock-resume t)
+	 ("i" "Idea" entry (file org-default-notes-file)
+	  "* %? :IDEA: \n%t" :clock-in t :clock-resume t)
+	 ("n" "Next Task" entry (file+headline org-default-notes-file "Tasks")
+	  "** NEXT %? \nDEADLINE: %t") ))
+</code></pre></p>
+<p>At this point, you may be wondering "well how do I get the new heading where I want it to go?". This is where the "refile" feature comes into play. After your new heading is created, press <code>C-c C-w</code> to activate refile. It will prompt you to type (with completion enabled) the heading path where you'd like to put the header. Simply press the return key when you're done, and it will automatically move the heading where you want. To allow refile to work between files stored in the <code>org-agenda-files</code> variable, include the following line in you configuration:</p>
+<p><pre class="pre-scrollable"><code class="lang-lisp">(setq org-refile-targets (quote ((nil :maxlevel . 9)
+                                 (org-agenda-files :maxlevel . 9))))
+</code></pre></p>
+<p>For this feature, I highly recommend using the <a href="https://github.com/emacs-helm/helm">Helm incremental completion engine</a><span class="sidenote note no-word-break invisible-sm">A fantastic tutorial for Helm can be found here: <a href="http://tuhdo.github.io/helm-intro.html">A Package in a league of its own</a>. </span>. With this enabled, you can see the list of auto-complete (using fuzzy-search) options as you type, making it easy to quickly narrow down your refile target.
+<p class="note no-word-break visible-sm">A fantastic tutorial for Helm can be found here: <a href="http://tuhdo.github.io/helm-intro.html">A Package in a league of its own</a>. </p></p>
+<h2>Summary &amp; Additional Resources</h2>
+<p>During a typical day at work, I rely on all of these tools for project management. After spending some time in the morning reviewing my agenda and re-organizing my projects (if necessary), I start by tackling my upcoming deadlines and tasks which are marked for today. Once those are taken care of, I'll chose a NEXT task (typically one with a <code>:WORK:</code> tag) and try to eliminate as many as possible before going home. When I'm interrupted by meetings, I start a MEETING with "Capture". Whenever I have thoughts about something else I need to accomplish, whether work-related or not, I use "Capture" again. Though I'm far from proficient at this, I always try to clock my time and, at the end of each day, I'll review how effectively I'm focusing my effort.</p>
+<p>Feel free to contact me with any comments on this short guide, as well as with any questions regarding any of the details I've omitted. I also encourage you to <code>git checkout</code> my <code>.emacs.d</code> configuration, which I've annotated and put on <a href="https://github.com/gjstein/emacs.d">my GitHub profile</a>. If you're interested in some more details on how to use Org and some of the additional features associated with it, you should peruse the following:</p>
+<ul>
+<li><a href="http://orgmode.org">The Org Website</a></li>
+<li><a href="http://orgmode.org/guide/index.html#Top">The Org Compact Guide</a></li>
+<li><a href="http://doc.norang.ca/org-mode.html">Bernt Hansen's Guide</a></li>
+</ul>
+      
+    </div>
+  
+
+  <!-- Post Footer -->
+  
+
+  <!-- Additional Metadata -->
+  <meta itemprop="description" content="I use Emacs&#39; &quot;org-mode&quot; to organize my life. Here&#39;s a snippet of how I get it all working.">
+
+</div>
+
+
+      </div>
+      <div class="content-bottom">
+        
+
+  <hr/>
+  <p><blockquote>
+    Liked this post? Subscribe to our <a class="post-link" href="/feed">RSS feed</a> or add your email to our newsletter:
+
+    <!-- Begin MailChimp Signup Form -->
+    <link href="//cdn-images.mailchimp.com/embedcode/horizontal-slim-10_7.css" rel="stylesheet" type="text/css">
+    <div id="mc_embed_signup">
+      <form action="https://cachestocaches.us15.list-manage.com/subscribe/post?u=f290745e370ad37f53ed7c7ac&amp;id=b7922d14de" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
+        <div id="mc_embed_signup_scroll">
+	  
+	  <input type="email" value="" name="EMAIL" class="email" id="mce-EMAIL" placeholder="email address" required>
+          <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
+          <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_f290745e370ad37f53ed7c7ac_b7922d14de" tabindex="-1" value=""></div>
+          <div class="clear"><input type="submit" value="Subscribe" name="subscribe" id="mc-embedded-subscribe" class="button"></div>
+        </div>
+      </form>
+    </div>
+
+  </blockquote></p>
+
+  <!--End mc_embed_signup-->
+  <hr/>
+
+
+  <!-- All posts in series -->
+  
+    <div class="post-list">
+      <div class="heading-font">all posts in series</div>
+      <h3><a href="/series/emacs-productivity/" class="nav-title">Emacs For Productivity</a></h3>
+      <div class="small-line-height">A collection of tips and guides for using Emacs to master your life.</div>
+      <ul class="small-post-list">
+        
+          <li ><a class="small-title" href="/2015/8/getting-started-use-package/">1 <span class="center-dot"></span> Getting Started with Use-Package</a>
+            <div class="small-detail">Jump-start emacs with use-package and never manually install another package again</div></li>
+        
+          <li class="selected"><a class="small-title" href="/2016/9/my-workflow-org-agenda/">2 <span class="center-dot"></span> My Workflow with Org-Agenda</a>
+            <div class="small-detail">I use Emacs&#39; &quot;org-mode&quot; to organize my life. Here&#39;s a snippet of how I get it all working.</div></li>
+        
+          <li ><a class="small-title" href="/2016/12/vim-within-emacs-anecdotal-guide/">3 <span class="center-dot"></span> Vim Within Emacs: An Anecdotal Guide</a>
+            <div class="small-detail">After using Emacs for 2 years, I decided to give &quot;evil-mode&quot; (Vim keybindings) a tentative try and I&#39;m not looking back.</div></li>
+        
+          <li ><a class="small-title" href="/2017/3/complete-guide-email-emacs-using-mu-and-/">4 <span class="center-dot"></span> A Complete Guide to Email in Emacs using Mu and Mu4e</a>
+            <div class="small-detail">Most email clients are a pain. Emacs &amp; mu4e are less of a pain.</div></li>
+        
+          <li ><a class="small-title" href="/2018/6/org-literate-programming/">5 <span class="center-dot"></span> Literate Programming with Org-mode</a>
+            <div class="small-detail">I frequently use Org mode to combine code snippets and analysis in a single document, a programming paradigm known as Literate Programming. Here are a few example showing how powerful this setup can be.</div></li>
+        
+      </ul>
+    </div>
+    <hr/>
+  
+
+  <div>
+  <div class="social-icon-container visible-xs">
+    <a class="social-icon twitter"
+         href="https://twitter.com/intent/tweet?url=http%3A%2F%2Fcachestocaches.com%2F2016%2F9%2Fmy-workflow-org-agenda%2F&text=Great%20post%20at"></a><a class="social-icon facebook"
+         href="https://www.facebook.com/sharer/sharer.php?u=http%3A%2F%2Fcachestocaches.com%2F2016%2F9%2Fmy-workflow-org-agenda%2F"></a><a class="social-icon googleplus"
+         href="https://plus.google.com/share?url=http%3A%2F%2Fcachestocaches.com%2F2016%2F9%2Fmy-workflow-org-agenda%2F"></a><a class="social-icon linkedin"
+         href="http://www.linkedin.com/shareArticle?mini=true&url=http%3A%2F%2Fcachestocaches.com%2F2016%2F9%2Fmy-workflow-org-agenda%2F&title=Caches%20To%20Caches&source=http%3A//cachestocaches.com"></a><a class="social-icon github"
+           href="https://github.com/gjstein/emacs.d"></a><a class="social-icon rss-feed"
+         href="/feed"></a>
+  </div>
+</div>
+
+
+  <hr/>
+
+  <script type="text/javascript">
+/* * * CONFIGURATION VARIABLES * * */
+var disqus_shortname = 'cachestocaches';
+
+/* * * DON'T EDIT BELOW THIS LINE * * */
+ function createCallback() {
+     var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+     dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+     (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+   };
+</script>
+<a class="heading-font" id="disqus_thread" style="cursor:pointer;"onclick="createCallback();return false;"><h4 class="constrain-width">+ Show Comments From Disqus</h4></a>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+
+  
+
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <div class="content">
+      
+  <div><a href="/"><img src="/static/logos/c2c_logo_2.png" class="img-responsive center-block" style="width:240px;"/></a></div>
+  <br/>
+  <div class="center-text narrow-font">
+    <span><a href="/">home</a></span>
+    <span class="center-dot"></span>
+    <span><a href="/archive/">archive</a></span>
+    <span class="center-dot"></span>
+    <span><a href="/contributors/">about</a></span>
+  </div>
+  <div class="social-icon-container">
+    <a class="social-icon light-border twitter" href="https://twitter.com/intent/follow?screen_name=CachesToCaches"></a>
+    <a class="social-icon light-border facebook" href="https://www.facebook.com/CachesToCaches"></a>
+    <a class="social-icon light-border googleplus" href="https://www.google.com/+Cachestocaches_c2c" rel="publisher"></a>
+    <a class="social-icon light-border github" href="https://github.com/CachesToCaches"></a>
+    <a class="social-icon light-border rss-feed" href="/feed"></a>
+  </div>
+
+  <br/>
+  <div class="center-text"><a href="http://gjstein.com">designed and maintained by<br/>Gregory J Stein</a></div>
+
+      
+      
+      </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+
+    <!-- Sidebar / Table of Contents -->
+    <script src="/static/styles/js/jquery.tableofcontents.g.min.js"></script>
+    <script src="/static/styles/js/sticky-nav.js"></script>
+    <script src="/static/styles/js/bootstrap-scrollspy.min.js"></script>
+    <script>
+    $(function(){$("#toc").tableOfContents(null,{
+      startLevel: 2, depth: 1});
+      $('body').scrollspy({
+        target: '#nav-sidebar',
+        offset: 20});
+    });
+    </script>
+    
+    <!-- Code Highlighting : highlight.js -->
+    
+
+<!-- <link rel="stylesheet" href="/static/highlight/styles/c2c.css"> -->
+<script src="/static/highlight/highlight.pack.js"></script>
+<script>hljs.configure({languages:[]});hljs.initHighlightingOnLoad();</script>
+<script src="/static/styles/js/anchor-scroll.js"></script>
+
+
+    <!-- Equation Rendering : mathjax -->
+    <script type="text/x-mathjax-config">
+     MathJax.Hub.Config({
+       jax: ["input/TeX","output/CommonHTML"],
+       tex2jax: { inlineMath: [["$","$"]] },
+       CommonHTML: {
+         linebreaks: { automatic: true, width: "container" }
+       }
+     });
+    </script>
+    <script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_CHTML" type="text/javascript"></script>
+
+    
+  <script>
+  (function(b,o,i,l,e,r){b.GoogleAnalyticsObject=l;b[l]||(b[l]=
+          function(){(b[l].q=b[l].q||[]).push(arguments)});b[l].l=+new Date;
+          e=o.createElement(i);r=o.getElementsByTagName(i)[0];
+          e.src='//www.google-analytics.com/analytics.js';
+          r.parentNode.insertBefore(e,r)}(window,document,'script','ga'));
+  ga('create','UA-60578350-2','auto');ga('send','pageview');
+  </script>
+
+  </body>
+</html>

@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Implementing A Second Brain in Emacs and Org-Mode &#8211; Tasshin</title>
+<link rel='dns-prefetch' href='//tasshin.com' />
+<link rel='dns-prefetch' href='//fonts.googleapis.com' />
+<link rel='dns-prefetch' href='//s.w.org' />
+<link rel="alternate" type="application/rss+xml" title="Tasshin &raquo; Feed" href="https://tasshin.com/feed/" />
+<link rel="alternate" type="application/rss+xml" title="Tasshin &raquo; Comments Feed" href="https://tasshin.com/comments/feed/" />
+<link rel="alternate" type="application/rss+xml" title="Tasshin &raquo; Implementing A Second Brain in Emacs and Org-Mode Comments Feed" href="https://tasshin.com/blog/implementing-a-second-brain-in-emacs-and-org-mode/feed/" />
+		<script type="text/javascript">
+			window._wpemojiSettings = {"baseUrl":"https:\/\/s.w.org\/images\/core\/emoji\/12.0.0-1\/72x72\/","ext":".png","svgUrl":"https:\/\/s.w.org\/images\/core\/emoji\/12.0.0-1\/svg\/","svgExt":".svg","source":{"concatemoji":"https:\/\/tasshin.com\/wp-includes\/js\/wp-emoji-release.min.js?ver=5.3"}};
+			!function(e,a,t){var r,n,o,i,p=a.createElement("canvas"),s=p.getContext&&p.getContext("2d");function c(e,t){var a=String.fromCharCode;s.clearRect(0,0,p.width,p.height),s.fillText(a.apply(this,e),0,0);var r=p.toDataURL();return s.clearRect(0,0,p.width,p.height),s.fillText(a.apply(this,t),0,0),r===p.toDataURL()}function l(e){if(!s||!s.fillText)return!1;switch(s.textBaseline="top",s.font="600 32px Arial",e){case"flag":return!c([127987,65039,8205,9895,65039],[127987,65039,8203,9895,65039])&&(!c([55356,56826,55356,56819],[55356,56826,8203,55356,56819])&&!c([55356,57332,56128,56423,56128,56418,56128,56421,56128,56430,56128,56423,56128,56447],[55356,57332,8203,56128,56423,8203,56128,56418,8203,56128,56421,8203,56128,56430,8203,56128,56423,8203,56128,56447]));case"emoji":return!c([55357,56424,55356,57342,8205,55358,56605,8205,55357,56424,55356,57340],[55357,56424,55356,57342,8203,55358,56605,8203,55357,56424,55356,57340])}return!1}function d(e){var t=a.createElement("script");t.src=e,t.defer=t.type="text/javascript",a.getElementsByTagName("head")[0].appendChild(t)}for(i=Array("flag","emoji"),t.supports={everything:!0,everythingExceptFlag:!0},o=0;o<i.length;o++)t.supports[i[o]]=l(i[o]),t.supports.everything=t.supports.everything&&t.supports[i[o]],"flag"!==i[o]&&(t.supports.everythingExceptFlag=t.supports.everythingExceptFlag&&t.supports[i[o]]);t.supports.everythingExceptFlag=t.supports.everythingExceptFlag&&!t.supports.flag,t.DOMReady=!1,t.readyCallback=function(){t.DOMReady=!0},t.supports.everything||(n=function(){t.readyCallback()},a.addEventListener?(a.addEventListener("DOMContentLoaded",n,!1),e.addEventListener("load",n,!1)):(e.attachEvent("onload",n),a.attachEvent("onreadystatechange",function(){"complete"===a.readyState&&t.readyCallback()})),(r=t.source||{}).concatemoji?d(r.concatemoji):r.wpemoji&&r.twemoji&&(d(r.twemoji),d(r.wpemoji)))}(window,document,window._wpemojiSettings);
+		</script>
+		<style type="text/css">
+img.wp-smiley,
+img.emoji {
+	display: inline !important;
+	border: none !important;
+	box-shadow: none !important;
+	height: 1em !important;
+	width: 1em !important;
+	margin: 0 .07em !important;
+	vertical-align: -0.1em !important;
+	background: none !important;
+	padding: 0 !important;
+}
+</style>
+	<link rel='stylesheet' id='wp-block-library-css'  href='https://tasshin.com/wp-includes/css/dist/block-library/style.min.css?ver=5.3' type='text/css' media='all' />
+<link rel='stylesheet' id='orgseries-default-css-css'  href='https://tasshin.com/wp-content/plugins/organize-series/orgSeries.css?ver=5.3' type='text/css' media='all' />
+<link rel='stylesheet' id='write-font-css'  href='https://fonts.googleapis.com/css?family=Gentium+Basic%3A700%7CGentium+Book+Basic%3A400%2C400italic%2C700%7CSlabo+27px%3A400&#038;subset=latin%2Clatin-ext' type='text/css' media='all' />
+<link rel='stylesheet' id='genericons-css'  href='https://tasshin.com/wp-content/themes/write/genericons/genericons.css?ver=3.4.1' type='text/css' media='all' />
+<link rel='stylesheet' id='normalize-css'  href='https://tasshin.com/wp-content/themes/write/css/normalize.css?ver=8.0.0' type='text/css' media='all' />
+<link rel='stylesheet' id='write-style-css'  href='https://tasshin.com/wp-content/themes/write/style.css?ver=2.1.2' type='text/css' media='all' />
+<link rel='stylesheet' id='drawer-style-css'  href='https://tasshin.com/wp-content/themes/write/css/drawer.css?ver=3.2.2' type='text/css' media='screen and (max-width: 782px)' />
+<script type='text/javascript' src='https://tasshin.com/wp-includes/js/jquery/jquery.js?ver=1.12.4-wp'></script>
+<script type='text/javascript' src='https://tasshin.com/wp-includes/js/jquery/jquery-migrate.min.js?ver=1.4.1'></script>
+<script type='text/javascript' src='https://tasshin.com/wp-content/themes/write/js/iscroll.js?ver=5.2.0'></script>
+<script type='text/javascript' src='https://tasshin.com/wp-content/themes/write/js/drawer.js?ver=3.2.2'></script>
+<link rel='https://api.w.org/' href='https://tasshin.com/wp-json/' />
+<link rel="EditURI" type="application/rsd+xml" title="RSD" href="https://tasshin.com/xmlrpc.php?rsd" />
+<link rel="wlwmanifest" type="application/wlwmanifest+xml" href="https://tasshin.com/wp-includes/wlwmanifest.xml" /> 
+<link rel='next' title='Goldratt on Persuasion' href='https://tasshin.com/blog/goldratt-on-persuasion/' />
+<meta name="generator" content="WordPress 5.3" />
+<link rel="canonical" href="https://tasshin.com/blog/implementing-a-second-brain-in-emacs-and-org-mode/" />
+<link rel='shortlink' href='https://tasshin.com/?p=50' />
+<link rel="alternate" type="application/json+oembed" href="https://tasshin.com/wp-json/oembed/1.0/embed?url=https%3A%2F%2Ftasshin.com%2Fblog%2Fimplementing-a-second-brain-in-emacs-and-org-mode%2F" />
+<link rel="alternate" type="text/xml+oembed" href="https://tasshin.com/wp-json/oembed/1.0/embed?url=https%3A%2F%2Ftasshin.com%2Fblog%2Fimplementing-a-second-brain-in-emacs-and-org-mode%2F&#038;format=xml" />
+	<style type="text/css">
+		/* Colors */
+				
+			</style>
+	<link rel="pingback" href="https://tasshin.com/xmlrpc.php">
+		<style type="text/css" id="wp-custom-css">
+			/* .wp-post-image {
+    display: none !important;
+}
+
+.post-thumbnail-large {
+	min-height: 0px;
+	margin-bottom: 180px;
+} */		</style>
+		</head>
+
+<body class="post-template-default single single-post postid-50 single-format-standard drawer header-side footer-side no-sidebar footer-0 has-avatars">
+<div id="page" class="hfeed site">
+	<a class="skip-link screen-reader-text" href="#content">Skip to content</a>
+
+	<header id="masthead" class="site-header">
+
+		<div class="site-top">
+			<div class="site-top-table">
+				<div class="site-branding">
+									<div class="site-title"><a href="https://tasshin.com/" rel="home">Tasshin</a></div>
+					<div class="site-description"></div>
+				</div><!-- .site-branding -->
+
+								<nav id="site-navigation" class="main-navigation">
+					<button class="drawer-toggle drawer-hamburger">
+						<span class="screen-reader-text">Menu</span>
+						<span class="drawer-hamburger-icon"></span>
+					</button>
+					<div class="drawer-nav">
+						<div class="drawer-content">
+							<div class="drawer-content-inner">
+							<div class="menu-primary-container"><ul id="menu-primary" class="menu"><li id="menu-item-71" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-71"><a href="/">Home</a></li>
+<li id="menu-item-173" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-173"><a href="https://tasshin.com/join/">Newsletter</a></li>
+<li id="menu-item-264" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-264"><a href="https://tasshin.com/notes/">Notes</a></li>
+<li id="menu-item-229" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-229"><a href="https://tasshin.com/links/">Links</a></li>
+<li id="menu-item-167" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-167"><a href="https://tasshin.com/start-here/">Start Here</a></li>
+</ul></div>														<form role="search" method="get" class="search-form" action="https://tasshin.com/">
+				<label>
+					<span class="screen-reader-text">Search for:</span>
+					<input type="search" class="search-field" placeholder="Search &hellip;" value="" name="s" />
+				</label>
+				<input type="submit" class="search-submit" value="Search" />
+			</form>														</div><!-- .drawer-content-inner -->
+						</div><!-- .drawer-content -->
+					</div><!-- .drawer-nav -->
+				</nav><!-- #site-navigation -->
+							</div><!-- .site-top-table -->
+		</div><!-- .site-top -->
+
+		
+		
+	</header><!-- #masthead -->
+
+	<div id="content" class="site-content">
+
+
+<div id="primary" class="content-area">
+	<main id="main" class="site-main">
+
+	
+		
+<div class="post-full post-full-summary">
+	<article id="post-50" class="post-50 post type-post status-publish format-standard hentry category-productivity tag-basb tag-emacs tag-evernote tag-org-mode tag-pkm">
+		<header class="entry-header">
+			<div class="entry-float">
+									<div class="entry-meta">
+		<span class="posted-on">
+		<a href="https://tasshin.com/blog/implementing-a-second-brain-in-emacs-and-org-mode/" rel="bookmark"><time class="entry-date published updated" datetime="2017-12-15T02:08:34+00:00">December 15, 2017</time></a>		</span>
+	</div><!-- .entry-meta -->
+				</div><!-- .entry-float -->
+			<h1 class="entry-title">Implementing A Second Brain in Emacs and Org-Mode</h1>
+		</header><!-- .entry-header -->
+		<div class="entry-content">
+			<figure><img src="https://cdn-images-1.medium.com/max/800/0*p3liDZPPVSV7hdMh." data-width="1433" data-height="728" /></figure>
+<p>This post is a continuation of “<a href="https://praxis.fortelabs.co/building-a-second-brain-in-emacs-and-org-mode-faa20ae06fc" target="_blank" rel="noopener noreferrer">Building A Second Brain with Emacs and Org-Mode.</a>” If you haven’t read that yet, read that post first.</p>
+<p><span id="more-50"></span> It gave a high level overview of how BASB extends GTD, what Emacs and Org-Mode are (and why I wanted to implement BASB with them), and what principles emerge from using these tools. This post will go into detail about how I’ve implemented BASB using Emacs and Org-Mode. If you’re already into Emacs and Org-Mode, I hope this gives you some interesting new possibilities for your Emacs configuration. If you’re interested in BASB but are not familiar with Emacs and Org-Mode, I hope this post gives you a better sense of the power that Emacs and Org give you when implementing BASB.</p>
+<h3>Should I use Emacs and Org-Mode?</h3>
+<p>To begin, I want to clarify that I don’t recommend Emacs and Org-Mode unconditionally. They’re incredible software, but they can be a time sink, albeit an interesting one. I learned to program by playing with my Emacs configuration — it’s a classic example of a <a href="http://chimera.labs.oreilly.com/books/1234000001813/ch05.html#solution_id24" target="_blank" rel="noopener noreferrer">breakable toy</a>, a project that you’re allowed to fail at. It is also notorious for having a steep learning curve. This is true, although I prefer to describe it as infinite, which is to say, you never master it. Every Emacs user I know is constantly learning new features, and even the best Emacs users don’t know it all.</p>
+<p>If you’ve got something that works for you, keep using it. I hope these posts help you learn something about how to iterate and improve on your current system. Still, some people might become interested in using Emacs and Org as a result of these posts, so I want to give clear guidelines about when that might or might not be a good idea.</p>
+<h3>Under what circumstances would I recommend using Emacs and Org-Mode?</h3>
+<ul>
+<li><strong>If text is the lingua franca of your notes. </strong>Emacs has an unparalleled ability to edit text. You can’t knock it till you try it. The thing that blew me away was C-t (that’s Emacs notation for Control and t pressed simultaneously), which transposes characters. So if you have typed “cta” rather than “cat”, you can place your cursor (with your keyboard, not your mouse) between the t and the a and transpose them with that command. There are similar commands available for transposing words, sentences, lines, and paragraphs</li>
+<li><strong>If you want to learn to program</strong>, or you want to learn a Lisp, or literate programming.</li>
+<li>If being able to <strong>create your own workflow</strong> is essential to your success</li>
+<li><strong>If you program, touch source code, or Git repositories</strong>: check out <a href="https://magit.vc/" target="_blank" rel="noopener noreferrer">Magit</a>, possibly the greatest Git user interface of all time, certainly the best I’ve used</li>
+</ul>
+<h3>When would I not recommend learning or using Emacs and Org-Mode?</h3>
+<ul>
+<li><strong>If none of the above apply</strong></li>
+<li><strong>If you already use Vim</strong>, which is often seen as a foil to Emacs. If you use Vim, I expect a lot of the ideas here will apply to you, too, even if the details don’t. Of course, if some of the features mentioned here seem interesting, you might want to look into emulating Vim in Emacs, with <a href="https://github.com/emacs-evil/evil" target="_blank" rel="noopener noreferrer">Evil</a> or <a href="http://spacemacs.org/" target="_blank" rel="noopener noreferrer">Spacemacs</a>. As they say in Spacemacs, the best editor isn’t Vim or Emacs, it’s Vim and Emacs. Of course, since I don’t use Vim myself, I can’t speak to that, so I come in peace</li>
+<li><strong>If you have a note-taking and/or task management system</strong> that works for you</li>
+<li><strong>If you hate fiddling with computers</strong></li>
+</ul>
+<h3>Well, I want to try it. How do I install Emacs and Org-Mode?</h3>
+<p>If you’re on Windows, use <a href="https://www.gnu.org/software/emacs/" target="_blank" rel="noopener noreferrer">the official GNU web page</a>. If you’re on Mac OS X,<a href="https://emacsformacosx.com/" target="_blank" rel="noopener noreferrer"> download a binary</a> and install it, or use a package manager like <a href="https://brew.sh/" target="_blank" rel="noopener noreferrer">Homebrew</a>. If you’re on Linux or another UNIX-like, use your distribution’s software or package manager.</p>
+<p>Once you’ve installed Emacs, you can start climbing the Emacs learning curve with the built-in tutorial. Hit Control and h simultaneously, and then hit t. (In Emacs notation, which you’ll learn soon, this is notated as C-h t). I think the tutorial took me 30–60 minutes, but it might take a little less or a little longer. You’ll also want to complete a <a href="https://orgmode.org/worg/org-tutorials/orgtutorial_dto.html" target="_blank" rel="noopener noreferrer">basic tutorial of Org-Mode</a>. (You may also find<a href="http://sachachua.com/blog/series/a-visual-guide-to-emacs/" target="_blank" rel="noopener noreferrer"> this series of visual notes on Emacs</a> useful.)</p>
+<p>Between installing Emacs and completing two tutorials, it should take you something like two to five hours to decide if it’s worth investing even more time to make Emacs and Org Mode a central part of your digital workflow. That’s a lot of time, compared to a lot of things, but there’s a lot of power in there. If you decide it’s worth it, you never really stop learning Emacs. Feel free to reach out to me if you get stuck or have a question.</p>
+<h3>How would Emacs and Org-Mode users implement BASB?</h3>
+<p>I can see two ways to implement these ideas in Emacs and Org-Mode. I call them the <em>minimal</em> and <em>maximal</em> approaches:</p>
+<ol>
+<li>The minimal approach: Use Emacs to edit text files, program, use shells and version control, and so on. Use Org Mode as a task manager, and to create text-heavy notes. When the notes stabilize, export those notes to Evernote or another note-taking program for reference</li>
+<li>The maximal approach: Do everything in Emacs and Org-Mode, hard stop</li>
+</ol>
+<p>It isn’t immediately obvious how to implement the maximal approach in Emacs. Org-Mode is excellent at dealing with actionable information, and generating notes. It’s also good at maintaining structured notes that include checklists, executable source code snippets, etc. But it’s not good at everything. A good reference system should be able to easily store all kinds of materials: not just text (which Emacs excels at), but also handwritten notes, photos, screenshots, voice memos, videos, and more. Emacs can do most of that, with attachments, but the interface is ugly compared to more user-friendly software. Moreover, since it’s designed for computers with physical keyboards, it’s not well suited to capturing or searching for information on a mobile device. Evernote, on the other hand, is designed to store, sync, search, and share mixed media notes across platforms.</p>
+<p>Accordingly, I’ve mostly adopted the first, more minimal approach for myself. I try to use Emacs for what it’s good at (editing text files, using shells, programming, and creating notes with Org), and use Evernote for what it’s good at (storing reference materials of multiple mediums, not limited to plain text). This visual diagram, based on the GTD workflow diagram, gives a broad visual overview of what this workflow looks like:</p>
+<p><img class="progressiveMedia-image js-progressiveMedia-image" src="https://cdn-images-1.medium.com/max/800/1*uzegRCbEpXGUIsJOFgmFSA.png" data-src="https://cdn-images-1.medium.com/max/800/1*uzegRCbEpXGUIsJOFgmFSA.png" /></p>
+<p>I’d like to be<em> capable of </em>implementing the maximal approach, so I’ve paid close attention to certain pieces of functionality that might be necessary for doing so. The remainder of this post will be about specific implementation details for this workflow, as well as the context for why I would want to implement each feature.</p>
+<h3>Capture / Progressive Summarization</h3>
+<p>I want it to be easy to create valuable notes in Org Mode. I also wanted to have a method for implementing the principle behind capturing that is taught in BASB: Progressive Summarization.</p>
+<h4>Progressive Summarization</h4>
+<p>The general idea of progressive summarization is that you want to create those notes so that, when you see them in the future, it’s easy to quickly comprehend the purpose. You do that by moving through the following process:</p>
+<ul>
+<li><strong>Layer 1:</strong> When you encounter something interesting, capture it</li>
+<li><strong>Layer 2: </strong>Bold the most interesting parts</li>
+<li><strong>Layer 3:</strong> Highlight the most interesting bolded sections</li>
+<li><strong>Layer 4: </strong>Summarize the bolded portions and the note in your own words</li>
+<li><strong>Layer 5: </strong>Turn your notes into something new: a tweet, a blog post, even a book</li>
+</ul>
+<p>You don’t do each step for every note. These are optional layers, added as needed. You add the layers <strong>opportunistically,</strong> that is, when you encounter your notes in your day to day work. This last bit should give you a sense of what Just in Time Project Management is all about.</p>
+<p>Layers 1, 4, and 5 are easy to do in Org-Mode: just write text. To bold in Org Mode for Layer 2, you can wrap text in asterisks. I use a feature of<a href="https://github.com/Fuco1/smartparens" target="_blank" rel="noopener noreferrer"> Smartparens</a>, sp-local-pairs, to make this very easy: just highlight the text, hit asterisk, and the text is wrapped with asterisks and hence bolded.</p>
+<p><img class="graf-image aligncenter" src="https://cdn-images-1.medium.com/max/800/1*kSVQDXG-DUJcjCYN7cnhtA.png" data-image-id="1*kSVQDXG-DUJcjCYN7cnhtA.png" data-width="251" data-height="65" /></p>
+<p>Layer 3, highlighting, is the tricky part. For me, what’s most important is to be able to export highlights to Evernote when they’re ready. You can highlight HTML with the mark tag. Additionally, Org-mode can have inline literal HTML tags, like this:</p>
+<p>@@html:&lt;b&gt;@@bold <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="4e3a2b363a0e">[email&#160;protected]</a>@html:&lt;/b&gt;@@</p>
+<p>I can use this to highlight text on export with the <strong>&lt;mark&gt;</strong> tag:</p>
+<p><img class="progressiveMedia-image js-progressiveMedia-image aligncenter" src="https://cdn-images-1.medium.com/max/800/1*DKroR6GUvVFElpoqO7B-Hg.png" data-src="https://cdn-images-1.medium.com/max/800/1*DKroR6GUvVFElpoqO7B-Hg.png" /></p>
+<p>This method is similar to the Smartparens feature above, but allows for more complicated wrappers. It is sufficient for note creation (Layer 1 and possibly 2–3) in Org-Mode and exporting them to Evernote. However, it is also messy and cluttered, and not ideal for long-term storage in a file. I just use them when creating a note that I’m planning to export to Evernote once I’ve completed it.</p>
+<p>Ideally, I want to easily highlight a region so that it is always highlighted in Emacs and HTML exports. My goal is to be able to do all of this in Emacs. To do that, I’d like to:</p>
+<ul>
+<li>Hide or clean this markup when displayed in Emacs, à la <a href="http://emacsredux.com/blog/2014/08/25/a-peek-at-emacs-24-dot-4-prettify-symbols-mode/" target="_blank" rel="noopener noreferrer"><strong>prettify-symbols-mode</strong></a></li>
+<li>Automatically highlight the wrapped region in Emacs</li>
+</ul>
+<p><a href="http://kitchingroup.cheme.cmu.edu/" target="_blank" rel="noopener noreferrer">John Kitchin</a>’s <a href="https://github.com/jkitchin/ov-highlight" target="_blank" rel="noopener noreferrer">ov-highlight</a> package aims to show persistent highlights in Emacs, but unfortunately it’s <a href="https://twitter.com/johnkitchin/status/932860145985392640" target="_blank" rel="noopener noreferrer">not ready for prime time yet</a>.</p>
+<h4>Exporting Notes from Org-Mode</h4>
+<p>Here is the workflow that I’ve established. I create notes in Org-Mode, process notes in Org-Mode, and store notes for reference in Evernote. Org-Mode simply works better than Evernote for me when creating text-heavy notes. Evernote is better at storing and accessing those notes. I want to make it as easy as possible to get the best from both tools. This means I need to make it easy to export notes from Org-Mode — whether they’re whole files, headers, or even just specific sections of text — into Evernote.</p>
+<p>The central part of this workflow is John Kitchin’s <a href="https://github.com/jkitchin/ox-clip" target="_blank" rel="noopener noreferrer">ox-clip</a>, which copies content from org-mode as formatted HTML to your system’s clipboard. With it you can select a portion of a buffer and copy formatted HTML of that content to your clipboard for easy import into other programs.</p>
+<p>Here are a couple of other tools that might be useful when exporting content from Org into note taking programs like Evernote:</p>
+<ul>
+<li>set <strong>org-export-with-toc</strong> and <strong>org-export-with-section-numbers</strong> to <em>nil</em></li>
+<li><a href="https://github.com/lujun9972/org-preview-html" target="_blank" rel="noopener noreferrer"><strong>org-preview-html</strong></a>: creates a workflow for previewing org files as you edit them, popularized by Markdown-centric tools like Ghost</li>
+<li><a href="https://github.com/joostkremers/pandoc-mode" target="_blank" rel="noopener noreferrer"><strong>pandoc-mode</strong></a>: easy access to<a href="http://pandoc.org/" target="_blank" rel="noopener noreferrer"> pandoc</a> (“a universal document converter”) for a variety of formats, including PDF formatted LaTeX-style.</li>
+</ul>
+<h4>Exporting Notes from Evernote</h4>
+<p>If you start with the minimal approach and decide to migrate back to using Org-Mode for everything (as Sacha Chua, <a href="http://sachachua.com/tag/evernote/#post-27043" target="_blank" rel="noopener noreferrer">the</a><a href="http://sachachua.com/tag/evernote/#post-25628" target="_blank" rel="noopener noreferrer"> pioneer</a> of integrating Org-Mode with Evernote, <a href="https://twitter.com/sachac/status/930008975214612481" target="_blank" rel="noopener noreferrer">did</a>), then you’ll want to know how to export Evernote Notes into Org-Mode. <a href="https://github.com/AshyIsMe/enex2org" target="_blank" rel="noopener noreferrer">This project</a>, enex2org, looks promising for converting Evernote’s file format, enex, to org files. I haven’t tried it myself yet, though. Alternatively, you can hyperlink to an Evernote with a shared URL. This really doesn’t work all that well, but it makes a first step toward escaping the Evernote elephant.</p>
+<h4>Easy Narrowing and Widening</h4>
+<p>If you’re writing a note in context in Org Mode — perhaps several levels deep in an Org file — you’ll want to be able to pay attention to just the contents of that note, while keeping it stored at that location. Some people like to use indirect-buffers for this, but I prefer a feature called “narrowing” and “widening,” which lets you limit what’s shown (and what’s editable) in an Emacs buffer to a particular region. Here’s are two screenshots of my Emacs configuration, which is currently ~2500 lines. The first shows multiple sections, with all of the lines in the file accessible (some visible, all editable) — everything is “widened”:</p>
+<figure><img src="https://cdn-images-1.medium.com/max/800/0*AxmAJppzDfoUS4Rb." data-width="1360" data-height="650" /></figure>
+<p>And here is a screenshot where I’ve narrowed to one sub-section of the configuration, one piece of functionality with explanation and the relevant Emacs Lisp:</p>
+<figure><img src="https://cdn-images-1.medium.com/max/800/0*SFCPmzqnbCY0KPCk." data-width="1339" data-height="595" /></figure>
+<p>There are many good commands for narrowing or widening to specific parts of specific Emacs buffers. As with many Emacs commands, by default you need to learn many different keyboard shortcuts to make use of them, which can be an obstacle. Some time ago I wrote a function called <strong>narrow-or-widen-dwim</strong>. Artur Malabarba profiled and augmented this function in his blog,<a href="http://endlessparentheses.com/emacs-narrow-or-widen-dwim.html" target="_blank" rel="noopener noreferrer"> Endless Parentheses</a>. I have combined it with his <a href="http://endlessparentheses.com/the-toggle-map-and-wizardry.html" target="_blank" rel="noopener noreferrer">toggle-map</a>, so for me, it’s bound to <strong>C-x t n</strong>. It’s easy to remember: “toggle narrowing.”</p>
+<h4>Using Emacs and Org-Mode on the Go</h4>
+<p>If you’re making Org-Mode a central part of your workflow whether for just tasks, or actionable and non-actionable information, you’ll want to be able to capture information into Org from anywhere. This is a bit of a challenge, as Emacs and Org-Mode are really designed for use with a full keyboard, not a phone’s screen. (This is a big part of why I’m embracing my Evernote overlords for reference materials.)</p>
+<p>Still, there are some solutions here. On Android, check out<a href="http://www.orgzly.com/" target="_blank" rel="noopener noreferrer"> Orgzly</a>; on, iPhone, look into <a href="https://orgmode.org/manual/MobileOrg.html" target="_blank" rel="noopener noreferrer">MobileOrg</a> or <a href="http://beorgapp.com/" target="_blank" rel="noopener noreferrer">beorg</a>. I prefer beorg. It doesn’t do everything that you can do in Org-Mode, but it’s great for looking at your files, and looking at your agenda. Org agenda views are a quick and flexible way to collect and display related information from across multiple files. In this case, Beorg can replicate this functionality to show you any events or tasks that you have for a given period of time, such as “today” or “this week.” Beorg can access events through your phone’s calendar. On my computer, I access Google Calendar events with<a href="https://github.com/myuhe/org-gcal.el" target="_blank" rel="noopener noreferrer"> org-gcal</a>. Beorg works great for capturing tasks and quick notes too, although you might want to capture notes with something else, such as Evernote.</p>
+<h4>Capturing Emails As Todo Items</h4>
+<p>You’ll also want to integrate Emacs and Org-Mode with your email client, since many important tasks come from email messages. mu4e is a mail client (mu) for Emacs (4e). It <a href="http://pragmaticemacs.com/emacs/master-your-inbox-with-mu4e-and-org-mode/" target="_blank" rel="noopener noreferrer">has great support for processing emails as todo items</a>. This is a <a href="http://pragmaticemacs.com/emacs/master-your-inbox-with-mu4e-and-org-mode/" target="_blank" rel="noopener noreferrer">good introductory article</a>.</p>
+<h4>Inserting Links into Notes</h4>
+<p><a href="https://github.com/rexim/org-cliplink" target="_blank" rel="noopener noreferrer">org-cliplink</a> allows you to insert a link from the clipboard, and it will set the text of that link to be the title of the linked page. By default, copying the link for something, such as org-cliplink’s project page, would simply have the unformatted URL:</p>
+<p><a href="https://github.com/rexim/org-cliplink" target="_blank" rel="noopener noreferrer">https://github.com/rexim/org-cliplink</a></p>
+<p>But when inserted with org-cliplink, the link becomes this:</p>
+<p><a href="https://github.com/rexim/org-cliplink" target="_blank" rel="noopener noreferrer">GitHub — rexim/org-cliplink: Insert org-mode links from clipboard</a></p>
+<p>I wish I could do this in Evernote, but since I’m creating most notes in Org-Mode first anyway, it’s easy enough to just copy the output with ox-clip.</p>
+<h4>Editing and Annotating PDFs in Emacs and Org-Mode</h4>
+<p>When using Emacs, you often stumble on some feature that you had no idea it could do. For me, that was learning that Emacs can view PDFs with its built-in DocView functionality. Unfortunately, Emacs’ built-in PDF viewer is slow, memory intensive, and read-only. An alternative, <a href="https://github.com/politza/pdf-tools%0A" target="_blank" rel="noopener noreferrer">pdf-tools</a>, is fast and has read/write support for in-PDF annotations in Emacs.</p>
+<p>The only snag is that you can’t install pdf-tools like a normal package. It has many dependencies which vary by operating system and local set-up. I found it a little intimidating and involved, but the documentation is helpful. Here’s a screenshot of what it looks like:</p>
+<figure><img src="https://cdn-images-1.medium.com/max/800/0*pGxMMorWv0iFMGcY." data-width="1365" data-height="699" /></figure>
+<p>You’ll want to change the default configuration. There <a href="http://pragmaticemacs.com/emacs/view-and-annotate-pdfs-in-emacs-with-pdf-tools/" target="_blank" rel="noopener noreferrer">are</a> <a href="http://pragmaticemacs.com/emacs/more-pdf-tools-tweaks/" target="_blank" rel="noopener noreferrer">quite</a> <a href="http://pragmaticemacs.com/emacs/even-more-pdf-tools-tweaks/" target="_blank" rel="noopener noreferrer">a</a> <a href="http://mbork.pl/2016-06-13_Displaying_pdfs_on_the_right" target="_blank" rel="noopener noreferrer">few</a> <a href="http://mbork.pl/2017-10-30_Pdf-tools_and_follow_mode" target="_blank" rel="noopener noreferrer">tweaks</a> <a href="http://tech.memoryimprintstudio.com/pdf-annotation-related-tools/" target="_blank" rel="noopener noreferrer">posted</a> <a href="https://codearsonist.com/reading-for-programmers" target="_blank" rel="noopener noreferrer">out there</a>! I like <a href="https://github.com/rudolfochrist/interleave" target="_blank" rel="noopener noreferrer">interleave</a>, shown above, which automatically juxtaposes a PDF with the Org file you are using to take notes.</p>
+<h4>Drag and Drop Images into Org-Mode</h4>
+<p>If you’re planning on implementing the maximal approach, <a href="https://github.com/abo-abo/org-download" target="_blank" rel="noopener noreferrer">org-download</a> will let you drag and drop images into a note with minimal configuration. It also exposes a function, <strong>org-download-screenshot</strong>, that lets you take a screenshot and that is automatically inserted into your org-mode buffer at point.</p>
+<p>Be sure to set <strong>org-startup-with-inline-images</strong> to<em> t </em>or<em> non-nil</em>, if you haven’t already. Then images will automatically show up where you want them..</p>
+<h3>Organize / P.A.R.A.</h3>
+<p>P.A.R.A. provides a simple and consistent system for organizing. It stands for Projects, Areas, Resources, and Archives:</p>
+<ul>
+<li><strong>Project:</strong> a group of related tasks, linked to a specific outcomes and deadlines</li>
+<li><strong>Areas: </strong>on-going spheres of activity (no deadline), with a standard to be met. For example, “call repair company” is a task; “replace garage door” is the relevant project; and “house” or “Home Maintenance” is an area, as you require a certain standard for you to continue owning the house and living there</li>
+<li><strong>Resources: </strong>materials that aren’t tied to a specific project or area, but have some kind of interest for you, such as “emacs,” “productivity,” or “board games”</li>
+<li><strong>Archives:</strong> inactive projects, areas, or resources. Examples might include a home maintenance project you completed last year, an old job, and a hobby you used to have but aren’t actively interested in any more</li>
+</ul>
+<p>You clearly define your projects and areas. Then you replicate those projects and areas your inboxes and storage spaces. Tiago recommends that you ensure that your projects and areas are consistently and completely synced between your task manager and your note-taking program. You can replicate them in your other inboxes, such as your documents folder and cloud storage services, on an as-needed basis. Whenever you download a new file, record a new task, or save a new web page, you already know where it should go. If it’s actionable, it goes in the appropriate project or area in your task manager; if it’s not, you might store it in the relevant project, area, resource, or archive on your file system or note-taking program.</p>
+<p>If this sounds crazy, well, now that I’ve implemented this system, the old way seems crazy. Many Emacs users include a note in their configuration explaining what each of their most important files does, and why. With this method, that information is unnecessary.</p>
+<p>Here’s another, related point. For most Org-mode users, the actionable information is very close to the non-actionable information. This is because if you want to look at the actionable information, you can do so very easily with the agenda views, even if notes are next to tasks in the original files. When I first heard Tiago say that he likes to keep a strict distinction and separation between actionable and non-actionable information, I thought, “that’s crazy, I don’t like it, I love that about Org-mode, you’re just justifying a really backwards workflow.” (Sorry Tiago!)</p>
+<p>It turns out Tiago actually has really sound reasons for recommending this separation. We have different needs for our tasks than our notes. Tasks need to be well-organized, up to date, easy to find and act on. There’s a higher quantity of reference materials, they change less often, and messiness is not only acceptable but contributes to creativity.</p>
+<p>The proliferation of agenda files, the need to explain their purpose explicitly, and the constant juxtaposition and intermixing of actionable and reference information all demonstrate the need for a better organizational scheme. Since implementing P.A.R.A. and migrating reference materials to Evernote I have fewer and shorter agenda files, and each file has a clear purpose. Tasks and some notes remain. Org-Mode is excellent as a task manager, so it makes sense to keep tasks there; the remaining notes belong in Org-Mode, usually because they are directly relate to a specific action, or because they contain executable code. All other notes and files are nicely filed and organized in parallel containers on a separate service or system. Everything is neat and tidy in a completely unanticipated way.</p>
+<p>These distinctions are already implicit in our organizational systems. For example, you probably already have a folder dedicated to your job or work. This becomes an area folder. I found that much of my data “self-organized” into the appropriate locations in a P.A.R.A.-based system. Because these distinctions are now explicit and consistent across systems, it’s easier to find everything, no matter what kind of information it is, or where it’s stored.</p>
+<h4>Project Overview with Org Column View</h4>
+<p>I wanted to get a quick view of which projects I have going at any given time. The <a href="https://orgmode.org/worg/org-tutorials/org-column-view-tutorial.html" target="_blank" rel="noopener noreferrer">column views</a> feature works well to implement this.</p>
+<p>I added several <a href="https://orgmode.org/manual/Properties-and-Columns.html" target="_blank" rel="noopener noreferrer">properties</a> to my projects header in my tasks file. Properties are tags with values. For example, in this context, each project has a priority, A-C; a name (e.g., “Write post about Emacs”); a relevant area (“Business”); a deadline (a specific but flexible date); and an associated outcome (something concrete and specific — “post is published” — but also motivating — “generating new connections and ideas”).</p>
+<figure><img src="https://cdn-images-1.medium.com/max/800/0*sjE6PmCFjIayc0eH." data-width="1366" data-height="208" /></figure>
+<p>Here’s what this dashboard looks like:</p>
+<figure><img src="https://cdn-images-1.medium.com/max/800/0*96tgfbaiyPBva9F2." data-width="643" data-height="239" /></figure>
+<p>I can get this dashboard showing my current projects by hitting <strong>=</strong> (a speed command), <strong>C-c C-x C-c </strong>(<strong>org-columns</strong>), or by using a homemade <a href="https://github.com/mwfogleman/.emacs.d/blob/master/michael.org#projects" target="_blank" rel="noopener noreferrer">function</a>, <strong>project-overview</strong>, that quickly navigates to this view.</p>
+<h4>Stuck Projects</h4>
+<p>A stuck project is a project without any action steps or tasks associated with it. This is a concept that comes from David Allen’s GTD.</p>
+<p>Org-Mode can tell you which subtrees don’t have tasks associated with them (“stuck projects”). You can also configure what it recognizes as a stuck project. Unfortunately, by default, this picks up a lot of noise: currently, it tells me I have ninety-five“stuck projects.” I’ve clearly defined what my projects are, though, and I currently have eleven projects.</p>
+<p>Moreover, those eleven projects each have an entry as a subheading of the “1 Projects” heading / subtree in my tasks file. That means that I can just <a href="https://github.com/mwfogleman/.emacs.d/blob/master/michael.org#projects" target="_blank" rel="noopener noreferrer">get the stuck projects in that subtree</a>. Voilà:</p>
+<figure><img src="https://cdn-images-1.medium.com/max/800/0*SbVEiDghyebU7Ura." data-width="384" data-height="58" /></figure>
+<p>Just one project is stuck. No noise, all signal!</p>
+<h4>Reviews in Org</h4>
+<p>I do weekly reviews, which David Allen calls the “Master Key to GTD.” Implementing P.A.R.A. fine tuned this system. Reviews now happen easily, quickly, and consistently. I use a <a href="https://gist.github.com/mwfogleman/fbec1cc11f9eaac5e5d36b92c671ec8b" target="_blank" rel="noopener noreferrer">template</a> in Org to facilitate this. It is essentially a checklist, but it has access to all of Org’s power. I include text pulled from the Getting Things Done book and other sources to describe each step, but I also juxtapose that text with executable source blocks that help me accomplish each step (such as viewing my project overview, or stuck projects, featured above, and more).</p>
+<p>Having a checklist-based weekly review clearly defines what needs to be done. Augmenting it with executable code makes it even faster and more fun. If I discover an improvement to the process, altering the template improves all future reviews.</p>
+<p>Here’s how. Org has a feature called “capture templates.” They let you quickly capture information in a variety of ways: a todo item, a quick note, and much more. Here’s a simple one, that enters a todo item in a certain file at a certain location, and puts the point (the cursor) at a specific location:</p>
+<p><img class="graf-image aligncenter" src="https://cdn-images-1.medium.com/max/800/1*bnjR8ReIKAdP-YTPBnvU_A.png" data-image-id="1*bnjR8ReIKAdP-YTPBnvU_A.png" data-width="538" data-height="56" /></p>
+<p>The actual capture template is the last part. The rest is metadata about how to access that template and what to do with it when it’s captured.</p>
+<p>The reason I mention this is that I used to think you could only have one line capture templates in Org-mode, like the last example. However, I wanted to have templates that were longer than one line: a form with multiple data points, for example. And ideally, it would be stored in a file. <a href="http://emacslife.com/emacs-chats/chat-karl-voit.html" target="_blank" rel="noopener noreferrer">Karl Voit</a> has <a href="http://karl-voit.at/2016/12/18/org-depend/" target="_blank" rel="noopener noreferrer">written about a powerful approach</a> that extends the <a href="https://github.com/joaotavora/yasnippet" target="_blank" rel="noopener noreferrer">yasnippet</a> template system with a project called <a href="https://github.com/joaotavora/yasnippet" target="_blank" rel="noopener noreferrer">yankpad</a>, which lets you manage snippets in Org Mode. Org also has native functionality that extends capture templates, which looks like this:</p>
+<p><img class="graf-image aligncenter" src="https://cdn-images-1.medium.com/max/800/1*plEsuyXPnP4vCVLIAmfPFw.png" data-image-id="1*plEsuyXPnP4vCVLIAmfPFw.png" data-width="644" data-height="66" /></p>
+<p>This means that hitting “w” in the capture template screen creates a new entry in a file for reviews, following the template stored in a different file. I’ve also created some convenience and keybindings that you can find in <a href="https://github.com/mwfogleman/.emacs.d/blob/master/michael.org#reviews" target="_blank" rel="noopener noreferrer">my configuration</a>.</p>
+<h3>Retrieve / JIT Project Management</h3>
+<p>Having captured and organized notes that are relevant to you, you’ll have a lot of materials to make use of in your projects. How can you find and use these materials in an efficient and effective way?</p>
+<p>Building A Second Brain’s method for retrieval is called “just in time project management,” which is about making use of your reference materials to create more deliverables, more frequently, through what Tiago calls “intermediate packets.” Another way of describing it is creating the “conditions for rapidly executing and delivering projects using existing assets.”</p>
+<p>The BASB course covers sixteen workflow strategies that can help you employ Just in Time project management. These strategies aren’t necessarily directly related to particular Emacs configurations or principles. I do want to discuss two points that emerged from this section for me.</p>
+<p><strong>Archipelago of Ideas</strong></p>
+<p>The first, Archipelago of Ideas, is about connecting ideas on a topic. Its title is taken from a quote from a <a href="https://boingboing.net/2009/01/27/diy-how-to-write-a-b.html" target="_blank" rel="noopener noreferrer">BoingBoing article</a> author Stephen Johnson wrote about his writing process:</p>
+<blockquote><p>I launch myself into the actual writing of the book… [by opening my notes in my word processor]. Instead of confronting a terrifying blank page, I’m looking at a document filled with quotes: from letters, from primary sources, from scholarly papers, sometimes even my own notes. It’s a great technique for warding off the siren song of procrastination. Before I hit on this approach, I used to lose weeks stalling before each new chapter, because it was just a big empty sea of nothingness. Now each chapter starts life as a kind of archipelago of inspiring quotes, which makes it seem far less daunting. All I have to do is build bridges between the islands.”</p></blockquote>
+<p>When I read Tiago’s explanation of this workflow strategy, I realized that this strategy was already implicit in the way I was using Org Mode. When writing something I’ll simply list all of my ideas on the topic, re-order them, and start writing transition sentences between the ideas I want to keep.</p>
+<h4>RandomNote</h4>
+<p>Having information stored in an organized fashion makes it easier to find something specific. But what if you don’t know what you’re looking for? What if you want something relevant, but not predictable? You need randomness. You need a random note. A random note in your reference materials will be relevant to you, and you will understand it, but it’s not expected, either. This is a wonderful tool for exploring unexpected connections.</p>
+<p>RandomNote opens a random note in your Evernote. The BASB developer crew has implemented it across Evernote platforms. I wrote an Org-mode version, <a href="https://github.com/mwfogleman/org-randomnote" target="_blank" rel="noopener noreferrer">org-randomnote</a>. It’s on <a href="https://melpa.org/" target="_blank" rel="noopener noreferrer">MELPA</a>, a package archive for Emacs, so you can easily try it, whether or not you implement the rest of BASB.</p>
+<h3>Conclusion</h3>
+<p>I hope these posts have shown you some interesting configurations for Emacs and Org-Mode, explained what Emacs and Org are and why you might use them; what BASB is, how it relates to GTD, and what problems it solves; and what principles emerge from using all of these tools and workflows. I’d love to hear if you found these posts useful. If you have questions, or if you have a different way of implementing these features or solving these workflow problems, please send your thoughts and questions to <a href="https://twitter.com/tasshinfogleman/" target="_blank" rel="noopener noreferrer">@tasshinfogleman</a> on Twitter.</p>
+<p><strong><em>If you enjoyed this post, give the <a href="https://digitalproductivity.coach">Digital Productivity Coach</a> a try. It's an interactive coach for digital productivity, available 24⁄7 to give you a feasible next step to improve your productivity skills. </em></strong></p>
+<p><strong><em><a href="https://tasshin.com/join/">Subscribe to my newsletter</a> or follow me on <a href="https://twitter.com/tasshinfogleman">Twitter</a> to get updates on my new blog posts and current projects.</em></strong></p>
+					</div><!-- .entry-content -->
+
+			<footer class="entry-footer">
+		<div class="entry-footer-meta">
+			<div class="cat-links">
+				<a href="https://tasshin.com/blog/category/productivity/" rel="category tag">Productivity</a>			</div>
+						<div class="tags-links">
+				<a href="https://tasshin.com/blog/tag/basb/" rel="tag">Basb</a>, <a href="https://tasshin.com/blog/tag/emacs/" rel="tag">Emacs</a>, <a href="https://tasshin.com/blog/tag/evernote/" rel="tag">Evernote</a>, <a href="https://tasshin.com/blog/tag/org-mode/" rel="tag">Org Mode</a>, <a href="https://tasshin.com/blog/tag/pkm/" rel="tag">Pkm</a>			</div>
+					</div>
+	</footer><!-- .entry-footer -->
+				<div class="author-profile">
+		<div class="author-profile-avatar">
+			<img alt='' src='https://secure.gravatar.com/avatar/1fe75c6222f8d307badc93053d4ea23b?s=75&#038;d=mm&#038;r=g' srcset='https://secure.gravatar.com/avatar/1fe75c6222f8d307badc93053d4ea23b?s=150&#038;d=mm&#038;r=g 2x' class='avatar avatar-75 photo' height='75' width='75' />		</div><!-- .author-profile-avatar -->
+		<div class="author-profile-meta">
+			<div class="author-profile-name"><strong><a class="author-profile-description-link" href="https://tasshin.com/blog/author/tasshin/" rel="author">Tasshin</a></strong></div>
+		</div><!-- .author-profile-meta -->
+		<div class="author-profile-description">
+					</div><!-- .author-profile-description -->
+	</div><!-- .author-profile -->
+	
+	</article><!-- #post-## -->
+</div><!-- .post-full -->
+
+	<nav class="navigation post-navigation">
+		<h2 class="screen-reader-text">Post navigation</h2>
+		<div class="nav-links">
+			<div class="nav-next"><div class="post-nav-title">Newer post</div><a href="https://tasshin.com/blog/goldratt-on-persuasion/" rel="next">Goldratt on Persuasion</a></div>		</div><!-- .nav-links -->
+	</nav><!-- .post-navigation -->
+	
+
+		
+	
+	</main><!-- #main -->
+</div><!-- #primary -->
+
+
+	</div><!-- #content -->
+
+	<footer id="colophon" class="site-footer">
+
+		
+		<div class="site-bottom">
+			<div class="site-bottom-table">
+				<nav id="footer-social-link" class="footer-social-link social-link">
+																	</nav><!-- #footer-social-link -->
+
+				<div class="site-info">
+					<div class="site-credit">
+						Powered by <a href="https://wordpress.org/">WordPress</a>					<span class="site-credit-sep"> | </span>
+						Theme: <a href="http://themegraphy.com/wordpress-themes/write/">Write</a> by Themegraphy					</div><!-- .site-credit -->
+				</div><!-- .site-info -->
+			</div><!-- .site-bottom-table -->
+		</div><!-- .site-bottom -->
+
+	</footer><!-- #colophon -->
+</div><!-- #page -->
+
+				<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script type='text/javascript'><!--
+			var seriesdropdown = document.getElementById("orgseries_dropdown");
+			if (seriesdropdown) {
+			 function onSeriesChange() {
+					if ( seriesdropdown.options[seriesdropdown.selectedIndex].value != ( 0 || -1 ) ) {
+						location.href = "https://tasshin.com/series/"+seriesdropdown.options[seriesdropdown.selectedIndex].value;
+					}
+				}
+				seriesdropdown.onchange = onSeriesChange;
+			}
+			--></script>
+			<script type='text/javascript' src='https://tasshin.com/wp-content/themes/write/js/skip-link-focus-fix.js?ver=20160525'></script>
+<script type='text/javascript' src='https://tasshin.com/wp-content/themes/write/js/doubletaptogo.js?ver=1.0.0'></script>
+<script type='text/javascript' src='https://tasshin.com/wp-content/themes/write/js/functions.js?ver=20190226'></script>
+<script type='text/javascript' src='https://tasshin.com/wp-includes/js/wp-embed.min.js?ver=5.3'></script>
+
+</body>
+</html>

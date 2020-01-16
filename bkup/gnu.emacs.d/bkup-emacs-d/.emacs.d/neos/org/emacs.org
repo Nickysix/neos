@@ -1,0 +1,27 @@
+#+TITLE: Emacs Knowledge
+#+TAGS:
+#+STARTUP:
+#+FILETAGS:
+
+
+
+* TODO Create a emacs package list
+* TODO Learn org-capture
+* TODO Learn to use org-protocol everywhere
+* TODO Remeber server-start p something for org-protocol
+
+
+* Emacs package list
+** engine-mode
+** sidebar
+** Neotree
+** emacs-w3m
+** use-package
+** swiper
+** counsil
+** ivy 
+** key-chord
+** general
+** evil
+** helm
+** projectile

@@ -1,0 +1,9 @@
+[submodule "use-package"]
+	path = use-package
+	url = https://github.com/jwiegley/use-package.git
+[submodule "ycmd"]
+	path = ycmd
+	url = https://github.com/Valloric/ycmd
+[submodule "packs/smartparens"]
+	path = packs/smartparens
+	url = https://github.com/Fuco1/smartparens.git

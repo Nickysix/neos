@@ -1,0 +1,30 @@
+# -*- mode: snippet -*-
+# name: latex letter
+# key: hdr
+# --
+\documentclass{scrlttr2}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[frenchb]{babel}
+\usepackage{graphicx}
+\graphicspath{{~/texmf/tex/latex/images}}
+
+\LoadLetterOption{sylvain}
+\LoadLetterOption{signature}
+
+\begin{document}
+
+\setkomavar{subject}{Objet: $1}
+
+\begin{letter}{à $2}
+  \opening{Madame, Monsieur,}
+
+  $0
+
+  \closing{Je vous prie d’agréer, Madame, Monsieur, l'expression de ma
+    considération distinguée.}
+
+\end{letter}
+
+\end{document}

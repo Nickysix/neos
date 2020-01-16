@@ -1,0 +1,54 @@
+
+;; ----- smex-history -----
+(
+ find-file
+ projectile-commander
+ ruler-mode
+ eshell
+ hl-line-mode
+ dired
+ eval-buffer
+)
+
+;; ----- smex-data -----
+(
+ (projectile-find-dir . 7)
+ (undo . 18)
+ (whitespace-cleanup . 1)
+ (outshine-cycle . 3)
+ (outshine-cycle-buffer . 2)
+ (restart-emacs . 2)
+ (speedbar-toggle-show-all-files . 3)
+ (speedbar-refresh . 1)
+ (eshell . 5)
+ (make-directory . 3)
+ (up-list . 8)
+ (outline-next-heading . 1)
+ (outline-previous-heading . 3)
+ (rename-file . 1)
+ (markdown-mode . 2)
+ (ruler-mode . 5)
+ (org-previous-visible-heading . 1)
+ (artist-mode . 1)
+ (evil-mode . 1)
+ (counsel-projectile-find-file . 1)
+ (projectile-find-file . 11)
+ (dired-find-file . 1)
+ (projectile-switch-project . 2)
+ (neotree-projectile-action . 1)
+ (isearch-query-replace-regexp . 1)
+ (imenu . 10)
+ (ivy-avy . 2)
+ (avy-goto-line . 4)
+ (hydra-ivy/body . 1)
+ (ibuffer . 1)
+ (dumb-jump-go . 3)
+ (ido-find-file . 1)
+ (neotree-refresh . 3)
+ (sr-speedbar-toggle . 2)
+ (eval-buffer . 1)
+ (hl-line-mode . 2)
+ (dired . 1)
+ (projectile-commander . 1)
+ (find-file . 1)
+)

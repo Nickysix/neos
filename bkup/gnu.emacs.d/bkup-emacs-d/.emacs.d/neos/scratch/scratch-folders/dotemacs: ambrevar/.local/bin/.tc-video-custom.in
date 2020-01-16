@@ -1,0 +1,171 @@
+#!/bin/sh
+
+usage () {
+	cat <<EOF>&2
+Usage: ${0##*/} MODE
+
+This script was generated with tc-video-custom.
+
+It transcodes the embedded list of files using FFmpeg. MODE will specify what
+kind of output you want. Edit this file to fit your needs and learn more about
+FFmpeg.
+
+Modes:
+
+  -f:   Full video.
+  -s:   Sample of 5 minute starting at 1 minute.
+  -S N: Sample of N minutes starting at 1 minute.
+
+EOF
+}
+
+SAMPLE=""
+OPT_PROCESS=false
+while getopts ":hfsS:" opt; do
+	case $opt in
+	h)
+		usage
+		exit ;;
+	f)
+		OPT_PROCESS=true ;;
+	s)
+		SAMPLE="-ss 60 -t 300"
+		OPT_PROCESS=true ;;
+	S)
+		SAMPLE="-ss 60 -t $((60*$OPTARG))"
+		OPT_PROCESS=true ;;
+	\?)
+		usage
+		exit 1 ;;
+	esac
+done
+
+shift $(($OPTIND - 1))
+
+if ! $OPT_PROCESS; then
+	usage
+	exit
+fi
+
+if ! command -v ffmpeg >/dev/null 2>&1; then
+	echo >&2 "'ffmpeg' not found"
+	exit 1
+fi
+
+transcode () {
+	## You can choose here to process all files at the same time. Useful if you
+	## need to remux streams or to concatenate.
+	# ffmpeg -i ###FILELIST \
+	ffmpeg -nostdin $SAMPLE -i "$@" \
+		-c:v libx264 -preset slow -crf 20 \
+		-c:a libvorbis -b:a 192k -ac 2 \
+		-c:s copy \
+		-dn \
+		-map 0 \
+		"${1%.*}-$(date '+%F-%H%M%S').mkv"
+}
+
+set -- ###FILENAMES
+
+## Choose to process all files one after another.
+for i ; do
+	transcode "$i"
+done
+
+## Or all files at the same time. You have to change the ffmpeg input in the
+## function.
+# transcode
+
+################################################################################
+## USE CASES
+##
+## Exchange stream 1 an 2 by first removing them, then reading them in the
+## desired order.
+##
+##   -map -0:1 -map -0:2 -map 0:2 -map 0:1
+##
+## Change audio stream 1 title and remove audio stream 2 title:
+##
+##   -metadata:s:a:0 title="FR: OGG Stereo" -metadata:s:a:1 title=""
+##
+## Demux audio:
+##   -vn -sn -c:a copy -map 0:1
+##
+## Dump audio to an ogg file:
+##   -vn -c:a libvorbis -b:a 192k
+##
+## Add a delay to audio (assuming stream 0 is video and stream 1 is audio)
+##   -i "$1" -itsoffset 0.300 -i "$1" -map 0:0 -map 1:1
+##
+## Insert stream 3 from file2 between all non-audio streams and audio streams of
+## file1:
+##   -i "file1" -i "file2" -map -0:a map 1:3 -map 0:a
+##
+## Concatenate files. See <https://trac.ffmpeg.org/wiki/Concatenate> for more
+## details.
+##
+##   -f concat -i list.txt -c copy out.ext
+##
+## with `cat list.txt`:
+##   file 'file1'
+##   file 'file2'
+##
+## With different codecs:
+##
+##   -filter_complex '[0:0] [0:1] [1:0] [1:1] concat=n=2:v=1:a=1 [v] [a]' -map '[v]' -map '[a]'
+##
+################################################################################
+
+################################################################################
+## SOUND
+##
+## You should consider mixing down audio to 2 channels with '-ac
+## 2'. This greatly reduce file size and avoid any confusion for playback, which
+## is often the case when converting DTS to any other format because DTS has
+## embedded channel description which is not available in other formats.
+################################################################################
+
+################################################################################
+## X264 OPTIONS
+##
+## x264 presets (-preset <preset>).
+##   preset ~= speed and quality*size ~= 1/speed
+##   ultrafast, superfast, veryfast, faster, fast, medium, slow, slower, veryslow, placebo
+##   Recommended values: faster -- slow
+##   slow is approx. two times slower than fast, and reduces the size by approx. 10%.
+##
+## x264 overall quality (-crf) is a logarithmic scale.
+##   18 is near perfection.
+##   22 is really good compression, while a bit more blurry than the original.
+##   20 is a good compromise.
+##
+## x264 tuning (-tune <preset>).
+##   Possible values: film, animation, grain, ...
+##   See x264 --fullhelp.
+##   No tuning by default.
+##
+## x264 options (-x264opts me=<value>).
+##   Possible values: hex, umh...
+##   me=umh is default.
+################################################################################
+
+################################################################################
+## FALLACIOUS INPUT
+##
+## In general, FFmpeg is not so good at copying fallacious streams. Reecoding
+## video and audio streams helps a lot.
+##
+## "Can't write packet with unknown timestamp"
+##   Put '-fflags genpts' before the input command.
+################################################################################
+
+################################################################################
+## MISC
+## To check what fmmpeg supports:
+##   $ ffmpeg -codecs
+##   $ ffmpeg -formats
+##
+## Useful guides:
+##   x264: http://ffmpeg.org/trac/ffmpeg/wiki/x264EncodingGuide
+##   ID3 details: http://en.wikipedia.org/wiki/ID3
+################################################################################

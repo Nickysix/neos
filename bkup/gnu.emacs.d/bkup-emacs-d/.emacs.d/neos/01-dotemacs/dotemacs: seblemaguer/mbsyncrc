@@ -1,0 +1,194 @@
+##########################################################################
+####
+#### To archive a maildir => just comment the corresponding conf. on this file
+####
+##########################################################################
+
+# Fsync no
+CopyArrivalDate yes # Force the date base on the file date when push
+Create Slave
+Sync All
+Expunge Both
+SyncState *
+
+
+##########################################################################
+# Gmail bulk
+##########################################################################
+IMAPAccount HikoGmail
+Host imap.gmail.com
+User hikoseb@gmail.com
+PassCmd "python3 ~/.get_passwd.py 'imap.gmail.com' 'hikoseb@gmail.com'"
+Port 993
+SSLType IMAPS
+# CertificateFile /etc/ssl/certs/ca-bundle.crt
+
+IMAPStore HikoGmail-remote
+Account HikoGmail
+
+MaildirStore HikoGmail-local
+Path ~/mail/HikoGmail/
+Inbox ~/mail/HikoGmail/INBOX
+SubFolders Legacy
+
+Channel HikoGmail-inbox
+Master :HikoGmail-remote:
+Slave :HikoGmail-local:
+Patterns "INBOX" "Deleted Items"
+
+Channel HikoGmail-sent
+Master :HikoGmail-remote:"[Gmail]/Messages envoy&AOk-s"
+Slave :HikoGmail-local:"Sent"
+
+Group HikoGmail
+Channel HikoGmail-inbox
+Channel HikoGmail-sent
+
+
+##########################################################################
+# Gmail normal
+##########################################################################
+IMAPAccount SebGmail
+Host imap.gmail.com
+User seb.lemaguer@gmail.com
+PassCmd "python3 ~/.get_passwd.py 'imap.gmail.com' 'seb.lemaguer@gmail.com'"
+SSLType IMAPS
+# CertificateFile /etc/ssl/certs/ca-bundle.crt
+
+IMAPStore SebGmail-remote
+Account SebGmail
+
+MaildirStore SebGmail-local
+Path ~/mail/SebGmail/
+Inbox ~/mail/SebGmail/INBOX
+
+Channel SebGmail-inbox
+Master :SebGmail-remote:
+Slave :SebGmail-local:
+Patterns "INBOX"
+
+Channel SebGmail-sent
+Master :SebGmail-remote:"[Gmail]/Messages envoy&AOk-s"
+Slave :SebGmail-local:"Sent"
+
+Group SebGmail
+Channel SebGmail-inbox
+Channel SebGmail-sent
+
+
+# =========================================================================================================
+# =========================================================================================================
+# =========================================================================================================
+
+
+##########################################################################
+# Gmail adapt
+##########################################################################
+IMAPAccount AdaptGmail
+Host imap.gmail.com
+User sebastien.lemaguer@adaptcentre.ie
+PassCmd "python3 ~/.get_passwd.py 'imap.gmail.com' 'sebastien.lemaguer@adaptcentre.ie'"
+SSLType IMAPS
+AuthMechs LOGIN
+
+IMAPStore AdaptGmail-remote
+Account AdaptGmail
+
+MaildirStore AdaptGmail-local
+Path ~/mail/AdaptGmail/
+Inbox ~/mail/AdaptGmail/INBOX
+
+Channel AdaptGmail-inbox
+Master :AdaptGmail-remote:
+Slave :AdaptGmail-local:
+Patterns "INBOX"
+
+Channel AdaptGmail-sent
+Master :AdaptGmail-remote:"[Gmail]/Sent Mail"
+Slave :AdaptGmail-local:sent
+
+Channel AdaptGmail-trash
+Master :AdaptGmail-remote:"[Gmail]/Trash"
+Slave :AdaptGmail-local:trash
+
+Group AdaptGmail
+Channel AdaptGmail-inbox
+Channel AdaptGmail-sent
+Channel AdaptGmail-trash
+
+
+##########################################################################
+# TCD
+##########################################################################
+IMAPAccount TCD
+Host outlook.office365.com
+User lemagues@tcd.ie
+PassCmd "python3 ~/.get_passwd.py 'outlook.office365.com' 'lemagues@tcd.ie'"
+Port 993
+SSLType IMAPS
+# CertificateFile /etc/ssl/certs/ca-bundle.crt
+
+IMAPStore TCD-remote
+Account TCD
+
+MaildirStore TCD-local
+Path ~/mail/TCD/
+Inbox ~/mail/TCD/INBOX
+SubFolders Legacy
+
+Channel TCD
+Master :TCD-remote:
+Slave :TCD-local:
+Patterns "INBOX" "Deleted Items" "Sent Items"
+
+# =========================================================================================================
+# =========================================================================================================
+# =========================================================================================================
+
+##########################################################################
+# Coli Saarland
+##########################################################################
+IMAPAccount Saarland
+Host mail.coli.uni-saarland.de
+User slemaguer
+PassCmd "python3 ~/.get_passwd.py 'mail.coli.uni-saarland.de' 'slemaguer'"
+Port 993
+SSLType IMAPS
+# CertificateFile /etc/ssl/certs/ca-bundle.crt
+
+IMAPStore Saarland-remote
+Account Saarland
+
+MaildirStore Saarland-local
+Path ~/mail/Saarland/
+Inbox ~/mail/Saarland/INBOX
+SubFolders Legacy
+
+Channel Saarland
+Master :Saarland-remote:
+Slave :Saarland-local:
+Patterns "INBOX" *
+
+# ##########################################################################
+# # Irisa
+# ##########################################################################
+# IMAPAccount Irisa
+# Host zimbra.inria.fr
+# User slemague
+# PassCmd "python3 ~/.get_passwd.py 'zimbra.inria.fr' 'slemague'"
+# Port 993
+# SSLType IMAPS
+# # CertificateFile /etc/ssl/certs/ca-bundle.crt
+
+
+# IMAPStore Irisa-remote
+# Account Irisa
+
+# MaildirStore Irisa-local
+# Path ~/mail/Irisa/
+# Inbox ~/mail/Irisa/INBOX
+
+# Channel Irisa
+# Master :Irisa-remote:
+# Slave :Irisa-local:
+# Patterns "Sent" "INBOX" "Deleted Items"

@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<!-- 2017-11-19 Sun 00:30 -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Advanced Techniques for Reducing Emacs Startup Time</title>
+<meta name="generator" content="Org mode">
+<meta name="author" content="Joe Schafer">
+<meta name="description" content="Collection of 8 techniques to reduce Emacs startup time."
+>
+<style>
+a,body{color:#111}.text-left,table caption{text-align:left}.src-code,table{overflow-x:auto}html{box-sizing:border-box;font-size:112.5%;line-height:24px}*,:after,:before{box-sizing:inherit}body{font-family:Palatino,"Palatino Linotype","Palatino LT STD","Book Antiqua",Georgia,serif;margin:0}#container{margin:0 auto;padding-left:30px;padding-right:30px}@media only screen and (max-width:800px){article{display:-webkit-box;display:-ms-flexbox;display:flex;-webkit-box-orient:vertical;-webkit-box-direction:normal;-ms-flex-direction:column;flex-direction:column}.citation-definition,.footnote-definition{-webkit-box-ordinal-group:101;-ms-flex-order:100;order:100}article>cite:first-of-type{margin-top:2rem}.bibliography-section{-webkit-box-ordinal-group:201;-ms-flex-order:200;order:200}main table{margin-left:auto;margin-right:auto}}@media only screen and (max-width:550px){#container{padding-left:15px;padding-right:15px}}@media only screen and (min-width:800px){#container{max-width:1100px}main blockquote,main dl,main ol,main p,main ul{max-width:650px;width:60%}table:not(.full-width){max-width:60%;width:auto;position:relative}table:not(.full-width)>caption{position:absolute;padding-top:.3em;top:0;left:0;width:calc(.4 * (100vw - 60px) - 45px);-webkit-transform:translateX(calc((.6 * (100vw - 60px) + 45px)));transform:translateX(calc((.6 * (100vw - 60px) + 45px)))}cite{float:right;clear:right;width:40%;padding-left:45px}aside+cite,blockquote+cite,h2+cite,h3+cite,p+cite{margin-top:1.725rem}figure:not(.full-width){display:-webkit-box;display:-ms-flexbox;display:flex;-webkit-box-orient:horizontal;-webkit-box-direction:normal;-ms-flex-direction:row;flex-direction:row}figure:not(.full-width)>div{-webkit-box-flex:0;-ms-flex:0 0 60%;flex:0 0 60%;margin-right:45px}figure:not(.full-width)>div>img{max-width:100%}}figure img,table.full-width{max-width:100%}article,cite,sub,sup{position:relative}h2,h3{line-height:2.4rem;margin-bottom:-1.2rem;margin-top:1.8rem;font-weight:400}@media only screen and (min-width:1100px){table:not(.full-width)>caption{-webkit-transform:translateX(669px);transform:translateX(669px);width:371px}}@media print{html{font-size:16px;line-height:1.2rem}}cite{display:block}sub,sup{font-size:.75rem;line-height:0;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.4em}.citation-reference a:link,.footnote-reference a:link{text-decoration:none}.citation-reference sup,.footnote-reference sup{left:-.2em}h1{font-weight:400;font-size:2rem;margin-bottom:1.5rem;margin-top:3rem;line-height:1}h2{font-size:1.414rem}h3{font-size:1.155rem;font-style:italic}blockquote,p{line-height:1.5rem;margin:1.5rem 0 0}dl,ol,ul{margin-top:1.5rem}cite,figcaption,table>caption{font-size:.9rem;font-style:normal;line-height:1.2rem;margin-bottom:.9rem}cite,cite a,figcaption,figcaption a,table>caption,table>caption a{color:#333}#main-header span{margin-top:0}article>footer{margin-top:3rem}section{padding-top:1rem;padding-bottom:1rem}aside{margin-left:1.4rem}aside p{font-style:italic}.callout{padding:10px;border-left-width:2px;border-left-style:solid}.callout-note{border-color:#9e9e9e;background-color:#fafafa}.callout-tip{border-color:#0f9d58;background-color:#e8f5e9}.callout-todo{border-color:#f4b400;background-color:#fef6e0}.callout-question,.callout-tldr{border-color:#4285f4;background-color:#e8f0fe}.callout-fixme,.callout-important,.callout-warning{border-color:#db4437;background-color:#fbe9e7}a:link{text-decoration:underline}table{clear:left;margin:3rem 0;border-collapse:separate;border-spacing:0;-webkit-font-feature-settings:'tnum';font-feature-settings:'tnum'}table th{border-bottom:1px solid #333;padding:.3em .5em 0}table tbody>tr>td:nth-child(1),table th:nth-child(1){padding-left:0}table tbody>tr>td:last-child,table th:last-child{padding-right:0}table tbody>tr:first-child>td{padding-top:.65ex}table tbody>tr>td{vertical-align:top;padding-left:.5em;padding-right:.5em}table caption{caption-side:top}.text-right{text-align:right}thead th{text-align:left;border-bottom:1px solid #AAA;font-weight:400}blockquote>footer,blockquote>p{margin-left:auto;margin-right:auto;width:75%}blockquote footer p{margin-left:auto;margin-right:0;text-align:right}ul{list-style-type:none}li{padding:.5rem 0}figure{padding:0;border:0;margin-left:0;margin-right:0;margin-top:1.5rem}figure.full-width img{width:100%;max-width:100%}figure figcaption{margin:0;padding:0}div.full-width,table.full-width{width:100%}.src-code,code{font-family:Consolas,"Liberation Mono",Menlo,Courier,monospace;font-size:16px}.src-code{padding:.75rem;line-height:1.25;border-radius:3px;border:1px solid #ddd}.src-label{background-color:#f7f7f7;display:block;margin-top:1.5rem;border-top-left-radius:3px;border-top-right-radius:3px;border:1px solid #ddd}.src-caption,.src-name,.src-view-raw{display:inline-block;padding:.375rem .75rem}.src-view-raw{float:right}.src-view-raw>a{color:#555;text-decoration:none}.src-label+.src-code{margin-top:0;border-top-left-radius:0;border-top-right-radius:0;border-top:none}.full-width{clear:both}.katex{font-size:1em!important}.org-preprocessor,.org-string{color:#183691}.org-keyword{color:#a71d5d}.org-builtin,.org-constant,.org-variable-name{color:#0086b3}.org-function-name,.org-type{color:#795da3}.org-comment,.org-comment-delimiter,.org-doc{color:#969896}#main-footer{margin-top:12px}#main-footer>p{margin-bottom:.5rem;margin-top:.5rem;line-height:1}</style>
+
+<meta name=viewport content='width=device-width, initial-scale=1'>
+</head>
+<body itemscope itemtype='http://schema.org/Blog'>
+<div id='container'><header id='main-header'>
+  <nav><a href='/'><span>Joe Schafer's Blog</span></a></nav>
+</header><main><article itemscope itemtype='http://schema.org/Article'>
+<header>
+<h1 itemprop='headline'>Advanced Techniques for Reducing Emacs Startup Time</h1>
+</header>
+<aside>
+<p>
+Six techniques to reduce Emacs startup time by the author of the <a href="https://github.com/jschaf/esup">Emacs
+Start Up Profiler</a>.
+</p>
+</aside>
+
+<p>
+tl;dr: Do these steps:
+</p>
+
+<ol class="org-ol">
+<li>Profile with Esup.</li>
+<li>Adjust the garbage collection threshold.</li>
+<li>Autoload <b>everything</b> with use-package.</li>
+<li>Avoid helper functions which cause eager loads.</li>
+<li>See my Emacs <a href="https://github.com/jschaf/dotfiles/blob/master/emacs/start.el">config</a> for an example.</li>
+</ol>
+
+
+<h2 id="org427ea2a">From .emacs.d Bankruptcy to Now</h2>
+<p>
+I recently declared my third .emacs.d bankruptcy and finished the
+fourth iteration of my Emacs configuration.  The evolution was:
+</p>
+
+<ol class="org-ol">
+<li>Copy and paste elisp snippets into <code>~/.emacs</code> and hope it works.</li>
+<li>Adopt a more structured approach with <code>el-get</code> to manage
+dependencies.</li>
+<li>Give up and outsource to Spacemacs.</li>
+<li>Get tired of Spacemacs intricacies and rewrite with <code>use-package</code>.</li>
+</ol>
+
+<p>
+This article is a collection of tips collected during the 3 rewrites
+and from creating the Emacs Start Up Profiler.  Many thanks to the
+teams behind Spacemacs, use-package and general.  Without these
+dedicated voluteers, this task would be vastly more difficult.
+</p>
+
+
+<h2 id="org59da114">But What About Daemon Mode</h2>
+<p>
+Before we get started, let me acknowledge the common retort when
+optimizing Emacs: &ldquo;Emacs is meant to run as a daemon so you&rsquo;ll only
+start it once.&rdquo;  That&rsquo;s all well and good except:
+</p>
+
+<ul class="org-ul">
+<li>Fast things feel nicer.</li>
+
+<li>When customizing Emacs, you sometimes get into weird states that can
+be hard to recover from without restarting.  For example, if you add
+a slow <code>lambda</code> function to your <code>post-command-hook</code>, it&rsquo;s tough to
+remove it.</li>
+
+<li>Restarting Emacs helps verify that customization will persist
+between sessions.</li>
+</ul>
+
+
+<h2 id="org771752b">1. Establish the Current and Best Possible Start Up Time</h2>
+<p>
+The first step is to measure the current start up time.  The easy way
+is to display the information at startup which will show progress
+through the next steps.
+</p>
+
+
+<pre class='src-code full-width src-elisp'><span class="org-comment-delimiter">;; </span><span class="org-comment">Use a hook so the message doesn't get clobbered by other messages.</span>
+(add-hook 'emacs-startup-hook
+          (<span class="org-keyword">lambda</span> ()
+            (message <span class="org-string">"Emacs ready in %s with %d garbage collections."</span>
+                     (format <span class="org-string">"%.2f seconds"</span>
+                             (float-time
+                              (time-subtract after-init-time before-init-time)))
+                     gcs-done)))
+</pre>
+
+<p>
+Second, measure the best possible startup speed so you know what&rsquo;s
+possible.  Mine is 0.3 seconds.
+</p>
+
+
+<pre class='src-code full-width src-sh'><span class="org-comment-delimiter"># </span><span class="org-comment">-q ignores personal Emacs files but loads the site files.</span>
+emacs -q --eval=<span class="org-string">'(message "%s" (emacs-init-time))'</span> 
+
+;; For macOS users:
+open -n /Applications/Emacs.app --args -q --eval=<span class="org-string">'(message "%s" (emacs-init-time))'</span>  
+</pre>
+
+
+<h2 id="orga2036b6">2. Profile Emacs Startup for Easy Wins</h2>
+<p>
+The <a href="https://github.com/jschaf/esup">Emacs StartUp Profiler</a> (ESUP) will give you detailed metrics for
+top-level expressions.
+</p>
+
+
+<figure id="fig:esup">
+<div><img src="../images/esup.png" alt="esup.png">
+</div>
+<figcaption><span class='figure-number'>Figure 1:</span> Emacs Start Up Profiler Screenshot</figcaption>
+</figure>
+
+<p class='callout callout-warning'>
+WARNING: Spacemacs users, ESUP currently chokes on the Spacemacs
+init.el file.  Follow <a href="https://github.com/jschaf/esup/issues/48">https://github.com/jschaf/esup/issues/48</a> for
+updates.
+</p>
+
+
+<h2 id="org37ca53c">3. Set the Garbage Collection Threshold Higher during Startup</h2>
+<p>
+This saves about <b><b>0.3 seconds</b></b> on my configuration.
+</p>
+
+<p>
+The default value for Emacs is 760kB which is extremely conservative on
+a modern machine. The real trick is to lower it back to something
+reasonable after initialization.  This saves about 0.3 seconds on my
+init files.
+</p>
+
+<div class='src-label'><a href='#/.emacs.d/init.el'><span class='src-name'>~/.emacs.d/init.el</span></a></div>
+<pre id='/.emacs.d/init.el' class='src-code full-width src-elisp'><span class="org-comment-delimiter">;; </span><span class="org-comment">Make startup faster by reducing the frequency of garbage</span>
+<span class="org-comment-delimiter">;; </span><span class="org-comment">collection.  The default is 800 kilobytes.  Measured in bytes.</span>
+(<span class="org-keyword">setq</span> gc-cons-threshold (* 50 1000 1000))
+
+<span class="org-comment-delimiter">;; </span><span class="org-comment">The rest of the init file.</span>
+
+<span class="org-comment-delimiter">;; </span><span class="org-comment">Make gc pauses faster by decreasing the threshold.</span>
+(<span class="org-keyword">setq</span> gc-cons-threshold (* 2 1000 1000))
+</pre>
+
+
+<h2 id="orgdf956cf">4. Never require anything; autoload with use-package instead</h2>
+<p>
+The best way to make Emacs faster is to do less.  Running <code>require</code>
+eagerly loads the underlying source file.  It&rsquo;s rare the you&rsquo;ll need
+functionality immediately at startup time.  
+</p>
+
+<p>
+With <a href="https://github.com/jwiegley/use-package"><code>use-package</code></a>, you declare which features you need from a package
+and <code>use-package</code> does the right thing.  Here&rsquo;s what it looks like:
+</p>
+
+
+<pre class='src-code full-width src-elisp'>(use-package evil-lisp-state <span class="org-comment-delimiter">; </span><span class="org-comment">the Melpa package name</span>
+
+  <span class="org-builtin">:defer</span> t <span class="org-comment-delimiter">; </span><span class="org-comment">autoload this package</span>
+
+  <span class="org-builtin">:init</span> <span class="org-comment-delimiter">; </span><span class="org-comment">Code to run immediately.</span>
+  (<span class="org-keyword">setq</span> evil-lisp-state-global nil)
+
+  <span class="org-builtin">:config</span> <span class="org-comment-delimiter">; </span><span class="org-comment">Code to run after the package is loaded.</span>
+  (abn/define-leader-keys <span class="org-string">"k"</span> evil-lisp-state-map))
+</pre>
+
+<p>
+To see what packages Emacs currently has loaded, examine the
+<code>features</code> variable.  For nice output see <a href="https://gist.github.com/RockyRoad29/bd4ca6fdb41196a71662986f809e2b1c">lpkg explorer</a> or my variant
+in <a href="https://github.com/jschaf/dotfiles/blob/master/emacs/funcs/abn-funcs-benchmark.el">abn-funcs-benchmark.el</a>.  The output looks like:
+</p>
+
+
+<pre class='src-code full-width src-txt'>479 features currently loaded
+  - abn-funcs-benchmark: /Users/jschaf/.dotfiles/emacs/funcs/abn-funcs-benchmark.el
+  - evil-surround: /Users/jschaf/.emacs.d/elpa/evil-surround-20170910.1952/evil-surround.elc
+  - misearch: /Applications/Emacs.app/Contents/Resources/lisp/misearch.elc
+  - multi-isearch: nil
+  - &lt;many more&gt;
+</pre>
+
+
+<h2 id="org142995b">5. Avoid Helper Functions to Set Up Modes</h2>
+<p>
+Often, Emacs packages will suggest running a helper function to set up
+keybindings.  Here&rsquo;s a few examples: 
+</p>
+
+<ul class="org-ul">
+<li><code>(evil-escape-mode)</code></li>
+<li><code>(windmove-default-keybindings) ; Sets up keybindings.</code></li>
+<li><code>(yas-global-mode 1) ; Complex snippet setup.</code></li>
+</ul>
+
+<p>
+Rewrite these with use-package to improve startup speed.  These helper
+functions are really just sneaky ways to trick you into eagerly
+loading packages before you need them.
+</p>
+
+<p>
+As an example, here&rsquo;s how to autoload <code>evil-escape-mode</code>.
+</p>
+
+
+<pre class='src-code full-width src-elisp'><span class="org-comment-delimiter">;; </span><span class="org-comment">The definition of evil-escape-mode.</span>
+(<span class="org-keyword">define-minor-mode</span> <span class="org-function-name">evil-escape-mode</span>
+  (<span class="org-keyword">if</span> evil-escape-mode
+      (add-hook 'pre-command-hook 'evil-escape-pre-command-hook)
+    (remove-hook 'pre-command-hook 'evil-escape-pre-command-hook)))
+
+<span class="org-comment-delimiter">;; </span><span class="org-comment">Before:</span>
+(evil-escape-mode)
+
+<span class="org-comment-delimiter">;; </span><span class="org-comment">After:</span>
+(use-package evil-escape
+  <span class="org-builtin">:defer</span> t
+  <span class="org-comment-delimiter">;; </span><span class="org-comment">Only needed for functions without an autoload comment (;;;###autoload).</span>
+  <span class="org-builtin">:commands</span> (evil-escape-pre-command-hook) 
+
+  <span class="org-comment-delimiter">;; </span><span class="org-comment">Adding to a hook won't load the function until we invoke it.</span>
+  <span class="org-comment-delimiter">;; </span><span class="org-comment">With pre-command-hook, that means the first command we run will</span>
+  <span class="org-comment-delimiter">;; </span><span class="org-comment">load evil-escape.</span>
+  <span class="org-builtin">:init</span> (add-hook 'pre-command-hook 'evil-escape-pre-command-hook))
+</pre>
+
+<p>
+For a much trickier example, consider <code>org-babel</code>.  The common recipe is:
+</p>
+
+
+<pre class='src-code full-width src-elisp'>(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((shell . t)
+   (emacs-lisp . nil)))
+</pre>
+
+<p>
+This is bad because <code>org-babel-do-load-languages</code> is defined in
+<code>org.el</code>, which is over 24k lines of code and takes about 0.2 seconds
+to load.  After examining the source code,
+<code>org-babel-do-load-languages</code> is simply requiring the <code>ob-&lt;lang&gt;</code>
+package like so:
+</p>
+
+
+<pre class='src-code full-width src-elisp'><span class="org-comment-delimiter">;; </span><span class="org-comment">From org.el in the org-babel-do-load-languages function.</span>
+(<span class="org-keyword">require</span> (intern (concat <span class="org-string">"ob-"</span> lang)))
+</pre>
+
+<p>
+In the <code>ob-&lt;lang&gt;.el</code>, there&rsquo;s only two methods we care about,
+<code>org-babel-execute:&lt;lang&gt;</code> and <code>org-babel-expand-body:&lt;lang&gt;</code>.  We can
+autoload the org-babel functionality instead of
+<code>org-babel-do-load-languages</code> like so:
+</p>
+
+
+<pre class='src-code full-width src-elisp'><span class="org-comment-delimiter">;; </span><span class="org-comment">Avoid `</span><span class="org-comment"><span class="org-constant">org-babel-do-load-languages</span></span><span class="org-comment">' since it does an eager require.</span>
+(use-package ob-python
+  <span class="org-builtin">:defer</span> t
+  <span class="org-builtin">:ensure</span> org-plus-contrib
+  <span class="org-builtin">:commands</span> (org-babel-execute:python))
+
+(use-package ob-shell
+  <span class="org-builtin">:defer</span> t
+  <span class="org-builtin">:ensure</span> org-plus-contrib
+  <span class="org-builtin">:commands</span>
+  (org-babel-execute:sh
+   org-babel-expand-body:sh
+
+   org-babel-execute:bash
+   org-babel-expand-body:bash))
+</pre>
+
+
+<h2 id="org3d73f8c">6. Defer Packages you don&rsquo;t need Immediately with Idle Timers</h2>
+<p>
+This saves about <b><b>0.4 seconds</b></b> for the 9 packages I defer.
+</p>
+
+<p>
+Some packages are useful and you want them available soon, but are not
+essential for immediate editing.  These modes include:
+</p>
+
+<ul class="org-ul">
+<li><code>recentf</code>: Saves recent files.</li>
+<li><code>saveplace</code>: Saves point of visited files.</li>
+<li><code>server</code>: Starts Emacs daemon.</li>
+<li><code>autorevert</code>: Automatically reloads files that changed on disk.</li>
+<li><code>paren</code>: Highlight matching parenthesis.</li>
+<li><code>projectile</code>: Project management tools.</li>
+<li><code>whitespace</code>: Highlight trailing whitespace.</li>
+</ul>
+
+<p>
+Instead of requiring these modes, <b><b>load them after N seconds of idle
+time</b></b>.  I use 1 second for the more important packages and 2 seconds
+for everything else.
+</p>
+
+
+<pre class='src-code full-width src-elisp'>(use-package recentf
+  <span class="org-comment-delimiter">;; </span><span class="org-comment">Loads after 1 second of idle time.</span>
+  <span class="org-builtin">:defer</span> 1)
+
+(use-package uniquify
+  <span class="org-comment-delimiter">;; </span><span class="org-comment">Less important than recentf.</span>
+  <span class="org-builtin">:defer</span> 2)
+</pre>
+
+
+
+<h2 id="orgc7c3ed4">Optimizations that aren&rsquo;t Worth It</h2>
+<p>
+Don&rsquo;t bother byte-compiling your personal Emacs files.  It saved
+about 0.05 seconds.  Byte compiling causes difficult to debug errors when the
+source file gets out of sync with compiled file.
+</p>
+<footer>Published on <time itemprop='datePublished' datetime='2017-11-19'>19 November 2017</time> by <span itemprop='author'>Joe Schafer</span>.</footer>
+</article>
+</main><hr>
+<footer id='main-footer'>
+<p>
+  <span itemprop='author'>Joe Schafer</span> © <span itemprop='copyrightYear'>2017</span>
+  &nbsp;&nbsp;<a href='https://github.com/jschaf'>github.com/jschaf</a>
+  &nbsp;&nbsp;<a href='https://www.linkedin.com/in/jschaf'>linkedin.com/jschaf</a>
+</p>
+<p>
+  Built with Emacs, caffeine,  Oxford commas, and Org-Mode.
+</p>
+</footer>
+<noscript>
+</noscript>
+</div>
+<script>
+var h=this;
+function l(a){var b=typeof a;if("object"==b)if(a){if(a instanceof Array)return"array";if(a instanceof Object)return b;var c=Object.prototype.toString.call(a);if("[object Window]"==c)return"object";if("[object Array]"==c||"number"==typeof a.length&&"undefined"!=typeof a.splice&&"undefined"!=typeof a.propertyIsEnumerable&&!a.propertyIsEnumerable("splice"))return"array";if("[object Function]"==c||"undefined"!=typeof a.call&&"undefined"!=typeof a.propertyIsEnumerable&&!a.propertyIsEnumerable("call"))return"function"}else return"null";else if("function"==
+b&&"undefined"==typeof a.call)return"object";return b}var m="closure_uid_"+(1E9*Math.random()>>>0),n=0;function p(a,b,c){return a.call.apply(a.bind,arguments)}function q(a,b,c){if(!a)throw Error();if(2<arguments.length){var d=Array.prototype.slice.call(arguments,2);return function(){var c=Array.prototype.slice.call(arguments);Array.prototype.unshift.apply(c,d);return a.apply(b,c)}}return function(){return a.apply(b,arguments)}}
+function r(a,b,c){r=Function.prototype.bind&&-1!=Function.prototype.bind.toString().indexOf("native code")?p:q;return r.apply(null,arguments)};function t(){0!=u&&(this[m]||(this[m]=++n));this.c=this.c;this.j=this.j}var u=0;t.prototype.c=!1;var v=String.prototype.trim?function(a){return a.trim()}:function(a){return a.replace(/^[\s\xa0]+|[\s\xa0]+$/g,"")};function w(a,b){return a<b?-1:a>b?1:0};function x(a,b){for(var c=1;c<arguments.length;c++){var d=arguments[c],e=l(d);if("array"==e||"object"==e&&"number"==typeof d.length){var e=a.length||0,g=d.length||0;a.length=e+g;for(var f=0;f<g;f++)a[e+f]=d[f]}else a.push(d)}};var y;a:{var z=h.navigator;if(z){var A=z.userAgent;if(A){y=A;break a}}y=""};function B(a,b){var c=C;return Object.prototype.hasOwnProperty.call(c,a)?c[a]:c[a]=b(a)};var D=-1!=y.indexOf("Opera"),E=-1!=y.indexOf("Trident")||-1!=y.indexOf("MSIE"),F=-1!=y.indexOf("Edge"),G=-1!=y.indexOf("Gecko")&&!(-1!=y.toLowerCase().indexOf("webkit")&&-1==y.indexOf("Edge"))&&!(-1!=y.indexOf("Trident")||-1!=y.indexOf("MSIE"))&&-1==y.indexOf("Edge"),H=-1!=y.toLowerCase().indexOf("webkit")&&-1==y.indexOf("Edge"),I;
+a:{var J="",K=function(){var a=y;if(G)return/rv\:([^\);]+)(\)|;)/.exec(a);if(F)return/Edge\/([\d\.]+)/.exec(a);if(E)return/\b(?:MSIE|rv)[: ]([^\);]+)(\)|;)/.exec(a);if(H)return/WebKit\/(\S+)/.exec(a);if(D)return/(?:Version)[ \/]?(\S+)/.exec(a)}();K&&(J=K?K[1]:"");if(E){var L,M=h.document;L=M?M.documentMode:void 0;if(null!=L&&L>parseFloat(J)){I=String(L);break a}}I=J}var C={};
+function N(a){return B(a,function(){for(var b=0,c=v(String(I)).split("."),d=v(String(a)).split("."),e=Math.max(c.length,d.length),g=0;!b&&g<e;g++){var f=c[g]||"",k=d[g]||"";do{f=/(\d*)(\D*)(.*)/.exec(f)||["","","",""];k=/(\d*)(\D*)(.*)/.exec(k)||["","","",""];if(0==f[0].length&&0==k[0].length)break;b=w(0==f[1].length?0:parseInt(f[1],10),0==k[1].length?0:parseInt(k[1],10))||w(0==f[2].length,0==k[2].length)||w(f[2],k[2]);f=f[3];k=k[3]}while(!b)}return 0<=b})};var O=E||D||H;function P(a,b,c){t.call(this);this.i=null!=c?r(a,c):a;this.h=b;this.f=r(this.l,this);this.a=null;this.b=[]}(function(){function a(){}a.prototype=t.prototype;P.b=t.prototype;P.prototype=new a;P.prototype.constructor=P;P.a=function(a,c,d){for(var b=Array(arguments.length-2),g=2;g<arguments.length;g++)b[g-2]=arguments[g];return t.prototype[c].apply(a,b)}})();
+P.prototype.g=function(a){this.a&&(h.clearTimeout(this.a),this.a=null);this.b=arguments;var b=this.f,c=this.h;if("function"!=l(b))if(b&&"function"==typeof b.handleEvent)b=r(b.handleEvent,b);else throw Error("Invalid listener argument");this.a=2147483647<Number(c)?-1:h.setTimeout(b,c||0)};P.prototype.l=function(){this.a=null;this.i.apply(null,this.b)};function Q(a){var b=[];a=a||document.styleSheets;if(a.imports&&a.imports.length)for(var c=0,d=a.imports.length;c<d;c++)x(b,Q(a.imports[c]));else if(a.length)for(c=0,d=a.length;c<d;c++)x(b,Q(a[c]));else{var e,c=null;try{c=a.cssRules||a.rules}catch(f){if(15==f.code)throw f.styleSheet=a,f;}if((e=c)&&e.length)for(var c=0,d=e.length,g;c<d;c++)g=e[c],g.styleSheet&&x(b,Q(g.styleSheet))}!(a.type||a.rules||a.cssRules)||a.disabled||b.push(a);return b};function R(a){a.forEach(function(a){var b=(a||document).getElementsByTagName("A");if(!b.length)throw Error("Can't find <a> tag for reference: "+a.textContent);var d=b[0].hash.replace(/^#/,""),b=document.getElementById(d);if(!b)throw Error("Can't find definition for id: "+d);var e=Math.max(document.documentElement.clientWidth,window.innerWidth||0),d=b.getElementsByTagName("sup");if(!d.length)throw Error("Can't find <sup> tag for citation definition"+b.textContent);d=d[0];800>e?(b.style["padding-top"]=
+"0",d.style["padding-top"]="0"):(a=a.getBoundingClientRect().top,e=b.getBoundingClientRect().top,a=String(Math.max(a-e,0))+"px",b.style["padding-top"]=a,d.style["padding-top"]=a)})};function S(a,b){a.style["margin-left"]=b?b+"px":"";a=(a||document).getElementsByTagName("CAPTION");!a.length||(a[0].style["margin-left"]=b?"-"+b+"px":"")};function T(){function a(b){for(var c=e.href,d=k.length;d--;)if(k[d].href===c)return b();setTimeout(function(){a(b)})}function b(a){d.body?a():setTimeout(function(){return b(a)})}function c(){e.addEventListener&&e.removeEventListener("load",c);e.media="all"}var d=document,e=document.createElement("LINK");e.rel="stylesheet";e.href="//cdnjs.cloudflare.com/ajax/libs/KaTeX/0.6.0/katex.min.css";e.media="only x";var g=document.getElementsByTagName("HEAD");if(!g.length)throw Error("Unable to find <head> tag");
+var f=g[0],k=Q().filter(function(a){return!!a});b(function(){f.appendChild(e)});e.addEventListener&&e.addEventListener("load",c);e.a=a;a(c)};function U(a){var b=new P(a,20);document.addEventListener("DOMContentLoaded",a);window.addEventListener("resize",function(){return b.g()})}U(function(){var a=Array.from(document.querySelectorAll(".citation-reference")),b=Array.from(document.querySelectorAll(".footnote-reference"));R(a.concat(b))});
+U(function(){Array.from(document.querySelectorAll("main table")).forEach(function(a){if(!Array.from(a.classList).includes("full-width"))if(800>Math.max(document.documentElement.clientWidth,window.innerWidth||0))S(a,0);else{var b;a:{if(O&&!(E&&N("9")&&!N("10")&&h.SVGElement&&a instanceof h.SVGElement)&&(b=a.parentElement))break a;b=a.parentNode;var c=typeof b;b=("object"==c&&b||"function"==c)&&1==b.nodeType?b:null}b&&S(a,Math.max(.6*b.offsetWidth-a.offsetWidth,0)/2)}})});
+U(function(){Array.from(document.querySelectorAll("main img")).forEach(function(a){if(a.height){var b=18-a.height%18,c=Math.floor(b/2);a.style["padding-top"]=Math.ceil(b/2)+"px";a.style["padding-bottom"]=c+"px"}})});window.hasLatex&&T();
+</script>
+</body>
+</html>

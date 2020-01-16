@@ -1,0 +1,25 @@
+#!/bin/sh
+
+if [ $# -eq 0 ]; then
+	cat <<EOF>&2
+Usage: ${0##*/} FILE [CFLAGS]
+
+Simulate a C interpreter by compiling, executing and removing file in one run.
+EOF
+	exit
+fi
+
+[ -z "$CC" ] && CC=gcc
+INPUT="$1"
+
+shift
+[ $# -eq 0 ] && set -- -Wall -Wextra -Wshadow -pthread -lm -g3 -O0
+
+FILE="$(mktemp)"
+echo "==> $CC \"$INPUT\" -o \"$FILE\" $*"
+
+$CC "$INPUT" -o "$FILE" "$@"
+
+echo "==> $FILE"
+"$FILE"
+rm "$FILE"

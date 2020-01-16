@@ -1,0 +1,3 @@
+#+TITLE: Journal.org
+#+LANGUAGE:  en
+#+AUTHOR: Nick Robitaille

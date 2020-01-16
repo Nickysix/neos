@@ -1,0 +1,39 @@
+#!/bin/sh
+
+OUTPUT_NAME="tc-video"
+
+usage () {
+	cat <<EOF>&2
+Usage: ${0##*/} [FILES]
+
+Create a '$OUTPUT_NAME' script in current folder. The script provides a FFmpeg call
+to transcode FILES with some useful options and instructive help.
+
+This script is meant to be easily editable to fit the user needs.
+
+EOF
+}
+
+[ $# -eq 0 ] && usage && exit 1
+[ "$1" = "-h" ] && usage && exit
+[ "$1" = "--" ] && shift
+
+escname () {
+	echo "$@" | sed 's|/|\\/|g'
+}
+
+SCRIPT_PATH="${0%/*}"
+SCRIPT_NAME="${0##*/}"
+FILELIST=""
+if [ -f "$SCRIPT_PATH/.$SCRIPT_NAME.in" ]; then
+	cp -i "$SCRIPT_PATH/.$SCRIPT_NAME.in" "$OUTPUT_NAME"
+	for i ; do
+		esci="$(escname "$i")"
+		FILELIST="${FILELIST:+$FILELIST -i }'$esci'"
+		ex -sc "%s/###FILENAMES/'$esci' ###FILENAMES/ | xit" "$OUTPUT_NAME"
+	done
+	ex -sc '%s/###FILELIST/'"$FILELIST"'/ | xit' "$OUTPUT_NAME"
+	chmod +x "$OUTPUT_NAME"
+else
+	echo ".$SCRIPT_NAME.in not found"
+fi

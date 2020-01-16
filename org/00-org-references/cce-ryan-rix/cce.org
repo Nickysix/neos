@@ -1,0 +1,304 @@
+Complete Computing Environment
+Table of Contents
+Emacs as a Complete Computing Environment
+A Summary: Core Tenants
+Complete Computing Environment Structure
+Installation and Usage
+init.el
+Legal Business
+Emacs as a Complete Computing Environment
+In Other Words: Why build an OS on top of Emacs?
+
+No other system provides the level of deep integration, customization, and history as Emacs. The fact that it's little more than a GUI system and a Lisp interpreter means you can replace and modify nearly any part you want, and this makes it wildly powerful and wildly dangerous. Make it act like Vim, build your own autocomplete framework. Insert whatever code you'd like to. Want an email client, and IRC client? A publishing system, or a music player? They all behave similarly, you can make far-flung changes that affect the entire system with a single s-expression. That's powerful.
+
+It's by no means perfect. The Emacs code base itself is a mess supporting 9 vastly different platforms, with obsolete support of some 40 others. It doesn't support asynchronous operations. The Emacs Lisp dialect is messy and poorly documented. The default keybindings and chords leave you feeling confused and anxious.
+
+But it's still an incredibly powerful and malleable system. Many shy away from systems like that, but as a craftsman, care for and mastery over my tools is an incredibly important thing to me, and is what leads me to build my own system, a computing environment that works for me and with me.
+
+Not everything is a fucking text though, why should my UI treat it like that? Though everything in Emacs is just a buffer of (sometimes formatted) text, that has some really neat side effects that make programming for it interesting – one simple one is that I can generate editing macros to transform and augment deep dark parts of the system, or my mail or my newsfeeds, and execute them in a way that would be otherwise impossible. Emacs provides me a functional X11 Window Manager and a single set of keybindings to manage text and GUI, and integrates cleanly with the Plasma desktop and the various "system" services provided by KDE.
+
+More pragmatically though, it stems from a simple goal: To control my world from a handful of handcrafted and optimised workspaces. Currently, that looks like a GPD Pocket, a desktop, and a racked server running my cloud-based services. All of these systems are built around the same core, and function in largely the same fashion, where the only variance is the input methods.
+
+As time progresses, and as consumer technology which meets my requirements become available, the exact configuration will shift in the direction of unity and flow.
+
+I have long held the belief that though they are taking over much of the worlds' computing time smartphones aren't that smart, that you can't and shouldn't do real work on them. That to be even remotely useful modern smartphones require you to push all of your personal data in to 3rd party services that don't, and can't, have your best interests at heart. If you want to review that document you worked on at work while you're on the subway, it probably travels around the fucking world, and gets written to root knows how many harddrives owned by Google and the NSA; it's public record.
+
+Imagine, instead, a single compute and storage core that could contain all of your data and meld to the world around it. A hunk of plastic that can plug in to a 24 inch display and become a workstation. Or it can slot in to the back of a 7 e-ink display and render the aformentioned PDF. Or it can be headless and be communicated with over voice and audio cues. The core, a 40% keyboard, and a 7" screen fit in your purse and fit in your cozy corner of the coffee shop where you write your novel at on the weekends. All of these workflows can accomplish their core task while assuring the user is free from spying, hacked accounts, and 90%-working sync solutions. This is the goal of the complete computing environment – a single hardware/software pairing for the future of my computing and, hopefully, an inspiration to others.
+
+Of course, a single computer by itself is not powerful enough to provide me with all of the functionality I need, and for such things, it would be prudent to act as a thin client for a system with more potential, such as the server sitting in my closet, with terabytes of storage and more RAM and CPU than you can shake a stick at. For such cases, and general integration, I plan to use the either Matrix decentralized RPC or perhaps TOR Hidden Services as a unified fabric for my various sub-systems. When I come home, my compute core notifies my homeserver over Matrix, turning on my lights, as a simple example. Using Matrix as the WebRTC signaling plane for things like CIDER REPLs, for example, could prove to be a killer feature, requiring no SSH, no crazy setup, just a simple peer-to-peer encrypted message passing channel.
+
+I dig in to this more in my Future Plans documention.
+
+A Summary: Core Tenants
+I pride myself in my workflow and in the experience and knowledge I have of my toolset. The act of writing code is simple, the act of building systems is unrelated. I know how to build a table, but I don't have mastery over that skill because the tools, while simple and accessible, are still foreign to me. That is not the case with my working environment, where I have spent hours honing my experience with the metaphorical planer, I have sawn more than my share of boards to the right length, I have worked this nailgun without err. I have set out to become a craftsman with and within my environment. Along the way, I have taken some core philosophies in how I use my tools. These are core to my experiences, and should be inherent in all that I design.
+
+Context switching is unproductive. Modal editing is not. Those are at odds. Any interface modality introduced to a system should be understandable and it should be consistent so as to minimize the negative effects of context switching. I use Emacs with Evil-Mode to achieve this right now with a set of custom keybindings which build on top of the idioms of both Emacs and Vim where appropriate.
+Tiling or Tiling-like window managers are the most productive way to move about multiple systems, but there is a world in which you don't move about multiple systems. CCE uses EXWM1 to map X11 windows to Emacs buffers and the only critical context switches out of CCE are in to Firefox and the various web products I use, largely due to my employer.
+At its core, the operating system and desktop itself serve as little more than an abstraction layer to my emacs environment and a web browser. Anything that I can use a command line, curses or emacs interface, I will do so, even if that means it is less friendly in a traditional sense. A side effect here is that I have freedom to explore computing paradigms that don't make as much sense to traditional users, such as my combination of Chromebooks, headless servers and text-to-speech systems.
+The smartphone is a setback for computing as a whole; the interface goes against nearly everything I stand for, they lock users in to unhealthy ecosystems and they encourage the use of proprietary software that regularly proves itself to be spying, cheating and selling the lives of their users. I should be able to wholly do my computing without the use of a smartphone, even if it means being unable to participate in the latest social-media craze until a 3rd party client is developed. Hell, that's probably a win.
+An Ergodox or smaller ortholinear2 keyboard with a custom layout allows me to achieve optimal typing efficiency while decreasing my risk of wrist and hand injury, making the act of computing on the whole a more positive experience. I have easy access to my modifiers and my escape, and that means I have little excuse for not using them.
+Computers should not be opaque. Code should be self-documenting, systems should not just make magic decisions without being able to explain them.
+I value security and privacy, even if that means hosting my own systems and services, or having to minimize the use of others. I will use a web client instead of a mobile application, I will encrypt wherever possible, data-at-rest will be in my control.
+I should be able to be productive on any device with a hardware keyboard.
+Complete Computing Environment Structure
+CCE is designed to be modular and portable, or at least more than previous efforts. More and more, I am trying to unify my computing environment down to a single machine, but until such a time, I have multiple form-factors to deal with and multiple, incompatible computing environments. This sucks, but here we are.
+
+A major failing of FSEM was the amount of time it took to tangle1, limiting the amount of time I was willing to invest in porting and debugging the system; I would edit fsem.el directly, and byte compile that, eventually remembering to un-tangle those changes back in to fsem.org. CCE takes a different approach, relying on heavy modularization, putting things in to multiple .org files based on their purpose, tangled, subsequently, to different .el and .elc files. This allows me to modify a particular subsystem without needing to recompile the whole thing. As such, this is the rough "table of contents", the things we can dive in to and work through.
+
+Core System – The basic minimal sanities of running an Emacs-based system
+Emacs Core Configuration – The minimum needed to get my Emacs in to a sane state for prose
+System Core Configuration – The minimum needed to get my system to a productive state
+EXWM – The Emacs X11 Window Manager, the Window Manager I use on all of my endpoints
+Shell Configuration – Bourne Again Shell
+Sauron – The notification framework for CCE
+Browsers – EWW and my GUI Browser of the week
+Task Management and GTD
+Org Mode Core – A more-and-more-heavily modified version of Bernt Hansen's configuration
+Long Form Writing – Writing blogs and short stories with Org-mode
+Org Agenda management
+Remote Task Sources
+Google Calendar
+Phabricator
+Communications Platforms
+Gnus email configuration
+Twitter
+Core Programming Environment – Autocomplete, snippets, source control and the like
+Javascript Programming
+Lisps and Lisp Accessories
+Arduino and Hardware
+C++ programming – Have to flesh this out.
+Core Operations Environment – Remote server access and affordances
+Ansible
+Puppet
+Logs and Stats processing – Working with literate programming, ELK, and related tooling
+Downtime
+Music – MPD and its ilk
+Movies and videos
+News, RSS and eBooks
+Home and life management
+Server Management
+Future Plans
+Installation and Usage
+Each of these modules tangles out to its own set of files, including this file itself. This file serves as the launcher, init.elc, and also has an installer function, which I execute by putting point inside of it and hitting C-c C-c:
+
+(setq after-cce-hook nil)
+(setq cce-files
+      '("cce-system-core" "cce-emacs-core" "cce-shells" "cce-sauron" "cce-exwm"
+        "cce-browsers" "cce-org" "cce-writing" "cce-agenda" "cce-gcal"
+        "cce-gnus" "cce-twitter" "cce-code-core"
+        "cce-arduino" "cce-lisps" "cce-js" "cce-operations"
+        "cce-music" "cce-movies" "cce-reading" "cce-home" "cce-servers"
+        "cce"))
+(defun cce/install (files)
+  (dolist (file files)
+    (message "installing %s" file)
+    (org-babel-tangle-file (concat "~/sync/cce/" file ".org"))
+    (with-current-buffer (find-file-noselect (concat "~/sync/cce/" file ".el") t)
+      (when (file-exists-p (concat "~/sync/cce/" file ".el"))
+        (revert-buffer t t)
+        (eval-buffer)
+        (kill-buffer))))
+  (dolist (file files)
+    (when (file-exists-p (concat "~/sync/cce/" file ".el"))
+      (byte-compile-file (concat "~/sync/cce/" file ".el")))))
+(cce/install cce-files)
+(async-shell-command "bash cce.shell" "*cce-install*")
+(disable-theme 'alect-black-alt)
+(load-theme 'alect-light)
+(bh/save-then-publish)
+(disable-theme 'alect-light)
+(load-theme 'alect-black-alt)
+After that is done, I run the shell script cce.sh with bash.
+
+test -f /usr/bin/dnf && sudo dnf install ansible libselinux-python
+test -f /usr/bin/apt && sudo apt install ansible
+
+ansible-playbook --become -i inventory -c local cce.yaml -e local_account=$USER $@
+---
+- name: CCE is installed
+  hosts: localhost
+
+  roles:
+
+  - role: system-core
+    tags:
+    - system-core
+
+  - role: emacs-core
+    tags:
+    - emacs-core
+
+  - role: code-core
+    tags:
+    - code-core
+
+  - role: exwm
+    tags:
+    - exwm
+
+  - role: writing
+    tags:
+    - writing
+
+  - role: gnus
+    tags:
+    - gnus
+
+  - role: lisps
+    tags:
+    - lisps
+
+  - role: operations
+    tags:
+    - operations
+
+  - role: browsers
+    tags:
+    - browsers
+    when: ansible_hostname != "fontkeming" and ansible_hostname != "penguin"
+
+  - role: music
+    tags:
+    - music
+
+  - role: home
+    tags:
+    - home
+
+  - role: arduino
+    tags:
+    - arduino
+    when: ansible_hostname != "fontkeming"
+
+  - role: shells
+    tags:
+    - shells
+
+  # from cce-servers.org
+  - role: docker
+    tags:
+    - docker
+I also want to install my configuration for Emacs obviously. There's some other bootstraps that happen on a new host, like setting up my Syncthing files, but that's largely managed outside of CCE.
+
+- name: CCE is installed
+  hosts: all
+
+  tasks:
+  - name: CCE installed as init.el
+    copy:
+      src: cce.elc
+      dest: ~/.emacs.d/init.elc
+    become: yes
+    become_user: "{{local_account}}"
+
+  - name: CCE directory is set in .emacs.d
+    file:
+      state: link
+      src: ~/sync/cce
+      dest: ~/.emacs.d/cce
+    become: yes
+    become_user: "{{local_account}}"
+init.el
+This is the loader for the CCE modules.
+
+(defvar after-cce-hook nil
+  "Hooks to run after all of the Complete Computing Environment has been loaded")
+
+(defconst qdot/emacs-start-time (current-time))
+(defun cce/time-since-start ()
+  (float-time (time-subtract (current-time)
+                             qdot/emacs-start-time)))
+
+(defun timestamped-message (orig-func &rest args)
+  (let ((format-string (car args))
+        (args (cdr args)))
+    (add-to-list 'args (format "%s -- %s"
+                               (number-to-string (cce/time-since-start))
+                               format-string))
+    (apply orig-func args)))
+;(advice-add 'message :around #'timestamped-message)
+
+(add-to-list 'load-path "~/.emacs.d/cce/") ;; Installed by cce.sh
+
+;; core
+(require 'cce-emacs-core)
+(require 'cce-system-core)
+(require 'cce-sauron)
+(require 'cce-exwm)
+(require 'cce-browsers)
+(require 'cce-shells)
+
+;; org mode configuration
+(require 'cce-org)
+(require 'cce-writing)
+(require 'cce-agenda)
+(require 'cce-gcal)
+
+;; comunications platforms
+(require 'cce-gnus)
+;(require 'cce-twitter)
+
+;; programming support
+(require 'cce-code-core)
+(require 'cce-arduino)
+(require 'cce-lisps)
+(require 'cce-js)
+
+;; downtime
+(require 'cce-music)
+(require 'cce-movies)
+(require 'cce-reading)
+(require 'cce-home)
+
+(add-hook 'after-cce-hook
+          (lambda ()
+            (message "The Complete Computing Environment has been loaded")))
+
+(add-hook 'after-cce-hook
+          `(lambda ()
+             (let ((elapsed (cce/time-since-start)))
+               (message "Loading %s...done (%.3fs)"
+                        ,load-file-name elapsed))) t)
+(add-hook 'after-init-hook
+          `(lambda ()
+             (let ((elapsed (cce/time-since-start)))
+               (message "Loading %s...done (%.3fs) [after-init]"
+                        ,load-file-name elapsed))) t)
+
+(defun cce/install (files)
+  (dolist (file files)
+    (message "Installing %s" file)
+    (org-babel-tangle-file (concat file ".org"))
+    (with-current-buffer (find-file-noselect (concat file ".el") t)
+      (revert-buffer t t)
+      (eval-buffer)
+      (kill-buffer)))
+  (dolist (file files)
+    (byte-compile-file (concat file ".el"))))
+
+(run-hooks 'after-cce-hook)
+Legal Business
+Copyright (C) 2014-2015 Ryan Rix <ry@n.rix.si>
+
+Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.3 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
+
+Code in this document is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+This document http://doc.rix.si/cce/cce.html (either in its HTML format or in its Org format is licensed under the GNU Free Documentation License version 1.3 or later (http://www.gnu.org/copyleft/fdl.html).
+
+The code examples and CSS stylesheets are licensed under the GNU General Public License v3 or later (http://www.gnu.org/licenses/gpl.html).
+
+Footnotes:
+1
+https://github.com/ch11ng/exwm
+
+2
+http://olkb.co
+
+Author: Ryan Rix
+
+Created: 2019-09-12 Thu 14:08
+
+Validate

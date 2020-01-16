@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: Insert a bash shebang
+# key: sb
+# --
+#! /bin/bash -
+
+$0

@@ -1,0 +1,1029 @@
+#+TITLE: EOS: Development Module
+#+AUTHOR: Lee Hinman
+#+EMAIL: lee@writequit.org
+#+SETUPFILE: ~/eos/setupfiles/eos.setup
+
+#+BEGIN_SRC emacs-lisp
+(provide 'eos-develop)
+#+END_SRC
+
+* EOS Development Module Configuration
+:PROPERTIES:
+:CUSTOM_ID: dev-module
+:END:
+
+This contains the configuration for elisp programming
+
+Remove some back-ends from vc-mode, no need to check all these things, I use
+=magit= for everything anyway:
+
+#+BEGIN_SRC emacs-lisp
+(setq vc-handled-backends '(git svn))
+#+END_SRC
+
+I need to hide the lighter for subword mode:
+
+#+BEGIN_SRC emacs-lisp
+(use-package subword
+  :diminish subword-mode)
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+(use-package log4j-mode
+  :ensure t
+  :init
+  (add-hook #'log4j-mode-hook #'view-mode)
+  (add-hook #'log4j-mode-hook #'read-only-mode)
+  (add-hook #'log4j-mode-hook 'eos/turn-on-hl-line))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+(use-package logview
+  :ensure t
+  :init
+  (add-hook #'logview-mode-hook 'eos/turn-on-hl-line))
+#+END_SRC
+
+Highlight idle things, but only in certain modes
+
+#+BEGIN_SRC emacs-lisp
+(use-package idle-highlight-mode
+  :ensure t
+  :init
+  (add-hook 'prog-mode-hook #'idle-highlight-mode)
+  :config
+  (setq idle-highlight-idle-time 1.0))
+#+END_SRC
+
+Hide-show is kind of like Vim's folding, but manually done right now.
+
+I'm in the process of trying out [[https://github.com/gregsexton/origami.el][Origami]] as a replacement, since it's a bit
+easier on the brain and has nicer functions (supposedly), however, Origami is
+much slower than hideshow for large buffers.
+
+#+BEGIN_SRC emacs-lisp
+(use-package hideshow
+  :bind (("C-c TAB" . hs-toggle-hiding)
+         ("C-\\" . hs-toggle-hiding)
+         ("M-\\" . eos/hs-fold-show-only-methods)
+         ("M-+" . hs-show-all))
+  :init
+  (add-hook #'prog-mode-hook #'hs-minor-mode)
+  (when (fboundp 'define-fringe-bitmap)
+    (define-fringe-bitmap 'hs-marker [16 48 112 240 112 48 16] nil nil 'center))
+  (defface hs-face '((t (:background "#ff8")))
+    "Face to hightlight the ... area of hidden regions"
+    :group 'hideshow)
+  (defface hs-fringe-face '((t (:foreground "#888")))
+    "Face used to highlight the fringe on folded regions"
+    :group 'hideshow)
+  (setq hs-set-up-overlay
+        (lambda (ov)
+          (when (eq 'code (overlay-get ov 'hs))
+            (let ((marker-string "*")
+                  (display-string (format " ... " (count-lines (overlay-start ov)
+                                                               (overlay-end ov)))))
+              (put-text-property 0 1 'display
+                                 (list 'right-fringe 'hs-marker 'hs-fringe-face)
+                                 marker-string)
+              (put-text-property 0 (length display-string)
+                                 'face 'hs-face display-string)
+              (overlay-put ov 'before-string marker-string)
+              (overlay-put ov 'display display-string))))
+        hs-isearch-open t)
+  :diminish hs-minor-mode
+  :config
+  (defvar hs-special-modes-alist
+    (mapcar 'purecopy
+            '((c-mode "{" "}" "/[*/]" nil nil)
+              (c++-mode "{" "}" "/[*/]" nil nil)
+              (bibtex-mode ("@\\S(*\\(\\s(\\)" 1))
+              (java-mode "{" "}" "/[*/]" nil nil)
+              (js-mode "{" "}" "/[*/]" nil)
+              (json-mode "{" "}" "/[*/]" nil)
+              (javascript-mode  "{" "}" "/[*/]" nil))))
+
+  (defvar eos/hs-level 2
+    "Default level to hide at when calling
+    `eos/fold-show-only-methods'. This is buffers may set this to
+    be buffer-local.")
+
+  (setq eos/hs-fold-show-only-methods-active-p nil)
+  (defun eos/hs-fold-show-only-methods ()
+    "Toggle between hiding all methods using `eos/hs-level' or
+showing them."
+    (interactive)
+    (save-excursion
+      (if eos/hs-fold-show-only-methods-active-p
+          (progn
+            (hs-show-all)
+            (setq-local eos/hs-fold-show-only-methods-active-p nil))
+        (progn
+          (goto-char (point-min))
+          (hs-hide-level eos/hs-level)
+          (setq-local eos/hs-fold-show-only-methods-active-p t))))))
+#+END_SRC
+
+Bring up the compilation buffer with =C-x c=
+
+#+BEGIN_SRC emacs-lisp
+(defun eos/last-compilation-buffer ()
+  "Display last compilation buffer in current window."
+  (interactive)
+  (if (buffer-live-p compilation-last-buffer)
+      (set-window-buffer (get-buffer-window) compilation-last-buffer)
+    (message "Last compilation buffer is killed.")))
+
+(global-set-key (kbd "C-x c") #'eos/last-compilation-buffer)
+
+(setq compilation-scroll-output 'first-error)
+#+END_SRC
+
+Also, you don't need to prompt me about saving files for compilation, just do it.
+
+#+BEGIN_SRC emacs-lisp
+(setq compilation-ask-about-save nil)
+#+END_SRC
+
+Need to be able to have buffers shared between machines with Syncthing
+
+#+BEGIN_SRC emacs-lisp
+(global-auto-revert-mode t)
+(diminish 'global-auto-revert-mode)
+(diminish 'auto-revert-mode)
+#+END_SRC
+
+Uses =M-n= and =M-p= to jump between the same variable in multiple places
+
+#+BEGIN_SRC emacs-lisp
+(use-package smartscan
+  :ensure t
+  :init (add-hook #'prog-mode-hook #'smartscan-mode)
+  :config
+  (bind-key "M-'" #'other-window smartscan-map)
+  (setq smartscan-symbol-selector "symbol"))
+#+END_SRC
+
+You'd be surprised how often you need to toggle boolean states in programming. I
+was surprised by how often I use this.
+
+#+BEGIN_SRC emacs-lisp
+(use-package bool-flip
+  :ensure t
+  :bind ("C-c C-b" . bool-flip-do-flip))
+#+END_SRC
+
+** Navigating programming modes
+
+I like using =C-c C-p= and =C-c C-n= to navigate by headlines in org-mode, so I'd also like to
+navigate by function declaration in all development modes with the same thing.
+
+#+BEGIN_SRC emacs-lisp
+(defun eos/previous-function ()
+  (interactive)
+  (beginning-of-defun))
+
+(defun eos/next-function ()
+  (interactive)
+  (beginning-of-defun -1))
+
+(bind-key "C-c C-p" 'eos/previous-function prog-mode-map)
+(bind-key "C-c C-n" 'eos/next-function prog-mode-map)
+
+;; cc-mode likes to have its own things, so bind them there too
+;;(bind-key "C-c C-p" 'eos/previous-function c-mode-base-map)
+;;(bind-key "C-c C-n" 'eos/next-function c-mode-base-map)
+#+END_SRC
+
+There's also a mode called =navi-mode= / =outshine= that aims to bring some of org-mode into
+development, so let's try that out.
+
+#+BEGIN_SRC emacs-lisp
+(defvar outline-minor-mode-prefix "\M-#")
+
+(use-package navi-mode
+  :ensure t
+  :init
+  (require 'outshine)
+  (add-hook 'emacs-lisp-mode-hook 'outline-minor-mode)
+  (add-hook 'clojure-mode-hook 'outline-minor-mode))
+#+END_SRC
+
+** Indentation
+:PROPERTIES:
+:CUSTOM_ID: h:f91026bf-ebbc-4dfb-b8e4-728f87835c6a
+:END:
+
+Everyone has a different indentation they like, so let's use dtrt-indent (dtrt =
+do the right thing) to try and figure out the best indentation. I don't enable
+it automatically though, I invoke it manually.
+
+#+BEGIN_SRC emacs-lisp
+(use-package dtrt-indent
+  :ensure t
+  :diminish t
+  :config
+  (setq dtrt-indent-active-mode-line-info ""))
+#+END_SRC
+
+** Additional highlighting
+:PROPERTIES:
+:CUSTOM_ID: h:780e139e-4a42-4a93-bb3f-87fae494e4f7
+:END:
+
+There is also some additional configuration that we may want to enable, let's do
+that with additional highlighting modes.
+
+First, highlight numbers in a "special" way, so they stick out:
+
+#+BEGIN_SRC emacs-lisp
+(use-package highlight-numbers
+  :ensure t
+  :init
+  (add-hook 'prog-mode-hook #'highlight-numbers-mode))
+#+END_SRC
+
+Also highlight quoted symbols in a nice way.
+
+#+BEGIN_SRC emacs-lisp
+(use-package highlight-quoted
+  :ensure t
+  :init
+  (add-hook 'prog-mode-hook #'highlight-quoted-mode))
+#+END_SRC
+
+Also highlight pre-defined symbols in elisp
+
+#+BEGIN_SRC emacs-lisp
+(use-package highlight-defined
+  :ensure t
+  :init
+  (add-hook 'emacs-lisp-hook #'highlight-defined-mode))
+#+END_SRC
+
+Highlight operators (like =&= and =;= in C-like modes)
+
+#+BEGIN_SRC emacs-lisp
+(use-package highlight-operators
+  :ensure t
+  :init
+  (add-hook 'c-mode-common-hook #'highlight-operators-mode))
+#+END_SRC
+
+Finally, let's highlight escape sequences in a better way also
+
+#+BEGIN_SRC emacs-lisp
+(use-package highlight-escape-sequences
+  :ensure t
+  :init
+  (add-hook 'prog-mode-hook #'hes-mode))
+#+END_SRC
+
+** Semantic Editing
+:PROPERTIES:
+:CUSTOM_ID: semantic
+:END:
+First, use a development version of cedet if applicable, I download the latest
+snapshot from http://www.randomsample.de/cedet-snapshots/ and extract it in
+~/src/elisp. Don't forget to run =make= in it!
+
+And then things to set up semantic mode
+
+#+BEGIN_SRC emacs-lisp
+;; Use the full Java 1.5 grammar to parse Java files
+(autoload 'wisent-java-default-setup "semantic/wisent/java"
+  "Hook run to setup Semantic in `java-mode'." nil nil)
+
+(defun eos/setup-semantic-mode ()
+  (interactive)
+  (use-package semantic
+    :init
+    (require 'semantic/wisent)
+    (require 'semantic/wisent/java)
+    (require 'semantic/wisent/java-wy)
+    (require 'semantic/ia)
+    (setq semantic-default-submodes
+          '(;; Perform semantic actions during idle time
+            global-semantic-idle-scheduler-mode
+            ;; Use a database of parsed tags
+            global-semanticdb-minor-mode
+            ;; Decorate buffers with additional semantic information
+            global-semantic-decoration-mode
+            ;; Highlight the name of the function you're currently in
+            global-semantic-highlight-func-mode
+            ;; Generate a summary of the current tag when idle
+            global-semantic-idle-summary-mode
+            ;; Switch to recently changed tags with `semantic-mrub-switch-tags',
+            ;; or `C-x B'
+            global-semantic-mru-bookmark-mode))
+    (semantic-mode t)
+    ;; Fixing a bug in semantic, see #22287
+    (defun semanticdb-save-all-db-idle ()
+      "Save all semantic tag databases from idle time.
+Exit the save between databases if there is user input."
+      (semantic-safe "Auto-DB Save: %S"
+        ;; FIXME: Use `while-no-input'?
+        (save-mark-and-excursion ;; <-- added line
+         (semantic-exit-on-input 'semanticdb-idle-save
+           (mapc (lambda (db)
+                   (semantic-throw-on-input 'semanticdb-idle-save)
+                   (semanticdb-save-db db t))
+                 semanticdb-database-list)))))))
+
+(add-hook 'c-mode-hook #'eos/setup-semantic-mode)
+(add-hook 'java-mode-hook #'eos/setup-semantic-mode)
+(add-hook 'emacs-lisp-mode-hook #'semantic-mode)
+#+END_SRC
+
+** Emacs' Built In Electric Modes (pair/indent/layout)
+:PROPERTIES:
+:CUSTOM_ID: electric-modes
+:END:
+Emacs finally has better support for automatically doing things like indentation
+and pairing parentheses. So, let's enable (some) of that
+
+How about some auto-indentation:
+
+#+BEGIN_SRC emacs-lisp
+(electric-indent-mode 1)
+
+;; Ignore electric indentation for python and yaml
+(defun electric-indent-ignore-mode (char)
+  "Ignore electric indentation for python-mode"
+  (if (or (equal major-mode 'python-mode)
+          (equal major-mode 'yaml-mode))
+      'no-indent
+    nil))
+(add-hook 'electric-indent-functions 'electric-indent-ignore-mode)
+#+END_SRC
+
+Finally, perhaps we want some automatic layout:
+
+#+BEGIN_SRC emacs-lisp
+(electric-layout-mode 1)
+#+END_SRC
+
+** Programming Mode Hooks
+:PROPERTIES:
+:CUSTOM_ID: prog-mode
+:END:
+
+In programming modes, make sure things like FIXME and TODO are
+highlighted so they stand out:
+
+#+BEGIN_SRC emacs-lisp
+(defun eos/add-watchwords ()
+  "Highlight FIXME, TODO, and NOCOMMIT in code TODO"
+  (font-lock-add-keywords
+   nil '(("\\<\\(TODO\\(?:(.*)\\)?:?\\)\\>"  1 'warning prepend)
+         ("\\<\\(FIXME\\(?:(.*)\\)?:?\\)\\>" 1 'error prepend)
+         ("\\<\\(NOCOMMIT\\(?:(.*)\\)?:?\\)\\>"  1 'error prepend))))
+
+(add-hook 'prog-mode-hook #'eos/add-watchwords)
+#+END_SRC
+
+* Paren matching with electric-pair-mode and Smartparens
+:PROPERTIES:
+:CUSTOM_ID: h:3a834588-e39d-467f-bf01-7afad9d09063
+:END:
+So, I vacillate between using =electric-pair-mode= and =smartparens=, ELP
+because it's built-in to Emacs and much faster, and Smartparens because it
+supports a lot of the paredit-like things that I love in lisp, but everywhere.
+
+First, stuff for automatically inserting pairs of characters with electric-pair-mode:
+
+#+BEGIN_SRC emacs-lisp
+(electric-pair-mode -1)
+(setq electric-pair-preserve-balance t
+      electric-pair-delete-adjacent-pairs t
+      electric-pair-open-newline-between-pairs nil)
+(show-paren-mode 1)
+#+END_SRC
+
+Now, the smartparens configuration:
+
+#+BEGIN_SRC emacs-lisp
+(use-package smartparens
+  :ensure t
+  :diminish smartparens-mode
+  :init
+  (electric-pair-mode -1)
+  (require 'smartparens-config)
+  ;; Turn on smartparens in the minibuffer
+  (add-hook 'minibuffer-setup-hook 'turn-on-smartparens-strict-mode)
+  (define-key smartparens-mode-map (kbd "C-M-f") 'sp-forward-sexp)
+  (define-key smartparens-mode-map (kbd "C-M-b") 'sp-backward-sexp)
+
+  (define-key smartparens-mode-map (kbd "C-M-<right>") 'sp-forward-sexp)
+  (define-key smartparens-mode-map (kbd "C-M-<left>") 'sp-backward-sexp)
+  (define-key smartparens-mode-map (kbd "M-F") 'sp-forward-sexp)
+  (define-key smartparens-mode-map (kbd "M-B") 'sp-backward-sexp)
+
+  (define-key smartparens-mode-map (kbd "C-M-d") 'sp-down-sexp)
+  (define-key smartparens-mode-map (kbd "C-M-a") 'sp-backward-down-sexp)
+  (define-key smartparens-mode-map (kbd "C-S-d") 'sp-beginning-of-sexp)
+  (define-key smartparens-mode-map (kbd "C-S-a") 'sp-end-of-sexp)
+
+  (define-key smartparens-mode-map (kbd "C-M-e") 'sp-up-sexp)
+  (define-key smartparens-mode-map (kbd "C-M-u") 'sp-backward-up-sexp)
+  (define-key smartparens-mode-map (kbd "C-M-t") 'sp-transpose-sexp)
+
+  (define-key smartparens-mode-map (kbd "C-M-n") 'sp-next-sexp)
+  (define-key smartparens-mode-map (kbd "C-M-p") 'sp-previous-sexp)
+
+  (define-key smartparens-mode-map (kbd "C-M-k") 'sp-kill-sexp)
+  (define-key smartparens-mode-map (kbd "C-M-w") 'sp-copy-sexp)
+
+  (define-key smartparens-mode-map (kbd "M-r") 'sp-unwrap-sexp)
+
+  (define-key smartparens-mode-map (kbd "C-(") 'sp-forward-barf-sexp)
+  (define-key smartparens-mode-map (kbd "C-)") 'sp-forward-slurp-sexp)
+  (define-key smartparens-mode-map (kbd "M-(") 'sp-forward-barf-sexp)
+  (define-key smartparens-mode-map (kbd "M-)") 'sp-forward-slurp-sexp)
+
+  (define-key smartparens-mode-map (kbd "M-D") 'sp-splice-sexp)
+
+  ;; Handle backspace in c-like modes better for smartparens
+  (bind-key [remap c-electric-backspace]
+            'sp-backward-delete-char smartparens-strict-mode-map)
+
+  ;; ;; Bind ";" to sp-comment in elisp
+  (bind-key ";" 'sp-comment emacs-lisp-mode-map)
+
+  (defun sp--org-skip-asterisk (ms mb me)
+    (or (and (= (line-beginning-position) mb)
+             (eq 32 (char-after (1+ mb))))
+        (and (= (1+ (line-beginning-position)) me)
+             (eq 32 (char-after me)))))
+
+  ;; Org-mode
+  (sp-with-modes
+      'org-mode
+    (sp-local-pair "*" "*"
+                   :actions '(insert wrap)
+                   :unless '(sp-point-after-word-p sp-point-at-bol-p)
+                   :wrap "C-*" :skip-match 'sp--org-skip-asterisk)
+    (sp-local-pair "_" "_" :unless '(sp-point-after-word-p) :wrap "C-_")
+    (sp-local-pair "/" "/" :unless '(sp-point-after-word-p)
+                   :post-handlers '(("[d1]" "SPC")))
+    (sp-local-pair "~" "~" :unless '(sp-point-after-word-p)
+                   :post-handlers '(("[d1]" "SPC")))
+    (sp-local-pair "=" "=" :unless '(sp-point-after-word-p)
+                   :post-handlers '(("[d1]" "SPC")))
+    (sp-local-pair "«" "»"))
+
+    ;;; Java
+  (sp-with-modes
+      '(java-mode c++-mode)
+    (sp-local-pair "{" nil :post-handlers '(("||\n[i]" "RET")))
+    (sp-local-pair "/*" "*/" :post-handlers '((" | " "SPC")
+                                              ("* ||\n[i]" "RET"))))
+
+  (smartparens-global-strict-mode 1)
+  (add-hook 'eshell-mode-hook 'turn-on-smartparens-mode))
+#+END_SRC
+
+* Paredit everywhere
+:PROPERTIES:
+:CUSTOM_ID: h:3866d5c9-7e88-4f83-89b6-e7292962fb70
+:END:
+Paredit is fantastic for lisp-like languages, and it would be great if it were
+available everywhere (a subset of it, anyway), thankfully there is
+[[https://github.com/purcell/paredit-everywhere][paredit-everywhere]].
+
+Note that I need to unbind =M-s= because it's the new isearch prefix in 25.1, so
+I set it to =nil= in the map.
+
+#+BEGIN_SRC emacs-lisp
+(eval-after-load 'paredit-everywhere
+  '(define-key paredit-everywhere-mode-map (kbd "M-s") nil))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+(use-package paredit-everywhere
+  :ensure t
+  :disabled t
+  :init (add-hook 'prog-mode-hook 'paredit-everywhere-mode))
+#+END_SRC
+
+* Documentation with helm-dash
+:PROPERTIES:
+:CUSTOM_ID: h:85b19bd9-c3e0-4475-a0b6-9e5eb1f8a884
+:END:
+
+Dash is a documentation tool that has nice offline documentation. This is great
+for plane trips or just when the internet goes out.
+
+Make sure that you do =M-x helm-dash-install-docset= to install the correct
+docset(s).
+
+I usually install =Java_SE8=, =Emacs Lisp=, and =ElasticSearch=. Then I use =C-c
+D= ('D' for Documentation) to activate it.
+
+#+BEGIN_SRC emacs-lisp
+(use-package helm-dash
+  :ensure t
+  :bind (("C-c D" . helm-dash))
+  :init
+  (setq helm-dash-common-docsets '("ElasticSearch" "Java")
+        helm-dash-min-length 1)
+  :config
+  (defun eos/use-java-docset ()
+    (setq-local helm-dash-docsets '("Java")))
+  (defun eos/use-elisp-docset ()
+    (setq-local helm-dash-docsets '("Emacs Lisp")))
+  (defun eos/use-haskell-docset ()
+    (setq-local helm-dash-docsets '("Haskell")))
+  (add-hook 'java-mode-hook #'eos/use-java-docset)
+  (add-hook 'emacs-lisp-mode-hook #'eos/use-elisp-docset)
+  (add-hook 'haskell-mode-hook #'eos/use-haskell-docset))
+#+END_SRC
+
+* Flycheck - Syntax Checking On The Fly
+:PROPERTIES:
+:CUSTOM_ID: flycheck
+:END:
+
+Pretty minimally configured, but awesome tool for most dynamic languages.
+
+#+BEGIN_SRC emacs-lisp
+(when (fboundp 'define-fringe-bitmap)
+  (define-fringe-bitmap 'flycheck-fringe-bitmap-double-arrow
+    [0 0 0 0 0 4 12 28 60 124 252 124 60 28 12 4 0 0 0 0]))
+
+(use-package flycheck
+  :ensure t
+  :defer 5
+  :bind (("M-g M-n" . flycheck-next-error)
+         ("M-g M-p" . flycheck-previous-error)
+         ("M-g M-=" . flycheck-list-errors))
+  :init
+  (require 'flycheck)
+  (global-flycheck-mode)
+  (setq flycheck-indication-mode 'right-fringe
+        flycheck-check-syntax-automatically '(save mode-enabled))
+  :diminish flycheck-mode
+  :config
+  (progn
+    (setq-default flycheck-disabled-checkers
+                  '(emacs-lisp-checkdoc json-jsonlint json-python-json))
+    (use-package flycheck-pos-tip
+      :ensure t
+      :init
+      (flycheck-pos-tip-mode)
+      (setq flycheck-pos-tip-timeout 10
+            flycheck-display-errors-delay 0.5))
+    (use-package helm-flycheck
+      :ensure t
+      :init (define-key flycheck-mode-map (kbd "C-c ! h") 'helm-flycheck))
+    (use-package flycheck-haskell
+      :ensure t
+      :init (add-hook 'flycheck-mode-hook #'flycheck-haskell-setup))))
+#+END_SRC
+
+* Development snippets with yasnippet
+
+I have recently be using skeletons, but yasnippet is useful also, so I'll try it
+again now after a while.
+
+#+BEGIN_SRC emacs-lisp
+(use-package yasnippet
+  :ensure t
+  :bind (("M-=" . yas-insert-snippet))
+  :diminish yas-minor-mode
+  :init
+  (yas-global-mode 1)
+  :config
+  (add-to-list 'yas-snippet-dirs "~/.emacs.d/site-lisp/snippets")
+  (yas-reload-all))
+#+END_SRC
+
+* Multi-compile for different compilations I run
+
+Running ES is great, but I'm an Elasticsearch developer, so I need to be able to run tests and all
+that pretty easily.
+
+#+BEGIN_SRC emacs-lisp
+(use-package multi-compile
+  :ensure t
+  :commands multi-compile-run
+  :bind ("<f6>" . multi-compile-run)
+  :init
+  (defun eshell/comp ()
+    "Run multi-compile from the directory you are currently located in"
+    (multi-compile-run))
+  :config
+  (require 's)
+  (setq multi-compile-completion-system 'helm
+        multi-compile-alist
+        '(;; Elasticsearch-specific compilation commands
+          ((s-contains? "es/elasticsearch" default-directory)
+           . (("ES core compile"
+               "./gradlew :server:compileJava :server:compileTestJava --console=plain"
+               "~/es/elasticsearch")
+              ("ES everything compile"
+               "./gradlew :server:compileJava :server:compileTestJava compileJava compileTestJava precommit --console=plain"
+               "~/es/elasticsearch")
+              ("ES core unit test"
+               "./gradlew :server:test --console=plain"
+               "~/es/elasticsearch")
+              ("ES core integ test"
+               "./gradlew :server:integTest --console=plain"
+               "~/es/elasticsearch")
+              ("ES core check"
+               "./gradlew :server:check --console=plain"
+               "~/es/elasticsearch")
+              ("ES backport check"
+               "./gradlew :server:compileJava :server:compileTestJava compileJava compileTestJava precommit :server:check --console=plain"
+               "~/es/elasticsearch")
+              ("ES documentation tests"
+               "./gradlew :docs:check --console=plain"
+               "~/es/elasticsearch")
+              ("ES REST tests"
+               "./gradlew :distribution:archives:integ-test-zip:integTest -Dtests.class=\"org.elasticsearch.test.rest.*Yaml*IT\" --console=plain"
+               "~/es/elasticsearch")
+              ("ES core precommit"
+               "./gradlew :server:precommit --console=plain"
+               "~/es/elasticsearch")
+              ("ES precommit"
+               "./gradlew precommit --console=plain"
+               "~/es/elasticsearch")
+              ("ES qa check"
+               "./gradlew check --console=plain"
+               "~/es/elasticsearch/qa")
+              ("ES check all"
+               "./gradlew check --console=plain"
+               "~/es/elasticsearch")
+              ("x-pack compile"
+               "./gradlew :x-pack:plugin:compileJava :x-pack:plugin:compileTestJava --console=plain"
+               "~/es/elasticsearch/x-pack")
+              ("x-pack everything compile"
+               "./gradlew compileJava compileTestJava precommit --console=plain"
+               "~/es/elasticsearch/x-pack")
+              ("x-pack precommit"
+               "./gradlew precommit --console=plain"
+               "~/es/elasticsearch/x-pack")
+              ("x-pack check"
+               "./gradlew check --console=plain"
+               "~/es/elasticsearch/x-pack")))
+          ;; Java compilation commands
+          (java-mode
+           . (("ant compile" .
+               "ant compile compile-test")
+              ("mvn compile" .
+               "mvn compile test-compile")
+              ("gradle compile" .
+               "gradle compileJava compileTestJava --console=plain"))))))
+#+END_SRC
+
+Also, we need compilation-mode to truncate lines immediately
+
+#+BEGIN_SRC emacs-lisp
+(add-hook 'compilation-mode-hook #'toggle-truncate-lines)
+#+END_SRC
+
+* Determining the test at point and copying the syntax for running it
+
+#+BEGIN_SRC emacs-lisp
+(defun eos/test-at-point ()
+  (interactive)
+  (if (not (eq major-mode 'java-mode))
+      (message "Buffer is not currently in java-mode")
+    "foo"))
+#+END_SRC
+
+* Emacs Lisp (Elisp)
+:PROPERTIES:
+:CUSTOM_ID: elisp
+:END:
+This contains the configuration for elisp programming
+
+First, turn on paredit and eldoc everywhere it's useful:
+
+#+BEGIN_SRC emacs-lisp
+(use-package paredit
+  :ensure t
+  :commands paredit-mode
+  :diminish "()"
+  :init
+  (add-hook 'emacs-lisp-mode-hook #'paredit-mode)
+  (add-hook 'ielm-mode-hook #'paredit-mode)
+  :config
+  (bind-key "M-)" #'paredit-forward-slurp-sexp paredit-mode-map)
+  (bind-key "C-(" #'paredit-forward-barf-sexp paredit-mode-map)
+  (bind-key "C-)" #'paredit-forward-slurp-sexp paredit-mode-map)
+  (bind-key ")" #'paredit-close-parenthesis paredit-mode-map)
+  (bind-key "M-\"" #'my/other-window-backwards paredit-mode-map))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+(use-package eldoc
+  :diminish eldoc-mode
+  :init
+  (add-hook 'emacs-lisp-mode-hook #'eldoc-mode)
+  (add-hook 'ielm-mode-hook #'eldoc-mode)
+  (add-hook 'lisp-interaction-mode-hook #'eldoc-mode)
+  :config
+  (setq eldoc-idle-delay 0.1))
+#+END_SRC
+
+Define some niceties for popping up an ielm buffer:
+
+#+BEGIN_SRC emacs-lisp
+(defun ielm-other-window ()
+  "Run ielm on other window"
+  (interactive)
+  (switch-to-buffer-other-window
+   (get-buffer-create "*ielm*"))
+  (call-interactively 'ielm))
+
+(define-key emacs-lisp-mode-map (kbd "C-c C-z") 'ielm-other-window)
+(define-key lisp-interaction-mode-map (kbd "C-c C-z") 'ielm-other-window)
+#+END_SRC
+
+Turn on elisp-slime-nav if available, so =M-.= works to jump to function
+definitions:
+
+#+BEGIN_SRC emacs-lisp
+(use-package elisp-slime-nav
+  :ensure t
+  :diminish elisp-slime-nav-mode
+  :init (add-hook 'emacs-lisp-mode-hook #'elisp-slime-nav-mode))
+#+END_SRC
+
+Some minor Elisp things borrowed from Steve Purcell's config.
+
+#+begin_src emacs-lisp
+(bind-key "M-:" #'pp-eval-expression)
+
+(defun eos/eval-last-sexp-or-region (prefix)
+ "Eval region from BEG to END if active, otherwise the last sexp."
+ (interactive "P")
+ (if (and (mark) (use-region-p))
+ (eval-region (min (point) (mark)) (max (point) (mark)))
+ (pp-eval-last-sexp prefix)))
+
+(bind-key "C-x C-e" 'eos/eval-last-sexp-or-region emacs-lisp-mode-map)
+
+(define-key lisp-mode-shared-map (kbd "RET") 'reindent-then-newline-and-indent)
+#+end_src
+
+Here's something that makes minibuffer evaluation a lot better, by pretti-fying
+the contents, and other such things. It's a package called "eval-expr".
+
+#+BEGIN_SRC emacs-lisp
+(use-package eval-expr
+  :ensure t
+  :init
+  (add-hook 'after-init-hook #'eval-expr-install))
+#+END_SRC
+
+Set up some things for developing Emacs itself:
+
+#+BEGIN_SRC emacs-lisp
+(use-package debbugs
+  :ensure t)
+#+END_SRC
+
+A couple of helpers for the minibuffer:
+
+#+BEGIN_SRC emacs-lisp
+(add-hook 'eval-expression-minibuffer-setup-hook #'eldoc-mode)
+(add-hook 'eval-expression-minibuffer-setup-hook #'paredit-mode)
+#+END_SRC
+
+Display the ugly =^L= lines in Elisp files as actual lines
+
+#+BEGIN_SRC emacs-lisp
+(use-package page-break-lines
+  :ensure t
+  :commands (turn-on-page-break-lines-mode)
+  :diminish page-break-lines-mode
+  :init
+  (add-hook 'emacs-lisp-mode-hook #'turn-on-page-break-lines-mode))
+#+END_SRC
+
+* Python
+:PROPERTIES:
+:CUSTOM_ID: python
+:END:
+Some various python settings, including loading jedi if needed to set up
+keys, the custom hook only loads jedi when editing python files:
+
+#+BEGIN_SRC emacs-lisp
+(use-package python
+  :defer t
+  :config
+  (setq-default python-indent-offset 4)
+  (define-key python-mode-map (kbd "<backtab>") 'python-back-indent))
+#+END_SRC
+
+I'd also like to (eventually) do some data science-y things with Python, so the ob-ipython package
+is supposed to be nice for that. I certainly hope it's better than gnuplot is.
+
+#+BEGIN_SRC emacs-lisp
+(when (executable-find "jupyter")
+  (use-package ob-ipython
+    :ensure t
+    :config
+    (use-package company
+      :config
+      (add-to-list 'company-backends 'company-ob-ipython))
+    (add-to-list 'org-latex-minted-langs '(ipython "python"))))
+#+END_SRC
+
+I'm using the [[https://github.com/porterjamesj/virtualenvwrapper.el][virtualenvwrapper]] package for managing these
+
+#+BEGIN_SRC emacs-lisp
+(use-package virtualenvwrapper
+  :ensure t
+  :defer t
+  :init
+  (progn
+    (venv-initialize-interactive-shells)
+    (venv-initialize-eshell)
+    (setq venv-location (or (getenv "WORKON_HOME")
+                            "~/.venvs"))))
+#+END_SRC
+
+* Ruby
+:PROPERTIES:
+:CUSTOM_ID: ruby
+:END:
+Using rbenv, set it up correctly when idle
+
+#+BEGIN_SRC emacs-lisp
+(use-package rbenv
+  :ensure t
+  :defer 25
+  :init
+  ;; I don't really care about the active ruby in the modeline
+  (setq rbenv-show-active-ruby-in-modeline nil)
+  (global-rbenv-mode t))
+#+END_SRC
+
+* Haskell
+:PROPERTIES:
+:CUSTOM_ID: haskell
+:END:
+Use GHC for haskell mode, and turn on auto-complete and some doc/indent
+modes:
+
+#+BEGIN_SRC emacs-lisp
+(defun eos/turn-off-flyspell ()
+  (interactive)
+  (flyspell-mode -1))
+
+(use-package haskell-mode
+  :ensure t
+  :init
+  (use-package intero
+    :ensure t
+    :init
+    (add-hook 'haskell-mode-hook 'intero-mode))
+  (add-hook 'haskell-mode-hook #'eos/turn-off-flyspell))
+#+END_SRC
+
+I tend to want to align things by regex (ie, ~=~) a lot in Haskell, so bind =C-c M-a= to do it.
+
+#+BEGIN_SRC emacs-lisp
+(global-set-key (kbd "C-c M-a") #'align-regexp)
+#+END_SRC
+
+* PureScript
+:PROPERTIES:
+:CUSTOM_ID: haskell
+:END:
+
+It's like Haskell, but for Javascript!
+
+#+BEGIN_SRC emacs-lisp
+(use-package purescript-mode
+  :ensure t
+  :init
+  (use-package psc-ide
+    :ensure t
+    :init
+    (defun eos/setup-purescript ()
+      (interactive)
+      (flyspell-mode -1)
+      (psc-ide-mode)
+      (company-mode 1)
+      (flycheck-mode 1)
+      (turn-on-purescript-indentation))
+    (add-hook 'purescript-mode-hook #'eos/setup-purescript)))
+#+END_SRC
+
+* Javascript
+:PROPERTIES:
+:CUSTOM_ID: javascript
+:END:
+I want indentation of 2 for json/js.
+
+#+BEGIN_SRC emacs-lisp
+(setq-default js-indent-level 2)
+#+END_SRC
+
+Bleh javascript. js2-mode is better than nothing.
+
+#+BEGIN_SRC emacs-lisp
+(use-package js2-mode
+  :ensure t
+  :mode "\\.js\\'"
+  :config (js2-imenu-extras-setup))
+#+END_SRC
+
+There's =tern= also, but I leave it turned off by default, just installed
+
+#+BEGIN_SRC emacs-lisp
+(use-package tern
+  :ensure t)
+#+END_SRC
+
+Finally, use json-mode for JSON instead of js-mode
+
+#+BEGIN_SRC emacs-lisp
+(use-package json-mode
+  :ensure t
+  :mode "\\.json\\'"
+  :config
+  (bind-key "C-c TAB" 'hs-toggle-hiding json-mode-map))
+#+END_SRC
+
+Sometimes I need to deal with large Javascript by using [[https://github.com/stedolan/jq][jq]]
+
+#+BEGIN_SRC emacs-lisp
+(use-package jq-mode
+  :ensure t
+  :init
+  (with-eval-after-load "json-mode"
+    (define-key json-mode-map (kbd "C-c C-j") #'jq-interactively)))
+#+END_SRC
+
+* Shell scripting
+:PROPERTIES:
+:CUSTOM_ID: h:5fe30558-190d-476d-9174-cca2e986bb97
+:END:
+Not really much here, other than telling shell-script-mode that =.bats= files
+are shell-scripts
+
+#+BEGIN_SRC emacs-lisp
+(add-to-list 'auto-mode-alist '("\\.bats$" . shell-script-mode))
+#+END_SRC
+
+Let's make .zsh also be a shell script
+
+#+BEGIN_SRC emacs-lisp
+(add-to-list 'auto-mode-alist '("\\.zsh$" . shell-script-mode))
+#+END_SRC
+
+* Rust
+:PROPERTIES:
+:CUSTOM_ID: h:8c865a27-afa4-4e85-a88c-3b798b9ce627
+:END:
+
+I've been following Rust for a while now, and I'd like to contribute to it. So
+need to have all the development bits installed and set up.
+
+#+BEGIN_SRC emacs-lisp
+(use-package rust-mode
+  :ensure t
+  :init
+  (use-package toml-mode
+    :ensure t))
+#+END_SRC
+
+And racer, for rust completion
+
+#+BEGIN_SRC emacs-lisp
+(use-package racer
+  :ensure t
+  :init
+  (use-package company-racer
+    :ensure t
+    :after company
+    :config
+    (push 'company-racer company-backends))
+  (add-hook 'rust-mode-hook #'racer-mode)
+  (add-hook 'rust-mode-hook #'eldoc-mode)
+  :config
+  (setq racer-cmd (executable-find "racer")))
+#+END_SRC
+
+And support for flycheck and rust
+
+#+BEGIN_SRC emacs-lisp
+(use-package flycheck-rust
+  :ensure t
+  :init
+  (add-hook 'rust-mode-hook #'flycheck-rust-setup))
+#+END_SRC
+
+* Groovy
+
+I tend to have to edit a lot of =build.gradle= files these days...
+
+#+BEGIN_SRC emacs-lisp
+(use-package groovy-mode
+  :ensure t)
+#+END_SRC

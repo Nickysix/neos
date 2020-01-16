@@ -1,0 +1,16 @@
+
+;; ----- amx-history -----
+(
+ treemacs
+ ag
+ cd
+ 5x5
+ amx
+ arp
+ dbx
+)
+
+;; ----- amx-data -----
+(
+ (treemacs . 1)
+)

@@ -1,0 +1,64 @@
+#+TITLE: EOS: Fun and Leisure Module
+#+AUTHOR: Lee Hinman
+#+EMAIL: lee@writequit.org
+#+SETUPFILE: ~/eos/setupfiles/eos.setup
+
+#+BEGIN_SRC emacs-lisp
+(provide 'eos-leisure)
+#+END_SRC
+
+* Download buffer
+:PROPERTIES:
+:CUSTOM_ID: downloads
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(defun eos/popup-downloads ()
+  "Pop up the downloads buffer"
+  (interactive)
+  (when (not (get-buffer "*eshell downloads*"))
+    (let ((eshell-buffer-name "*eshell downloads*"))
+      (eshell)))
+  (popwin:popup-buffer-tail "*eshell downloads*"))
+
+;; eshell 4 is always my "download stuff" buffer
+(global-set-key (kbd "C-x M-d") #'eos/popup-downloads)
+#+END_SRC
+
+* Getting the weather
+:PROPERTIES:
+:CUSTOM_ID: weather
+:END:
+
+Let's manage the forecast and weather too, will be managed from the main Hydra
+
+#+BEGIN_SRC emacs-lisp
+(use-package wttrin
+  :ensure t
+  :init
+  (setq wttrin-default-cities '("Denver")))
+#+END_SRC
+
+* Browsing stack overflow
+:PROPERTIES:
+:CUSTOM_ID: stack-overflow
+:END:
+
+Emacs has a really nice stack overflow client, called "sx"
+
+#+BEGIN_SRC emacs-lisp
+(use-package sx
+  :ensure t)
+#+END_SRC
+
+* Pretty colors in buffers
+:PROPERTIES:
+:CUSTOM_ID: h:df0e7f66-8fe2-41c7-b604-9a680cda850e
+:END:
+
+Especially when looking at emacs themes, rainbow-mode is nice.
+
+#+BEGIN_SRC emacs-lisp
+(use-package rainbow-mode
+  :ensure t)
+#+END_SRC

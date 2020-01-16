@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: Minimal LaTeX header
+# key: hdr
+# --
+\documentclass{minimal}
+
+\begin{document}
+  $0
+\end{document}

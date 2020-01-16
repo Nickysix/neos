@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: `...'
+# key: kw
+# condition: 'force-in-comment
+# --
+`$1' $0

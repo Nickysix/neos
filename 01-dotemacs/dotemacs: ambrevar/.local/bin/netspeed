@@ -1,0 +1,53 @@
+#!/bin/sh
+
+usage () {
+	cat <<EOF>&2
+Usage: ${0##*/} [INTERFACE]
+
+Return up and down transmission speed on given interface. If not given, use the
+first online interface returned by ifconfig (lo is ignored).
+EOF
+}
+ 
+[ $# -gt 1 ] && usage && exit 1
+[ "$1" = "-h" ] && usage && exit
+
+if [ -n "$1" ]; then
+	interface="$1"
+else
+	interface="$(ifconfig | grep -vm1 '^lo\|^ \|^$' | cut -f1 -d':')"
+	## AWK alternative
+	# ifconfig | awk -F: '!/^ / && !/^$/ && $1!="lo" {print $1;exit}'
+fi
+
+if [ ! -d "/sys/class/net/${interface}" ]; then
+	echo >&2 "Error: no such interface: ${interface}"
+else
+	path="/dev/shm/netspeed"
+	time=$(date +%s)
+
+	read -r rx < /sys/class/net/"$interface"/statistics/rx_bytes
+	read -r tx < /sys/class/net/"$interface"/statistics/tx_bytes
+
+	if [ ! -f "$path" ]; then
+		echo "$time $rx $tx" > "$path"
+		chmod 0666 "$path"
+	fi
+
+	read -r time_old rx_old tx_old < "$path"
+	echo "$time $rx $tx" > "$path"
+	time_diff=$((time - time_old))
+
+	if [ "$time_diff" -gt 0 ]; then
+		rx_rate=$(((rx - rx_old) / time_diff))
+		tx_rate=$(((tx - tx_old) / time_diff))
+
+		[ "$rx_rate" -gt 1024 ] && rx_rate=$((rx_rate / 1024)) && rx_unit=K
+		[ "$rx_rate" -gt 1024 ] && rx_rate=$((rx_rate / 1024)) && rx_unit=M
+
+		[ "$tx_rate" -gt 1024 ] && tx_rate=$((tx_rate / 1024)) && tx_unit=K
+		[ "$tx_rate" -gt 1024 ] && tx_rate=$((tx_rate / 1024)) && tx_unit=M
+
+		printf "%s %s↓ %s %s↑" "$rx_rate" "$rx_unit" "$tx_rate" "$tx_unit"
+	fi
+fi

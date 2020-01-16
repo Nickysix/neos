@@ -1,0 +1,17 @@
+# -*- mode: snippet -*-
+# name: class
+# key: class
+# --
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ${1:Namespace}
+{
+    class ${2:Name}
+    {
+        $0
+    }
+}

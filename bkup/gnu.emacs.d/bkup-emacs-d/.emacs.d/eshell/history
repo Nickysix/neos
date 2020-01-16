@@ -1,0 +1,12 @@
+racket --version
+sbcl --version
+w3m --version
+cd ~
+sbcl
+curl --version
+ls -1
+clear
+clear
+clear
+clear
+w3m --verson

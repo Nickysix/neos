@@ -1,0 +1,44 @@
+#
+# wm independent hotkeys
+#
+
+# terminal emulator
+super + Return
+	st -e fish
+
+# program launcher
+super + @space
+	rofi -show drun
+
+# password menu
+super + shift + p
+     passmenu
+
+# make sxhkd reload its configuration files:
+super + grave
+	pkill -USR1 -x sxhkd
+
+super + shift + x : {s,h,r,p}
+    sudo {zzz, hibernate, reboot, shutdown}
+
+super + shift + l
+      slock
+
+super + shift + z
+      setxkbmap -variant colemak
+
+super + alt + n
+      $HOME./config/rofi/nmcli-rofi
+
+# media shit
+XF86Audio{Play,Stop,Prev,Next}
+    mpc {toggle,stop,prev,next}
+
+XF86Audio{Mute,LowerVolume,RaiseVolume}
+    vol.sh {m,d,i}
+
+XF86MonBrightnessUp
+    light -A 10
+
+XF86MonBrightnessDown
+    light -U 10

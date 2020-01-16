@@ -1,0 +1,171 @@
+
+
+[[https://github.com/sindresorhus/awesome][https://cdn.rawgit.com/sindresorhus/awesome/d7305f38d29fed78fa85652e3a63e154dd8e8829/media/badge.svg]]
+
+A community driven list of resources of interest to CS Educators.
+
+To contribute, follow this [[https://github.com/zamansky/awesome-cs-education/blob/master/contributing.org][contribution guide]]. 
+
+#+BEGIN_QUOTE
+*Table of Contents*
+- [[#awesome-cs-education][Awesome CS Education]]
+- [[#blogs][Blogs]]
+- [[#organizations-and-non-profits][Organizations and non profits]]
+  - [[#general][General]]
+  - [[#regional][Regional]]
+- [[#online-communities][online Communities]]
+  - [[#popular-sites][Popular sites]]
+  - [[#mailing-lists][Mailing Lists]]
+  - [[#facebook][Facebook]]
+- [[#online-tools-and-ides][Online tools and IDEs]]
+  - [[#repls][Repls]]
+  - [[#online-problem-sites][Online problem sites]]
+- [[#curricula-and-support-services][Curricula and support services]]
+- [[#computer-science-competitions-for-k12][Computer Science Competitions for K12]]
+  - [[#online--at-local-schools][online / at local schools]]
+  - [[#regional][Regional]]
+- [[#regional-professional-development][Regional Professional Development]]
+- [[#online-professional-development][Online Professional Development]]
+- [[#interesting-talks--presentations--videos-etc][Interesting talks / presentations / videos etc.]]
+- [[#language-specific-links][Language Specific links]]
+  - [[#java][Java]]
+  - [[#python][Python]]
+- [[#course--level-specific-links][Course / Level specific links]]
+  - [[#intro-including-apcs-p][Intro (including APCS-P)]]
+  - [[#intermediate-include-apcs-a-or-first-year-college][Intermediate (include APCS-A or first year college)]]
+  - [[#advanced][Advanced]]
+- [[#other-cs-ed-related-awesome-sites][Other CS Ed related awesome sites]]
+- [[#license][License]]
+#+END_QUOTE* Awesome CS Education
+
+* Blogs
+
+| Blog                                                     | Author             | Notes |
+|----------------------------------------------------------+--------------------+-------|
+| [[https://medium.com/bits-and-behavior][Bits and Behaviour]]                                       | Andy Ko            |       |
+| [[http://blog.acthompson.net/][Computer Science Teacher]]                                 | Alfred Thompson    |       |
+| [[http://cestlaz.github.io][C'est la Z]]                                               | Mike Zamansky      |       |
+| [[http://geekymomblog.com/][Geeky Mom Blog]]                                           | Laura Blankenship  |       |
+| [[https://codinginmathclass.wordpress.com/][Coding in Math Class]]                                     | Dawn DuPriest      |       |
+| [[https://computinged.wordpress.com/][Computing Education Blog]]                                 | Mark Guzdial       |       |
+| [[https://gflint.wordpress.com/][Garth's CS Education Blog]]                                | Garth Flint        |       |
+| https://cszero.wordpress.com/                            | Brett Becker       |       |
+| https://sites.google.com/a/vt.edu/acbart-eportfolio/blog | Austin Bart        |       |
+| https://blog.emiliebarnard.com/                          | Emilie Barnard     |       |
+| https://medium.com/@colleenlewis                         | Colleen Lewis      |       |
+| http://blogs.whitman.edu/countingfromzero/               | Janet Davis        |       |
+| https://www.cs.grinnell.edu/~rebelsky/musings/           | Sam Rebelsky       |       |
+| http://www.cs.uni.edu/~wallingf/blog/                    | Eugene Wallingford |       |
+| https://cacm.acm.org/blogs/blog-cacm                     |                    |       |
+| http://gflint.wordpress.com/                             | Garth Flint        |       |
+| http://blog.acthompson.net                               | Alfred Thompson    |       |
+| http://innovativeteacher.org                             | Doug Bergman       |       |
+| https://cszero.wordpress.com/other/ is a meta list       |                    |       |
+
+
+
+* Organizations and non profits
+** General
+| Site            | Description                                                  |
+|-----------------+--------------------------------------------------------------|
+| [[http://code.org][code.org]]        | online ide, curricula, outreach materials and more           |
+| [[http://www.csteachers.org/][ CSTeachers.org]] | CSTA - Computer Science Teachers Association  (ACM subgroup) |
+| [[http://acm.org][ACM]]             | Association for Computing Machinery                          |
+** Regional
+| Site               | Description                             |
+|--------------------+-----------------------------------------|
+| [[http://www.csinsf.org/][CS For All in SF]]   | curricula, resources, research and more |
+| [[http://cs4all.org/][CS4Alll New Mexico]] | curricula, resources, research and more |
+| [[http://csnyc.org][CSNYC]]              | CS4All NYC                              |
+
+* online Communities
+** Popular sites
+- [[https://cseducators.stackexchange.com/][Computer Science Educators StackExcahnge]]
+- [[https://www.reddit.com/r/CSEducation/][CS Education subreddit]]
+** Mailing Lists
+- [[http://sigcse.org/sigcse/membership/mailing-lists][SIGCSE Mailing Lists]]
+- APCSA - need join link
+** Facebook
+- [[https://www.facebook.com/groups/CSEdForum/][CS Education Discussion]]
+- [[https://www.facebook.com/groups/1546763215587966/][CS Education Researchers and Practitioners]]
+- [[https://www.facebook.com/groups/APComputerScienceTeachers/][AP CS Teachers]]
+- [[https://www.facebook.com/groups/1029824640390220/][APCSP Teachers]]
+- [[https://www.facebook.com/groups/FollowCSTA/][CSTA]]
+
+* Online tools and IDEs
+** Repls
+| Site       | Description                                                            |
+|------------+------------------------------------------------------------------------|
+| [[http://codehs.com][CodeHS]]  | Multi language support, classroom support, curriculum and online community                      |
+| [[http://codesters.com][Codesters]]  | Python REPL with curriculum and online community                       |
+| [[http://repl.it][Repl.it]]    | Multi language support and classroom support                           |
+|            |                                                                        |
+** Online problem sites
+| Site              | Description                                                                                                                                     |
+|-------------------+-------------------------------------------------------------------------------------------------------------------------------------------------|
+| [[http://codingbat.com][Coding Bat]]        | Python and Java, classroom grading support and make your own questions                                                                          |
+| [[http://codehs.com][CodeHS]]            | Python, Java, JavaScript, classroom grading support and make your own questions and graders, with shared repository of teacher created problems |
+| [[http://www.codestepbystep.com/][code step by step]] | Code Step By Step                                                                                                                               |
+| [[https://chortle.ccsu.edu/CPuzzles/][C Puzzles]]         | Short algorithmic challenges to solve in C                                                                                                      |
+| [[http://exercism.io/][Exercism]]          | Download and solve practice problems in over 30 different languages. Submit them to the community for review.                                   |
+| [[https://regexcrossword.com/][Regex Crossword]]   | Learn regular expressions through crossword puzzles                                                                                             |
+|                   |                                                                                                                                                 |
+
+* Curricula and support services
+| Site           | Description                                                                   |
+|----------------+-------------------------------------------------------------------------------|
+| [[http://codehs.com][CodeHS]]          | 6-12 Curriculum (JS, Python, AP Java, AP CSP and more), curriculum tools, PD, and classroom management tools and resources                   |
+| [[http://tealsk12.org][TEALS]]          | Partner with a Software Engineer to bring CS to your school                   |
+| [[http://codesters.com][Codesters]]      | Python based tools and curricula                                              |
+| [[http://www.bootstrapworld.org/][Bootstrapworld]] | Functional programming either standalone CS or integrated into other subjects |
+|                |                                                                               |
+
+* Computer Science Competitions for K12
+** online / at local schools
+| Competition | Notes                                                           |
+|-------------+-----------------------------------------------------------------|
+| [[http://www.usaco.org][USACO]]       | individual. independent of school, training materials available |
+| [[http://www.acsl.org][ACSL]]        | In school, individual, team                                     |
+** Regional
+
+* Regional Professional Development
+| Link | Description | Location | time of year |
+|------+-------------+----------+--------------|
+|      |             |          |              |
+
+
+* Online Professional Development
+Professional development courses geared for teachers to help teach computer science. 
+| Name | Description |
+|------+-------------+----------+--------------|
+| [[https://codehs.com/info/pd][CodeHS]]      | CodeHS offers many online professional development courses for teachers looking to learn how to teach computer science classes. In several states, you can get official credit/approvals by completing one of the courses. Courses include: Teaching Intro to Computer Science, Teaching AP Computer Science Principles, Teaching AP Computer Science in Java, Teaching Computing Ideas, Teaching Intro Python, Teaching Web Design. The courses are approximately 30-40 hour online courses with personalized grading.              |
+
+
+
+* Interesting talks / presentations / videos etc.
+(inclusion in this section does not imply endorsement views by the
+curators of this site but all listed links are considered worth a
+visit)
+- [[https://docs.google.com/presentation/d/1skkpIGPR81RsnIuth2PjhMkCi1YuODqpLOhEEjXsnXQ/edit#slide=id.gc6f75fceb_0_0][Andy Ko's talk in teaching computer science]]
+
+* Language Specific links
+** Java
+** Python
+- [[https://github.com/quobit/awesome-python-in-education][Awesome Python in Education]] -  A curated list about Python in Education
+- [[https://www.ynonperek.com/2017/09/21/python-exercises/][Non-trivial Python Exercises]]
+* Course / Level specific links
+** Intro (including APCS-P)
+- [[https://ap.cs50.net][CS50 AP]] - Harvard University's adaptation of CS50 for AP Computer Science Principles
+** Intermediate (include APCS-A or first year college)
+** Advanced
+- [[http://nand2tetris.org/][Nand2Tetris]] - Nand2Tetris is textbook/course in computer architecture from logic gates up through virtual machines and compilers
+
+* Other CS Ed related awesome sites
+- [[https://github.com/sindresorhus/awesome][Awesome]] - a list of awesome lists
+- [[https://github.com/Macmod/awesome-cs][Awesome CS]] - many Awesome CS topic and language links
+
+* License
+
+[[https://creativecommons.org/publicdomain/zero/1.0/][http://mirrors.creativecommons.org/presskit/buttons/88x31/svg/cc-zero.svg]]
+
+To the extent possible under law, Mike Zamansky has waived all copyright and related or neighboring rights to this work.

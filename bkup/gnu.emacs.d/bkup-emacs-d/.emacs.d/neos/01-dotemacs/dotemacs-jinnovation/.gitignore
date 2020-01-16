@@ -1,0 +1,15 @@
+elpa*
+*.dat
+*.eld
+*.cache
+eshell/
+nxhtml/
+recentf
+tramp
+url/
+
+/.ecukes-failing-scenarios
+
+/init.el
+/straight/
+/transient/

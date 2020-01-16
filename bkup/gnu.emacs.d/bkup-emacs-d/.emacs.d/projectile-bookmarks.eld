@@ -1,0 +1,1 @@
+("~/.emacs.d/neos/config/" "~/.emacs.d/neos/org/" "~/.emacs.d/neos/")

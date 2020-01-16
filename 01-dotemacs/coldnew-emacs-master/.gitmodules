@@ -1,0 +1,21 @@
+[submodule "modules/ycmd"]
+	path = modules/ycmd
+	url = git@github.com:Valloric/ycmd.git
+[submodule "modules/YCM-Generator"]
+	path = modules/YCM-Generator
+	url = git@github.com:rdnetto/YCM-Generator.git
+[submodule "modules/emacs"]
+	path = modules/emacs
+	url = https://github.com/emacs-mirror/emacs.git
+[submodule "modules/hexo.el"]
+	path = modules/hexo.el
+	url = https://github.com/coldnew/hexo.el.git
+[submodule "modules/jdee-server"]
+	path = modules/jdee-server
+	url = https://github.com/jdee-emacs/jdee-server.git
+[submodule "modules/ProofGeneral"]
+	path = modules/ProofGeneral
+	url = https://github.com/ProofGeneral/PG.git
+[submodule "modules/libvterm"]
+	path = modules/libvterm
+	url = https://github.com/akermu/emacs-libvterm.git

@@ -1,0 +1,431 @@
+#+TITLE: EOS: Navigation
+#+AUTHOR: Lee Hinman
+#+EMAIL: lee@writequit.org
+#+SETUPFILE: ~/eos/setupfiles/eos.setup
+
+#+BEGIN_SRC emacs-lisp
+(provide 'eos-navigation)
+#+END_SRC
+
+* General Emacs Navigation
+:PROPERTIES:
+:CUSTOM_ID: general-nav
+:END:
+
+These are miscellaneous bindings used all over the place that don't
+really fit in anywhere else.
+
+First, some window management and navigation helpers
+
+#+BEGIN_SRC emacs-lisp
+(global-set-key (kbd "C-x +") 'balance-windows-area)
+
+(global-set-key (kbd "C-c y") #'bury-buffer)
+(global-set-key (kbd "C-c C-y") #'bury-buffer)
+(global-set-key (kbd "C-c r") #'revert-buffer)
+
+;; ==== Window switching ====
+(defun eos/other-window-backwards ()
+  (interactive)
+  (other-window -1))
+
+(global-set-key (kbd "M-'") #'other-window)
+(global-set-key (kbd "M-\"") #'eos/other-window-backwards)
+(global-set-key (kbd "H-'") #'other-window)
+(global-set-key (kbd "H-\"") #'eos/other-window-backwards)
+(global-set-key (kbd "<C-tab>") #'other-window)
+(global-set-key (kbd "C-x C-o") #'other-window)
+#+END_SRC
+
+If you split buffers and have A on the left and B on the right, this will put B
+on the left and A on the right. I actually use this more than I thought I
+would...
+
+#+BEGIN_SRC emacs-lisp
+(defun transpose-buffers (arg)
+  "Transpose the buffers shown in two windows."
+  (interactive "p")
+  (let ((selector (if (>= arg 0) 'next-window 'previous-window)))
+    (while (/= arg 0)
+      (let ((this-win (window-buffer))
+            (next-win (window-buffer (funcall selector))))
+        (set-window-buffer (selected-window) next-win)
+        (set-window-buffer (funcall selector) this-win)
+        (select-window (funcall selector)))
+      (setq arg (if (plusp arg) (1- arg) (1+ arg))))))
+
+(global-set-key (kbd "C-x 4 t") 'transpose-buffers)
+#+END_SRC
+
+Next, some of the random bindings that I use that don't really fit elsewhere.
+
+#+BEGIN_SRC emacs-lisp
+(global-set-key (kbd "C-x C-l") 'toggle-truncate-lines)
+
+;; join line to next line
+(global-set-key (kbd "M-j")
+                (lambda ()
+                  (interactive)
+                  (join-line -1)))
+
+;; Completion that uses many different methods to find options.
+(global-set-key (kbd "M-/") 'hippie-expand)
+
+;; Font size
+(define-key global-map (kbd "C-+") 'text-scale-increase)
+(define-key global-map (kbd "C--") 'text-scale-decrease)
+
+;; Start or switch to eshell
+(global-set-key (kbd "C-x C-m") 'eshell)
+
+;; If you want to be able to M-x without meta (phones, etc)
+(global-set-key (kbd "C-c C-x") 'execute-extended-command)
+#+END_SRC
+
+Some random highlighting helpers
+
+#+BEGIN_SRC emacs-lisp
+(use-package hl-anything
+  :ensure t
+  :diminish hl-highlight-mode
+  :commands hl-highlight-mode
+  :init
+  (global-set-key (kbd "<f7> <f7>") 'hl-highlight-thingatpt-local)
+  (global-set-key (kbd "<f7> u") 'hl-unhighlight-all-local)
+  (global-set-key (kbd "<f7> U") 'hl-unhighlight-all-global)
+  (global-set-key (kbd "<f7> n") 'hl-find-next-thing)
+  (global-set-key (kbd "<f7> p") 'hl-find-prev-thing))
+#+END_SRC
+
+** Isearch bindings
+:PROPERTIES:
+:CUSTOM_ID: isearch
+:END:
+
+#+BEGIN_SRC emacs-lisp
+;; Use regex searches by default.
+;;(global-set-key (kbd "C-s") 'isearch-forward-regexp)
+;;(global-set-key (kbd "C-r") 'isearch-backward-regexp)
+;; Case-fold regex by default
+(setq search-default-mode 'character-fold-to-regexp)
+;; Non regex search gets the meta also
+(global-set-key (kbd "C-M-s") 'isearch-forward)
+(global-set-key (kbd "C-M-r") 'isearch-backward)
+
+;; Activate occur easily inside isearch
+(define-key isearch-mode-map (kbd "C-o")
+  (lambda () (interactive)
+    (let ((case-fold-search isearch-case-fold-search))
+      (occur (if isearch-regexp isearch-string (regexp-quote isearch-string))))))
+
+(defun eos/add-watchword (string)
+  "Highlight whatever `string' is in the current buffer
+permanently."
+  (font-lock-add-keywords
+   nil `((,(if isearch-regexp isearch-string (regexp-quote isearch-string))
+          1 '((:background "yellow") (:weight bold)) t))))
+
+(define-key isearch-mode-map (kbd "M-h")
+  (lambda () (interactive)
+    (eos/add-watchword isearch-string)))
+#+END_SRC
+
+* Mouse-based navigation
+:PROPERTIES:
+:CUSTOM_ID: mouse
+:END:
+
+Need to enable this to get trackpad scrolling to work on my Lenovo T450s
+
+#+BEGIN_SRC emacs-lisp
+;; mouse integration
+(require 'mouse)
+(xterm-mouse-mode t)
+(global-set-key [mouse-4] '(lambda ()
+                           (interactive)
+                           (scroll-down 1)))
+(global-set-key [mouse-5] '(lambda ()
+                           (interactive)
+                           (scroll-up 1)))
+(setq mouse-sel-mode t)
+(defun track-mouse (e))
+#+END_SRC
+
+* God-mode
+:PROPERTIES:
+:CUSTOM_ID: god-mode
+:END:
+God-mode was always something a little strange to me, halfway to =evil-mode=,
+but not quite Emacs.
+
+Lately though, I've begun using it because it allows me to do things I spend a
+lot of time doing (navigating) without hitting control. This is especially
+helpful because while I don't suffer from the so-called "Emacs-pinky", I am
+instead suffering from "Emacs-thumb".
+
+#+BEGIN_SRC emacs-lisp
+(use-package god-mode
+  :ensure t
+  :disabled t
+  :bind ("<escape>" . god-mode-all)
+  :config
+  (global-set-key (kbd "<escape>") 'god-mode-all)
+  (define-key god-local-mode-map (kbd ".") 'repeat)
+  (define-key god-local-mode-map (kbd "i") 'god-local-mode)
+  (defun god-update-cursor ()
+    "Update my cursor."
+    (setq cursor-type
+          (if god-local-mode
+              'box
+            'bar)))
+  ;;(add-hook 'god-mode-enabled-hook 'god-update-cursor)
+  ;;(add-hook 'god-mode-disabled-hook 'god-update-cursor)
+  (add-to-list 'god-exempt-major-modes 'sauron-mode)
+  (add-to-list 'god-exempt-major-modes 'eshell-mode)
+  (add-to-list 'god-exempt-major-modes 'org-agenda-mode)
+  (add-to-list 'god-exempt-major-modes 'mingus-playlist-mode)
+  (add-to-list 'god-exempt-major-modes 'mingus-browse-mode)
+  (add-to-list 'god-exempt-major-modes 'twittering-mode)
+  (add-to-list 'god-exempt-major-modes 'Man-mode)
+  (add-to-list 'god-exempt-major-modes 'proced-mode)
+  (add-to-list 'god-exempt-major-modes 'gnus-summary-mode)
+  (add-to-list 'god-exempt-major-modes 'gnus-article-mode)
+  (add-to-list 'god-exempt-major-modes 'gnus-group-mode)
+  (add-to-list 'god-exempt-major-modes 'elfeed-search-mode)
+  (add-to-list 'god-exempt-major-modes 'haskell-interactive-mode)
+  (add-to-list 'god-exempt-major-modes 'epresent-mode)
+  (add-to-list 'god-exempt-major-modes 'compilation-mode)
+  (add-to-list 'god-exempt-major-modes 'Custom-mode)
+  ;; Finally, a fix for key-translation-map by redefining the
+  ;; `key-string-after-consuming-key' method, courtesy of
+  ;; https://github.com/chrisdone/god-mode/issues/75
+  (defun key-string-after-consuming-key (key key-string-so-far)
+    "Interpret god-mode special keys for key (consumes more keys
+if appropriate). Append to keysequence."
+    (let ((key-consumed t) next-modifier next-key)
+      (message key-string-so-far)
+      (setq next-modifier
+            (cond
+             ((string= key god-literal-key)
+              (setq god-literal-sequence t)
+              "")
+             (god-literal-sequence
+              (setq key-consumed nil)
+              "")
+             ((and
+               (stringp key)
+               (not (eq nil (assoc key god-mod-alist)))
+               (not (eq nil key)))
+              (cdr (assoc key god-mod-alist)))
+             (t
+              (setq key-consumed nil)
+              (cdr (assoc nil god-mod-alist))
+              )))
+      (setq next-key
+            (if key-consumed
+                (god-mode-sanitized-key-string (read-event key-string-so-far))
+              key))
+      (let* ((literal-key-string (concat next-modifier next-key))
+             (translation (lookup-key key-translation-map (kbd literal-key-string)))
+             (next-interpreted-key-string (or translation literal-key-string)))
+        (if key-string-so-far
+            (concat key-string-so-far " " next-interpreted-key-string)
+          next-interpreted-key-string)))))
+#+END_SRC
+
+* Dumb-jump
+:PROPERTIES:
+:CUSTOM_ID: h:45e9b2dd-2e84-4acd-b27e-6e31e9ee628f
+:END:
+
+Jumping to things, in a dumb way, with ag. It's usually bound to =C-M-g= (for
+"goto" I guess), =C-M-p= to jump back, and =C-M-q= to "show" things.
+
+#+BEGIN_SRC emacs-lisp
+(use-package dumb-jump
+  :ensure t
+  :bind (("M-g o" . dumb-jump-go-other-window)
+         ("M-g j" . dumb-jump-go)
+         ("M-g i" . dumb-jump-go-prompt)
+         ("M-g x" . dumb-jump-go-prefer-external)
+         ("M-g z" . dumb-jump-go-prefer-external-other-window))
+  :init (dumb-jump-mode)
+  :config
+  (setq dumb-jump-selector 'helm))
+#+END_SRC
+
+* Smart-jump
+
+I can hear what you're thinking "Wait. Right after dumb-jump you're configuring something called
+'smart-jump'? Why would you even have both?".
+
+Smart-jump lets you wrap a bunch of different jumping methods in a single command.
+
+#+BEGIN_SRC emacs-lisp
+(use-package smart-jump
+  :disabled t
+  :ensure t
+  :init
+  (require 'smart-jump)
+  ;; Java
+  ;; First try meghanada-mode if enabled
+  (smart-jump-register :modes 'java-mode
+                       :jump-fn 'meghanada-jump-declaration
+                       :pop-fn 'meghanada-back-jump
+                       :refs-fn 'meghanada-reference
+                       :should-jump t
+                       :heuristic 'point
+                       :async 700
+                       :order 1)
+  ;; Second, try helm-gtags
+  (smart-jump-register :modes 'java-mode
+                       :jump-fn 'helm-gtags-dwim
+                       :pop-fn 'helm-gtags-pop-stack
+                       :should-jump t
+                       :heuristic 'point
+                       :async 700
+                       :order 2)
+  ;; Third fall back to regular ggtags
+  (smart-jump-register :modes 'java-mode
+                       :jump-fn 'ggtags-find-tag-dwim
+                       :pop-fn 'ggtags-prev-mark
+                       :refs-fn 'ggtags-find-reference
+                       :should-jump t
+                       :heuristic 'point
+                       :async 700
+                       :order 3)
+
+  ;; Elisp
+  (smart-jump-register :modes '(emacs-lisp-mode lisp-interaction-mode)
+                       :jump-fn 'elisp-slime-nav-find-elisp-thing-at-point
+                       :pop-fn 'pop-tag-mark
+                       :should-jump t
+                       :heuristic 'error
+                       :async nil)
+  ;; C/C++
+  (smart-jump-register :modes '(c-mode c++-mode)
+                       :jump-fn 'ggtags-find-tag-dwim
+                       :pop-fn 'ggtags-prev-mark
+                       :refs-fn 'ggtags-find-reference
+                       :should-jump t
+                       :heuristic 'point
+                       :async 500)
+  ;; Clojure
+  (smart-jump-register :modes '(clojure-mode cider-mode cider-repl-mode)
+                       :jump-fn 'cider-find-var
+                       :pop-fn 'cider-pop-back
+                       :refs-fn 'cljr-find-usages
+                       :should-jump 'cider-connected-p
+                       :heuristic 'point
+                       :async 500)
+  ;; Javascript
+  (smart-jump-register :modes '(js2-mode))
+  ;; Python
+  (smart-jump-register :modes '(python-mode))
+  ;; Ruby
+  (smart-jump-register :modes '(ruby-mode))
+  ;; Haskell
+  (smart-jump-register :modes '(haskell-mode)
+                       :jump-fn 'intero-goto-definition
+                       :pop-fn 'xref-pop-marker-stack
+                       :refs-fn 'intero-uses-at
+                       :should-jump t
+                       :heuristic 'point
+                       :async nil))
+#+END_SRC
+
+* Move-text
+
+This is a nice package used to move text around
+
+#+BEGIN_SRC emacs-lisp
+(use-package move-text
+  :ensure t
+  :init (move-text-default-bindings))
+#+END_SRC
+
+* Navigating without control
+
+I don't use EVIL mode, as I think that on a Dvorak keyboard, VI-like keys aren't really that
+helpful.
+
+What I do want though, is something that is I can toggle to make a buffer "view-like", and navigate
+it how I want
+
+#+BEGIN_SRC emacs-lisp
+(use-package hydra :ensure t)
+(require 'view)
+
+(defhydra eos/nav-mode (:foreign-keys run)
+  "[NAV-MODE] q or i to exit"
+  ("C-h" hl-line-mode)
+  ("t" toggle-truncate-lines)
+  ("a" beginning-of-line)
+  ("l" forward-char)
+  ("<right>" forward-char)
+  ("h" backward-char)
+  ("<left>" backward-char)
+  ("n" next-line)
+  ("j" next-line)
+  ("<down>" next-line)
+  ("p" previous-line)
+  ("k" previous-line)
+  ("<up>" previous-line)
+  ("e" View-scroll-half-page-forward)
+  ("u" View-scroll-half-page-backward)
+  ("SPC" scroll-up-command)
+  ("S-SPC" scroll-down-command)
+  ("<" beginning-of-buffer)
+  (">" end-of-buffer)
+  ("." end-of-buffer)
+  ("C-'" nil)
+  ("C-\"" nil)
+  ("d" (when (y-or-n-p "Kill buffer?")
+         (kill-this-buffer))
+   :exit t)
+  ("/" isearch-forward-regexp :exit t)
+  ("?" isearch-backward-regexp :exit t)
+  ("i" nil :exit t)
+  ("q" nil :exit t))
+
+(global-set-key (kbd "M-V") 'eos/nav-mode/body)
+#+END_SRC
+
+* Search engines
+
+Frequently I want to search for a particular thing from Emacs (most of the time it's a class name,
+or a failure message, or something of that sort). Engine-mode does that.
+
+#+BEGIN_SRC emacs-lisp
+(use-package engine-mode
+  :ensure t
+  :defer 10
+  :init (engine-mode 1)
+  :config
+  ;; Use an external browser for these
+  (setq engine/browser-function 'browse-url-generic)
+
+  (defengine duckduckgo
+    "https://duckduckgo.com/?q=%s"
+    :keybinding "d")
+
+  (defengine elasticsearch
+    "https://github.com/elastic/elasticsearch/search?q=%s&type="
+    :keybinding "e")
+
+  (defengine x-pack
+    "https://github.com/elastic/x-pack-elasticsearch/search?q=%s&type="
+    :keybinding "x")
+
+  (defengine google-maps
+    "http://maps.google.com/maps?q=%s"
+    :keybinding "m")
+
+  (defengine stack-overflow
+    "https://stackoverflow.com/search?q=%s"
+    :keybinding "s")
+
+  (defengine wikipedia
+    "http://www.wikipedia.org/search-redirect.php?language=en&go=Go&search=%s"
+    :keybinding "w"))
+#+END_SRC

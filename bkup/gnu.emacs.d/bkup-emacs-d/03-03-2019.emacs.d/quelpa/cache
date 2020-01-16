@@ -1,0 +1,1 @@
+((origami :repo "seblemaguer/origami.el" :fetcher github) (quelpa :url "https://framagit.org/steckerhalter/quelpa.git" :fetcher git) (quelpa-use-package :fetcher github :repo "quelpa/quelpa-use-package" :stable nil))

@@ -1,0 +1,23 @@
+#+TITLE: Linux Knowledge Base
+#+STARTUP: indent
+#+STARTUP: showall
+
+
+
+
+
+* Tasks
+
+
+* Linux Application List
+:PROPERTIES:
+:CATEGORY: Linux Application
+:END:
+** Referencer
+** Launchy
+** Cairo-Dock
+** Hampster Project
+** Leafpad
+** Freeplane
+** Htop
+** Synaptic

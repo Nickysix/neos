@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: Python3 shebang header
+# key: hdr
+# --
+#!/usr/bin/env python3
+
+$0

@@ -1,0 +1,286 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<!-- saved from url=(0047)https://www.emacswiki.org/emacs/DotEmacsModular -->
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>EmacsWiki: Dot Emacs Modular</title><link rel="alternate" type="application/wiki" title="Edit this page" href="https://www.emacswiki.org/emacs?action=edit;id=DotEmacsModular"><link type="text/css" rel="stylesheet" href="./EmacsWiki_ Dot Emacs Modular_files/light.css"><meta name="robots" content="INDEX,FOLLOW"><link rel="alternate" type="application/rss+xml" title="EmacsWiki" href="https://www.emacswiki.org/emacs?action=rss"><link rel="alternate" type="application/rss+xml" title="EmacsWiki: DotEmacsModular" href="https://www.emacswiki.org/emacs?action=rss;rcidonly=DotEmacsModular">
+<link rel="alternate" type="application/rss+xml" title="Emacs Wiki with page content" href="https://www.emacswiki.org/full.rss">
+<link rel="alternate" type="application/rss+xml" title="Emacs Wiki with page content and diff" href="https://www.emacswiki.org/full-diff.rss">
+<link rel="alternate" type="application/rss+xml" title="Emacs Wiki including minor differences" href="https://www.emacswiki.org/minor-edits.rss">
+<link rel="alternate" type="application/rss+xml" title="Changes for DotEmacsModular only" href="https://www.emacswiki.org/emacs?action=rss;rcidonly=DotEmacsModular"><meta content="width=device-width" name="viewport">
+<script type="text/javascript" src="./EmacsWiki_ Dot Emacs Modular_files/outliner.0.5.0.62-toc.js"></script><style id="dark-reader-style" type="text/css">@media screen {
+
+/* Leading rule */
+html {
+  -webkit-filter: invert(100%) hue-rotate(180deg) brightness(70%) contrast(90%) !important;
+  filter: invert(100%) hue-rotate(180deg) brightness(70%) contrast(90%) !important;
+}
+
+/* Reverse rule */
+img,
+video,
+:not(object):not(body)>embed,
+object,
+svg image,
+[style*="background:url"],
+[style*="background-image:url"],
+[style*="background: url"],
+[style*="background-image: url"],
+[background],
+twitterwidget {
+  -webkit-filter: invert(100%) hue-rotate(180deg) !important;
+  filter: invert(100%) hue-rotate(180deg) !important;
+}
+[style*="background:url"] *,
+[style*="background-image:url"] *,
+[style*="background: url"] *,
+[style*="background-image: url"] *,
+input,
+[background] *,
+img[src^="https://s0.wp.com/latex.php"],
+twitterwidget .NaturalImage-image {
+  -webkit-filter: none !important;
+  filter: none !important;
+}
+.compatibility-with-darkreader-below-4-3-3 {
+  background: white !important;
+}
+
+/* Text contrast */
+html {
+  text-shadow: 0 0 0 !important;
+}
+
+/* Full screen */
+:-webkit-full-screen, :-webkit-full-screen * {
+  -webkit-filter: none !important;
+  filter: none !important;
+}
+:-moz-full-screen, :-moz-full-screen * {
+  -webkit-filter: none !important;
+  filter: none !important;
+}
+:fullscreen, :fullscreen * {
+  -webkit-filter: none !important;
+  filter: none !important;
+}
+
+/* Page background */
+html {
+  background: rgb(13,13,13) !important;
+}
+
+/* Custom rules */
+.compatibility-with-darkreader-below-4-3-3 {
+    background: white !important;
+}
+
+}</style>
+<script type="text/javascript">
+
+  function addOnloadEvent(fnc) {
+    if ( typeof window.addEventListener != "undefined" )
+      window.addEventListener( "load", fnc, false );
+    else if ( typeof window.attachEvent != "undefined" ) {
+      window.attachEvent( "onload", fnc );
+    }
+    else {
+      if ( window.onload != null ) {
+	var oldOnload = window.onload;
+	window.onload = function ( e ) {
+	  oldOnload( e );
+	  window[fnc]();
+	};
+      }
+      else
+	window.onload = fnc;
+    }
+  }
+
+  // https://stackoverflow.com/questions/280634/endswith-in-javascript
+  if (typeof String.prototype.endsWith !== 'function') {
+    String.prototype.endsWith = function(suffix) {
+      return this.indexOf(suffix, this.length - suffix.length) !== -1;
+    };
+  }
+
+  var initToc=function() {
+
+    var outline = HTML5Outline(document.body);
+    if (outline.sections.length == 1) {
+      outline.sections = outline.sections[0].sections;
+    }
+
+    if (outline.sections.length > 1
+	|| outline.sections.length == 1
+           && outline.sections[0].sections.length > 0) {
+
+      var toc = document.getElementById('toc');
+
+      if (!toc) {
+	var divs = document.getElementsByTagName('div');
+	for (var i = 0; i < divs.length; i++) {
+	  if (divs[i].getAttribute('class') == 'toc') {
+	    toc = divs[i];
+	    break;
+	  }
+	}
+      }
+
+      if (!toc) {
+	var h2 = document.getElementsByTagName('h2')[0];
+	if (h2) {
+	  toc = document.createElement('div');
+	  toc.setAttribute('class', 'toc');
+	  h2.parentNode.insertBefore(toc, h2);
+	}
+      }
+
+      if (toc) {
+        var html = outline.asHTML(true);
+        toc.innerHTML = html;
+
+	items = toc.getElementsByTagName('a');
+	for (var i = 0; i < items.length; i++) {
+	  while (items[i].textContent.endsWith('✎')) {
+            var text = items[i].childNodes[0].nodeValue;
+	    items[i].childNodes[0].nodeValue = text.substring(0, text.length - 1);
+	  }
+	}
+      }
+    }
+  }
+
+  addOnloadEvent(initToc);
+  </script>
+</head><body class="default"><div class="header"><a class="logo" href="https://www.emacswiki.org/emacs/SiteMap"><img alt="[Home]" class="logo" src="./EmacsWiki_ Dot Emacs Modular_files/logo218x38.png"></a><div class="menu"><span class="gotobar bar"><a class="local" href="https://www.emacswiki.org/emacs/SiteMap">SiteMap</a> <a class="local" href="https://www.emacswiki.org/emacs/Search">Search</a> <a class="local" href="https://www.emacswiki.org/emacs/ElispArea">ElispArea</a> <a class="local" href="https://www.emacswiki.org/emacs/HowTo">HowTo</a> <a class="local" href="https://www.emacswiki.org/emacs/Glossary">Glossary</a> <a class="local" href="https://www.emacswiki.org/emacs/RecentChanges">RecentChanges</a> <a class="local" href="https://www.emacswiki.org/emacs/News">News</a> <a class="local" href="https://www.emacswiki.org/emacs/Problems">Problems</a> <a class="local" href="https://www.emacswiki.org/emacs/Suggestions">Suggestions</a> </span><form method="get" action="https://www.emacswiki.org/emacs" enctype="multipart/form-data" accept-charset="utf-8" class="search"><p><label for="search">Search:</label> <input type="text" name="search" size="15" accesskey="f" id="search"> <label for="searchlang">Language:</label> <input type="text" name="lang" size="5" id="searchlang"> <input type="submit" name="dosearch" value="Go!"></p></form></div><h1><a href="https://www.emacswiki.org/emacs?search=%22DotEmacsModular%22" rel="nofollow" title="Click to search for references to this page"><span style="padding-right: 0.5ex;">Dot</span><span style="padding-right: 0.5ex;">Emacs</span><span style="padding-right: 0.5ex;">Modular</span></a></h1></div><div class="wrapper"><div class="content browse"><div class="toc"><ol><li><a href="https://www.emacswiki.org/emacs/DotEmacsModular#toc1">Loading multiple files</a></li><li><a href="https://www.emacswiki.org/emacs/DotEmacsModular#toc2">My site start</a></li><li><a href="https://www.emacswiki.org/emacs/DotEmacsModular#toc3">Recursive subdirs</a></li><li><a href="https://www.emacswiki.org/emacs/DotEmacsModular#toc4">Load directory</a></li><li><a href="https://www.emacswiki.org/emacs/DotEmacsModular#toc5">Splitting customizations into separate files</a></li><li><a href="https://www.emacswiki.org/emacs/DotEmacsModular#toc6">Emacs Modular Configuration</a></li></ol></div><h2 id="toc1">Loading multiple files</h2><p>Here’s one way to load multiple files from a specified directory.</p><pre>  <span class="comment">;; default xemacs configuration directory</span>
+  (<span class="keyword">defconst</span> <span class="variable">toc<span class="builtin">:xemacs-config-dir</span></span> <span class="string">"~/.xemacs/xemacs_configs/"</span> <span class="string">""</span>)</pre><pre>  <span class="comment">;; utility function to auto-load my package configurations</span>
+  (<span class="keyword">defun</span> <span class="function">toc<span class="builtin">:load-config-file</span></span> (filelist)
+    (<span class="keyword cl">dolist</span> (file filelist)
+      (load (expand-file-name 
+             (concat toc<span class="builtin">:xemacs-config-dir</span> file)))
+       (message <span class="string">"Loaded config file:%s"</span> file)
+       ))</pre><pre>  <span class="comment">;; load my configuration files</span>
+  (toc<span class="builtin">:load-config-file</span> '(<span class="string">"mswindows_config"</span>
+                          <span class="string">"frames_config"</span>
+                          <span class="string">"info_config"</span>
+                          <span class="string">"desktop_config"</span>
+                          <span class="string">"efs_config"</span>
+                          <span class="string">"backup_config"</span>
+                          <span class="string">"modemaps_config"</span>
+                         ))</pre><p>This loads the files mswindows_config.el, frames_config.el… etc from the directory toc:xemacs-config-dir. I find it helps me to split my (X)Emacs config into manageable chunks. The toc: symbol prefix (my initials) is just to make sure it does not clash with anything else.</p><h2 id="toc2">My site start</h2><p><a class="local" href="https://www.emacswiki.org/emacs/EraEriksson">EraEriksson</a> created a simple library for keeping your <a class="local" href="https://www.emacswiki.org/emacs/DotEmacs">DotEmacs</a> simple by allowing you to divide it into a modular collection of files. It’s called <tt>my-site-start</tt> and can be downloaded from <a href="https://github.com/tripleee/my-site-start/" class="url http">https://github.com/tripleee/my-site-start/</a></p><p>By default it will recursively load all files and directories starting from <tt><span>~/.emacs.d/site-start.d/</span></tt> but this can easily be customized to use a different directory, not recurse, etc.</p><p>The library is just a simple framework for loading a modularized set of startup files. It does not include any functionality to actually create this modularized set of files.</p><p>As of 2009-02-05 this should be considered beta software. The author would appreciate any comments from users; please email ee are aye plus ee el eye es pea at eye kay eye dot ef eye.</p><p>As of 2015-02-25, please note the new download location and a new version with (gasp) one line of code changed. I have also expanded the documentation a bit. (And yes, the startup file naming scheme was copied from Debian intentionally.)</p><div class="color one level0"><p>Works well in my experience. It echoes Debian’s design for <tt><span>/etc/emacs/</span></tt> - not sure which came first.</p><p>It’s theoretically neat to be able to activate a package for personal use just by symlinking its startup file into <tt><span>~/.emacs.d/site-start.d/</span></tt>, but I don’t know of any package that uses this method of installing or which supports soft-linking correctly in its startup file. In order to set the load-path correctly even when visited thru a soft symlink, you can write: </p><pre>(<span class="keyword elisp">if</span> load-file-name
+   (add-to-list 
+      'load-path 
+      (file-name-directory (file-truename load-file-name))))
+</pre><p>For multi-file packages, there is unfortunately no convention to indicate to the user which file is the Right File to symlink.</p></div><div class="color two level0"><p>Debian already included a method like the mentioned <tt>my-site-start</tt>: It’s called <tt>debian-run-directories</tt> defined in file /usr/share/emacs/site-lisp/debian-startup.el in package emacsen-common. So I put in my .emacs.d/init.el</p><pre>(setq dotfiles-dir (file-name-directory (or load-file-name (buffer-file-name))))
+
+(<span class="keyword elisp">let</span> ((user-site-start-dir (concat dotfiles-dir <span class="string">"/site-start.d"</span>)))
+    (debian-run-directories user-site-start-dir))
+</pre><p><a class="anchor" name="RecursiveSubdirs"></a> </p></div><h2 id="toc3">Recursive subdirs</h2><p>The follow defun returns a list of all directories under a specific directory tree: </p><pre>(<span class="keyword">defun</span> <span class="function">recursive-subdirs</span> (directory <span class="type">&amp;optional</span> withroot)
+  <span class="string">"Return a unsorted list of names of directories in DIRECTORY recursively.
+If WITHROOT is non-nil, also DIRECTORY will be include."</span>
+  (<span class="keyword elisp">let</span> (subdirs)
+    (<span class="keyword cl">dolist</span> (element (directory-files-and-attributes directory nil nil nil))
+      (<span class="keyword elisp">let</span>* ((path (car element))
+             (isdir (car (cdr element)))
+             (ignore (or (string= path <span class="string">"."</span>) (string= path <span class="string">".."</span>))))
+        (<span class="keyword elisp">if</span> (and (eq isdir t) (not ignore))
+            (<span class="keyword elisp">let</span> ((dir (concat directory <span class="string">"/"</span> path)))
+              (setq subdirs (append (cons dir subdirs)
+                                    (recursive-subdirs dir)))))))
+    (<span class="keyword elisp">if</span> (not (eq withroot nil))
+        (add-to-list 'subdirs directory))
+    subdirs))
+</pre><p>You can use this function in your <a class="local" href="https://www.emacswiki.org/emacs/InitFile">InitFile</a> file for reading all “.el” files like in this snippet: </p><pre>(<span class="keyword cl">dolist</span> (dir (recursive-subdirs <span class="string">"~/.emacs.d/config"</span> t))
+  (<span class="keyword cl">dolist</span> (file (directory-files dir t <span class="string">"<span>\.</span>el$"</span> nil))
+    (load (file-name-sans-extension file))))
+</pre><p><a class="local" href="https://www.emacswiki.org/emacs/targzeta">targzeta</a></p><p><a class="anchor" name="LoadDirectory"></a> </p><h2 id="toc4">Load directory</h2><p>A faster alternative to <a href="https://www.emacswiki.org/emacs/DotEmacsModular#RecursiveSubdirs" class="local anchor">RecursiveSubdirs</a> is this function: </p><pre>(<span class="keyword">defun</span> <span class="function">load-directory</span> (directory)
+  <span class="string">"Load recursively all `.el' files in DIRECTORY."</span>
+  (<span class="keyword cl">dolist</span> (element (directory-files-and-attributes directory nil nil nil))
+    (<span class="keyword elisp">let</span>* ((path (car element))
+           (fullpath (concat directory <span class="string">"/"</span> path))
+           (isdir (car (cdr element)))
+           (ignore-dir (or (string= path <span class="string">"."</span>) (string= path <span class="string">".."</span>))))
+      (<span class="keyword elisp">cond</span>
+       ((and (eq isdir t) (not ignore-dir))
+        (load-directory fullpath))
+       ((and (eq isdir nil) (string= (substring path -3) <span class="string">".el"</span>))
+        (load (file-name-sans-extension fullpath)))))))
+</pre><p>and within <a class="local" href="https://www.emacswiki.org/emacs/InitFile">InitFile</a>: </p><pre>(load-directory <span class="string">"~/.emacs.d/config"</span>)
+</pre><p>Example: </p><pre>$&gt; tree .emacs.d/ 
+.emacs.d/
+|-- config/
+|   |-- completion.el
+|   |-- control-version.el
+|   |-- external-command-whole-buffer.el
+|   |-- highligth-current-line.el
+|   |-- modes/
+|   |   |-- flymake-mode.el
+|   |   |-- markdown-mode.el
+|   |   |-- po-mode.el
+|   |   |-- programming/
+|   |   |   |-- c-mode.el
+|   |   |   |-- css-mode.el
+|   |   |   |-- global.el
+|   |   |   |-- js-mode.el
+|   |   |   |-- perl-mode.el
+|   |   |   |-- php-mode.el
+|   |   |   |-- python-mode.el
+|   |   |   |-- sh-mode.el
+|   |   |   `-- yasnippet.el
+|   |   |-- xml-mode.el
+|   |   `-- yaml-mode.el
+|   |-- rename-frame.el
+|   |-- revert-all-buffers.el
+|   |-- sh.el
+|   `-- windows.el
+`-- load-directory.el
+</pre><pre>$&gt; cat ~/.emacs
+...
+<span class="comment">;;; Load all <span class="string">".el"</span> files under ~/.emacs.d/config directory.</span>
+(load <span class="string">"~/.emacs.d/load-directory"</span>)
+(load-directory <span class="string">"~/.emacs.d/config"</span>)
+</pre><p><a class="local" href="https://www.emacswiki.org/emacs/targzeta">targzeta</a> </p><hr><h2 id="toc5">Splitting customizations into separate files</h2><p>See <a class="local" href="https://www.emacswiki.org/emacs/InitSplit">InitSplit</a> for a tool to move some of your Emacs customizations (from <code>M-x customize</code>) into separate files.</p><h2 id="toc6">Emacs Modular Configuration</h2><p>Making modular your config file. <a href="https://github.com/targzeta/emacs-modular-configuration" class="url http outside">Info and source.</a></p><p>by <a class="local" href="https://www.emacswiki.org/emacs/targzeta">targzeta</a></p><p>See <a class="local" href="https://www.emacswiki.org/emacs/DotEmacsStructuring">DotEmacsStructuring</a> for other options for organizing your <a class="local" href="https://www.emacswiki.org/emacs/InitFile">InitFile</a>.</p><p><a class="local" href="https://www.emacswiki.org/emacs/CategoryDotEmacs">CategoryDotEmacs</a></p></div><div class="wrapper close"></div></div><div class="footer"><hr><span class="translation bar"><br>  <a class="translation new" href="https://www.emacswiki.org/emacs?action=translate;id=DotEmacsModular;missing=de_es_fr_it_ja_ko_pt_ru_se_uk_zh" rel="nofollow">Add Translation</a></span><div class="edit bar"><a accesskey="c" class="comment local edit" href="https://www.emacswiki.org/emacs/Comments_on_DotEmacsModular">Talk</a> <a accesskey="e" class="edit" href="https://www.emacswiki.org/emacs?action=edit;id=DotEmacsModular" rel="nofollow" title="Click to edit this page">Edit this page</a> <a class="history" href="https://www.emacswiki.org/emacs?action=history;id=DotEmacsModular" rel="nofollow">View other revisions</a> <a class="admin" href="https://www.emacswiki.org/emacs?action=admin;id=DotEmacsModular" rel="nofollow">Administration</a></div><div class="time">Last edited 2017-04-19 19:19 UTC by <a class="author" href="https://www.emacswiki.org/emacs/dknight">dknight</a> <a class="diff" href="https://www.emacswiki.org/emacs?action=browse;diff=2;id=DotEmacsModular" rel="nofollow">(diff)</a></div><div style="float:right; margin-left:1ex;">
+<!-- Creative Commons License -->
+<a class="licence" href="https://creativecommons.org/licenses/GPL/2.0/"><img alt="CC-GNU GPL" style="border:none" src="./EmacsWiki_ Dot Emacs Modular_files/cc-GPL-a.png"></a>
+<!-- /Creative Commons License -->
+</div>
+
+<!--
+<rdf:RDF xmlns="http://web.resource.org/cc/"
+ xmlns:dc="http://purl.org/dc/elements/1.1/"
+ xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+<Work rdf:about="">
+   <license rdf:resource="https://creativecommons.org/licenses/GPL/2.0/" />
+  <dc:type rdf:resource="http://purl.org/dc/dcmitype/Software" />
+</Work>
+
+<License rdf:about="https://creativecommons.org/licenses/GPL/2.0/">
+   <permits rdf:resource="http://web.resource.org/cc/Reproduction" />
+   <permits rdf:resource="http://web.resource.org/cc/Distribution" />
+   <requires rdf:resource="http://web.resource.org/cc/Notice" />
+   <permits rdf:resource="http://web.resource.org/cc/DerivativeWorks" />
+   <requires rdf:resource="http://web.resource.org/cc/ShareAlike" />
+   <requires rdf:resource="http://web.resource.org/cc/SourceCode" />
+</License>
+</rdf:RDF>
+-->
+
+<p class="legal">
+This work is licensed to you under version 2 of the
+<a href="https://www.gnu.org/">GNU</a> <a href="https://www.emacswiki.org/GPL">General Public License</a>.
+Alternatively, you may choose to receive this work under any other
+license that grants the right to use, copy, modify, and/or distribute
+the work, as long as that license imposes the restriction that
+derivative works have to grant the same rights and impose the same
+restriction. For example, you may choose to receive this work under
+the
+<a href="https://www.gnu.org/">GNU</a>
+<a href="https://www.emacswiki.org/FDL">Free Documentation License</a>, the
+<a href="https://creativecommons.org/">CreativeCommons</a>
+<a href="https://creativecommons.org/licenses/sa/1.0/">ShareAlike</a>
+License, the XEmacs manual license, or
+<a href="https://www.emacswiki.org/OLD">similar licenses</a>.
+</p>
+<p class="legal" style="padding-top: 0.5em">Please note our <a href="https://www.emacswiki.org/emacs/Privacy">Privacy Statement</a>.</p>
+</div>
+
+
+</body></html>

@@ -1,0 +1,36 @@
+;;; -*- coding: utf-8 -*-
+
+;; ----- ido-last-directory-list -----
+(
+ ("/home/nick/.emacs.d/neos/" . "config/")
+ ("/home/nick/.emacs.d/" . "neos/")
+ ("/home/nick/" . ".emacs.d/")
+)
+
+;; ----- ido-work-directory-list -----
+(
+ "/home/nick/.emacs.d/neos/scratch/"
+ "/home/nick/.emacs.d/neos/config/"
+)
+
+;; ----- ido-work-file-list -----
+(
+ "view-source_https___ladicle.com_post_config_.html"
+ "config-markdown.el"
+)
+
+;; ----- ido-dir-file-cache -----
+(
+ ("/home/nick/.emacs.d/neos/config/" (23924 2504 916010 738000) "../" "01-config-archived/" "00-config- collections/" "config-general.el" "./" "config-treemacs.el" "config-dired-sidebar.el" "config-diminish.el" "03-config-backup/" "config-scratch/" "config-ido.el" "config-w3m.el" ".projectile" "config-ibuffer.el" "02-config-systems/")
+
+ ("/home/nick/.emacs.d/neos/" (23901 58151 841557 43000) "../" "local/" "config/" "./" "refile/" "pkgs/" "scratch/" "docs/" ".projectile" "langs/" "03-init/" "01-dotemacs/" "00-emacs-mirror/" "org/" "02-literate/" "bkup/")
+
+ ("/home/nick/.emacs.d/" (23924 10244 989732 714000) "../" "neos/" "transient/" "elpa/" "projectile.cache" "session.2c08a50d9-461b-46a1-8e9c-897d3260e17b" "./" "auto-save-list/" "projectile-bookmarks.eld" "ido.last" ".abbrev_defs" "smex-items" "url/" "snippets/" "eshell/" ".last-package-update-day")
+
+ ("/home/nick/" (23924 10245 303066 64000) ".emacs" "../" ".watsup/" ".xsession-errors" ".slime/" "Desktop/" "Music/" ".vscode-oss/" "Videos/" "bkup-spacemacs-d/" ".w3m/" "Templates/" ".steampath" ".cargo/" ".xinitrc" ".purple/" "Documents/" "neos.emacs.d/" ".bash_history" ".lmmsrc.xml" ".wget-hsts" ".Xauthority" ".config/" ".bash_logout" ".keynav" ".profile" ".racket/" ".dmrc" "./" "Pictures/" ".dir_colors" "Downloads/" ".mozilla/" "bkup-emacs-d/" ".thumbnails/" ".pki/" "check-compositor.sh" ".emacs.d/" ".quicklisp/" ".nvm/" ".xsession-errors.old" ".mume/" ".java/" "Public/" ".steam/" ".local/" "datacrow/" "darknet-theory.org" "Bin/" ".cache/" ".themes/" ".hyperb/" "nulldc.properties" "index.html" ".icons/" ".bash_profile" ".steampid" "datacrow.properties" ".ICEauthority" ".Xclients" ".gnome/" ".subversion/" "ncss/" ".bashrc" "practice-text.txt" "nulldc.script" ".gnupg/" ".esd_auth" ".ColorGrab/" "spacemacs.emacs.d/" ".audacity-data/" "03-17-19_emacs-refile.el")
+
+ ("/home/nick/.emacs.d/neos/scratch/" (23889 36961 475462 307000) "../" "scratch-folders/" "view-source_https___ladicle.com_post_config_.html" "loving-lisp-savvy-programmers-secret-weapon.txt" "./" "lisp-hints.txt" "scratch-files/" "org-publish-tutorial.org")
+)
+
+;; ----- ido-unc-hosts-cache -----
+t

@@ -1,0 +1,120 @@
+#+TITLE: EOS: Notification Module
+#+AUTHOR: Lee Hinman
+#+EMAIL: lee@writequit.org
+#+SETUPFILE: ~/eos/setupfiles/eos.setup
+#+OPTIONS: auto-id:t
+
+#+BEGIN_SRC emacs-lisp
+(provide 'eos-notify)
+#+END_SRC
+
+* A Word about Notifications and Alerting
+:PROPERTIES:
+:CUSTOM_ID: notifications
+:END:
+
+Yep. I need to actually make this work for OSX, for Linux it's no problem
+though.
+
+#+BEGIN_SRC emacs-lisp
+(use-package alert
+  :ensure t
+  :config
+  (when (eq system-type 'darwin)
+    (setq alert-default-style 'notifier))
+  (when (eq system-type 'gnu/linux)
+    (setq alert-default-style 'notifications)))
+#+END_SRC
+
+To use this, I just need to do =(alert "this is a message")=.
+
+The all-seeing eye of Sauron
+
+#+BEGIN_SRC emacs-lisp
+(use-package sauron
+  :ensure t
+  :init
+  (setq sauron-modules
+        '(sauron-compilation
+          sauron-dbus
+          ;; sauron-elfeed
+          sauron-erc
+          ;; sauron-mu4e
+          sauron-notifications
+          sauron-org
+          sauron-twittering
+          ;; sauron-zeroconf
+          ))
+
+  (when (not (boundp 'dbus-compiled-version))
+    ;; Remove dbus if it is not compiled
+    (require 'sauron)
+    (setq sauron-modules (remove 'sauron-dbus sauron-modules)))
+
+  (setq sauron-max-line-length 120
+        sauron-watch-patterns '("dakrone" "thnetos" "okenezak")
+        sauron-watch-nicks '("dakrone" "thnetos")
+        sauron-nick-insensitivity 20
+        sauron-min-priority 2
+        sauron-prio-twittering-new-tweets 2
+        sauron-prio-erc-default 1
+        sauron-prio-erc-privmsg-root 1
+        sauron-prio-erc-privmsg-default 1
+        sauron-zeroconf-priority 2
+        sauron-prio-org-minutes-left-list '((10 3) (2 4))
+        sauron-frame-geometry "120x36+0+0")
+
+  ;; filter out IRC spam
+  (defun tsp/hide-irc-user-spam (origin priority msg &optional properties)
+    (or (string-match "^*** Users" msg)
+        (and (string-match "^.* has quit" msg) (string-match "erc" origin))
+        (and (string-match "^.* has joined #" msg) (string-match "erc" origin))))
+  (defun tsp/hide-tweet-counts (origin priority msg &optional properties)
+    (or (string-match "^[0-9]+ new tweets" msg)))
+  (add-hook 'sauron-event-block-functions #'tsp/hide-irc-user-spam)
+  (add-hook 'sauron-event-block-functions #'tsp/hide-tweet-counts)
+
+  (sauron-start-hidden)
+
+  ;; Need to stop tracking notifications, because sauron will be sending
+  ;; notifications!
+  (sauron-notifications-stop)
+
+  (add-hook 'sauron-event-added-functions 'sauron-alert-el-adapter)
+
+  :commands (sauron-toggle-hide-show)
+  :bind ("M-o" . sauron-toggle-hide-show))
+#+END_SRC
+
+* Notifications for running commands in Eshell
+:PROPERTIES:
+:CUSTOM_ID: h:f06f9521-d13c-474d-aebc-1d27b13b52ab
+:END:
+
+This is used to mimic zsh's =REPORTTIME= feature, but with sauron alerting!
+
+#+BEGIN_SRC emacs-lisp
+(use-package eshell
+  :config
+  ;; Seconds a command must take before showing an alert
+  (setq eos/eshell-time-before-alert 5.0)
+
+  (defun eos/eshell-precommand ()
+    (interactive)
+    (setq-local eos/eshell-command-start-time (current-time)))
+
+  (defun eos/eshell-command-finished ()
+    (interactive)
+    (when (and (boundp 'eos/eshell-command-start-time)
+               (> (float-time (time-subtract (current-time)
+                                             eos/eshell-command-start-time))
+                  eos/eshell-time-before-alert))
+      (sauron-add-event major-mode 2
+                        (format "EShell: command [%s] finished, status: %s"
+                                eshell-last-command-name
+                                eshell-last-command-status)
+                        (lambda () (switch-to-buffer-other-window (buffer-name)))
+                        nil)))
+  (add-hook 'eshell-pre-command-hook #'eos/eshell-precommand)
+  (add-hook 'eshell-post-command-hook #'eos/eshell-command-finished))
+#+END_SRC

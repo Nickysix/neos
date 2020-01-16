@@ -1,0 +1,34 @@
+
+* root topic - TAB and S-TAB to toggle folding
+** child topic
+child topic text 
+*** leaf topic:
+some text blah
+blah 
+blah
+*** another leaf topic:
+# test table - TAB to cycle through columns, M-e to move point to end of cell
+| col1 | col2 (contact) | col3 (notes)             | col4 (source, C-c C-o to open links!)                                            |
+|------+----------------+--------------------------+----------------------------------------------------------------------------------------|
+| row1 | Rudy           | has a message for him    | https://www.youtube.com/watch?v=IbqiCxEIeEo                                            |
+| row2 | Rocky Racoon   | is checked into his room | https://www.youtube.com/results?search_query=rocky+racooon&page=&utm_source=opensearch |
+| row3 | Mr Brown       | who is he?               | https://www.youtube.com/watch?v=iWsm3PEf6H8                                            |
+| row4 | Mrs Robinson   | Jesus love her           | https://www.youtube.com/watch?v=9C1BCAgu2I8                                            |
+|      |                |                          |                                                                                        |
+* another root topic
+** another root's child topic 
+some text
+# advanced table with column calculations:
+|                   | weight | A's contribution | A's weighted score | B's contribution | B's weighted score |
+|-------------------+--------+------------------+--------------------+------------------+--------------------|
+| idea              |      7 |                5 |                 35 |               10 |                 70 |
+| business plan     |      2 |                5 |                 10 |                5 |                 10 |
+| domain expertise  |      5 |                9 |                 45 |                6 |                 30 |
+| commitment & risk |      7 |                8 |                 56 |                5 |                 35 |
+| responsibilities  |      6 |                9 |                 54 |                5 |                 30 |
+| total points      |        |                  |                200 |                  |                175 |
+| % of total        |        |                  |         0.53333333 |                  |         0.46666667 |
+#+TBLFM: @7$4=vsum(@2$4..@6$4)::@7$6=vsum(@2$6..@6$6)::@2$4..@6$4=$2*$3::@2$6..@6$6=$2*$5::@8$4=@7$4/(@7$4+@7$6)::@8$6=@7$6/(@7$4+@7$6)
+The above line calculates the table! Test it by changing the contribution or weight columns (C-c C-f on the TBLFM line should execute it)
+*** another child's leaf
+more text

@@ -1,0 +1,7 @@
+/elpa
+/elpa.bak
+/var
+/epkgs
+*.elc
+/local.el
+/.cask

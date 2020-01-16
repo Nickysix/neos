@@ -1,0 +1,442 @@
+#+TITLE: EOS: Java Development Module
+#+AUTHOR: Lee Hinman
+#+EMAIL: lee@writequit.org
+#+SETUPFILE: ~/eos/setupfiles/eos.setup
+#+OPTIONS: auto-id:t
+
+#+BEGIN_SRC emacs-lisp
+(provide 'eos-java)
+#+END_SRC
+
+* Java
+:PROPERTIES:
+:CUSTOM_ID: java
+:END:
+
+To start, decide between using meghanada, eclim, lsp, all, some, or neither
+
+#+BEGIN_SRC emacs-lisp
+(setq eos/use-meghanada nil)
+(setq eos/use-eclim nil)
+(setq eos/use-lsp nil)
+#+END_SRC
+
+Java uses eclim and/or malabar to make life at least a little bit livable.
+
+=intellij-java-style= is a copy of our Intellij indentation rules for
+Elasticsearch, which are a little weird in some cases, but needed in order to
+work with the ES codebase.
+
+#+BEGIN_SRC emacs-lisp
+;; via http://emacs.stackexchange.com/questions/17327/how-to-have-c-offset-style-correctly-detect-a-java-constructor-and-change-indent
+(defun my/point-in-defun-declaration-p ()
+  (let ((bod (save-excursion (c-beginning-of-defun)
+                             (point))))
+    (<= bod
+        (point)
+        (save-excursion (goto-char bod)
+                        (re-search-forward "{")
+                        (point)))))
+
+(defun my/is-string-concatenation-p ()
+  "Returns true if the previous line is a string concatenation"
+  (save-excursion
+    (let ((start (point)))
+      (forward-line -1)
+      (if (re-search-forward " \\\+$" start t) t nil))))
+
+(defun my/inside-java-lambda-p ()
+  "Returns true if point is the first statement inside of a lambda"
+  (save-excursion
+    (c-beginning-of-statement-1)
+    (let ((start (point)))
+      (forward-line -1)
+      (if (search-forward " -> {" start t) t nil))))
+
+(defun my/trailing-paren-p ()
+  "Returns true if point is a training paren and semicolon"
+  (save-excursion
+    (end-of-line)
+    (let ((endpoint (point)))
+      (beginning-of-line)
+      (if (re-search-forward "[ ]*);$" endpoint t) t nil))))
+
+(defun my/prev-line-call-with-no-args-p ()
+  "Return true if the previous line is a function call with no arguments"
+  (save-excursion
+    (let ((start (point)))
+      (forward-line -1)
+      (if (re-search-forward ".($" start t) t nil))))
+
+(defun my/arglist-cont-nonempty-indentation (arg)
+  (if (my/inside-java-lambda-p)
+      '+
+    (if (my/is-string-concatenation-p)
+        16 ;; TODO don't hard-code
+      (unless (my/point-in-defun-declaration-p) '++))))
+
+(defun my/statement-block-intro (arg)
+  (if (and (c-at-statement-start-p) (my/inside-java-lambda-p)) 0 '+))
+
+(defun my/block-close (arg)
+  (if (my/inside-java-lambda-p) '- 0))
+
+(defun my/arglist-close (arg) (if (my/trailing-paren-p) 0 '--))
+
+(defun my/arglist-intro (arg)
+  (if (my/prev-line-call-with-no-args-p) '++ 0))
+
+(defconst intellij-java-style
+  '((c-basic-offset . 4)
+    (c-comment-only-line-offset . (0 . 0))
+    ;; the following preserves Javadoc starter lines
+    (c-offsets-alist
+     .
+     ((inline-open . 0)
+      (topmost-intro-cont    . +)
+      (statement-block-intro . my/statement-block-intro)
+      (block-close           . my/block-close)
+      (knr-argdecl-intro     . +)
+      (substatement-open     . +)
+      (substatement-label    . +)
+      (case-label            . +)
+      (label                 . +)
+      (statement-case-open   . +)
+      (statement-cont        . +)
+      (arglist-intro         . my/arglist-intro)
+      (arglist-cont-nonempty . (my/arglist-cont-nonempty-indentation c-lineup-arglist))
+      (arglist-close         . my/arglist-close)
+      (inexpr-class          . 0)
+      (access-label          . 0)
+      (inher-intro           . ++)
+      (inher-cont            . ++)
+      (brace-list-intro      . +)
+      (func-decl-cont        . ++))))
+  "Elasticsearch's Intellij Java Programming Style")
+
+(c-add-style "intellij" intellij-java-style)
+(customize-set-variable 'c-default-style
+                        '((java-mode . "intellij")
+                          (awk-mode . "awk")
+                          (other . "gnu")))
+
+;; Used for eos/setup-java
+(use-package shut-up :ensure t)
+
+(defun eos/setup-java ()
+  (interactive)
+  (define-key java-mode-map (kbd "M-,") 'pop-tag-mark)
+  (define-key java-mode-map (kbd "C-c M-i") 'java-imports-add-import-dwim)
+  (define-key java-mode-map (kbd "C-c C-b") 'bool-flip-do-flip)
+  (c-set-style "intellij" t)
+  (subword-mode 1)
+  (shut-up (toggle-truncate-lines 1))
+  ;; Generic java stuff things
+  (setq-local fci-rule-column 99)
+  (setq-local fill-column 100)
+  (when (fboundp 'eos/turn-on-whitespace-mode)
+    (whitespace-mode -1)
+    (eos/turn-on-whitespace-mode))
+  ;; hide the initial comment in the file (usually a license) if hs-minor-mode
+  ;; is enabled
+  (when (boundp' hs-minor-mode)
+    (hs-hide-initial-comment-block)))
+
+(add-hook 'java-mode-hook #'eos/setup-java)
+
+;; Make emacs' compile recognize broken gradle output
+(require 'compile)
+(add-to-list 'compilation-error-regexp-alist
+             '("^:[^/.\n]+\\(/.+\\):\\([[:digit:]]+\\):" 1 2))
+#+END_SRC
+
+Let's make the Backspace key act more like Intellij's backspace, in that I almost never want to just
+go back, I want to remove a whole line
+
+#+BEGIN_SRC emacs-lisp
+(use-package smart-backspace
+  :ensure t
+  :bind ("<C-M-backspace>" . smart-backspace))
+#+END_SRC
+
+* Managing Java Imports with the =java-imports= Package
+:PROPERTIES:
+:CUSTOM_ID: java-imports
+:END:
+
+I also have a custom package, [[https://github.com/dakrone/emacs-java-imports][java-imports]], which I use to quickly add imports
+for things.
+
+#+BEGIN_SRC emacs-lisp
+(use-package java-imports
+  :ensure t
+  :config
+  ;; Elasticsearch's import style
+  (setq java-imports-find-block-function 'java-imports-find-place-sorted-block)
+  (add-hook 'java-mode-hook 'java-imports-scan-file))
+#+END_SRC
+
+* Connecting Emacs and Eclipse with Eclim
+:PROPERTIES:
+:CUSTOM_ID: eclim
+:END:
+Eclim is decent for emacs-java integration, but isn't quite there for showing
+errors or things like that. Unfortunately I still have to jump back into
+Intellij all the time for things.
+
+Right now I have this disabled, I'm doing Java dev in Emacs 100% of the time,
+but I don't need this. Crazy, I know. I've been meaning to write a blog post
+about it, I just need to find the time.
+
+#+BEGIN_SRC emacs-lisp
+(use-package eclim
+  :ensure t
+  :disabled t
+  :init
+  ;; only show errors
+  (setq-default eclim--problems-filter "e")
+  (when eos/use-eclim
+    (add-hook 'java-mode-hook #'eclim-mode)
+    (use-package company-emacs-eclim
+      :ensure t
+      :init (company-emacs-eclim-setup))))
+#+END_SRC
+
+* Configuring SDKMan for Groovy/Gradle
+:PROPERTIES:
+:CUSTOM_ID: sdkman
+:END:
+
+This will have to be downloaded from http://sdkman.io, there is no package for it
+
+Let's also add it to the tramp remote path
+
+#+BEGIN_SRC emacs-lisp
+(eval-after-load "tramp"
+  '(progn
+     (add-to-list 'tramp-remote-path "/home/hinmanm/.sdkman/candidates/gradle/current/bin")
+     (add-to-list 'tramp-remote-path "/home/hinmanm/.sdkman/candidates/groovy/current/bin")))
+#+END_SRC
+
+* Configure GNU Global and Gtags
+:PROPERTIES:
+:CUSTOM_ID: gnu-global
+:END:
+
+See: https://github.com/leoliu/ggtags
+
+If on OSX, you'll need to:
+
+: brew install ctags
+: wget -c http://tamacom.com/global/global-6.3.1.tar.gz
+: tar zxvf global-6.3.1.tar.gz
+: cd global-6.3.1
+: ./configure --prefix=/usr/local --with-exuberant-ctags=/usr/local/bin/ctags
+: make install
+
+I also add this to my shell configuration:
+
+: export GTAGSCONF=/usr/local/share/gtags/gtags.conf
+: export GTAGSLABEL=ctags
+
+I actually choose to do this because the fedora/debian/ubuntu version of
+=global= is so older it doesn't work well.
+
+#+BEGIN_SRC emacs-lisp
+(defun eos/setup-helm-gtags ()
+  (interactive)
+  ;; this variables must be set before load helm-gtags
+  ;; you can change to any prefix key of your choice
+  (setq helm-gtags-prefix-key "\C-cg")
+  (setq helm-gtags-ignore-case t
+        helm-gtags-auto-update t
+        helm-gtags-use-input-at-cursor t
+        helm-gtags-pulse-at-cursor t
+        helm-gtags-suggested-key-mapping t)
+  (use-package helm-gtags
+    :ensure t
+    ;; not needed because of smart-jump
+    :init (helm-gtags-mode t)
+    :diminish ""
+    :bind (:map helm-gtags-mode-map
+                ("M-S" . helm-gtags-select)
+                ("M-." . helm-gtags-dwim)
+                ("M-," . helm-gtags-pop-stack)
+                ("C-c <" . helm-gtags-previous-history)
+                ("C-c >" . helm-gtags-next-history)))
+  (helm-gtags-mode t))
+
+(defun eos/setup-ggtags ()
+  (interactive)
+  (ggtags-mode 1)
+  ;; turn on eldoc with ggtags
+  (setq-local eldoc-documentation-function #'ggtags-eldoc-function)
+  ;; add ggtags to the hippie completion
+  (setq-local hippie-expand-try-functions-list
+              (cons 'ggtags-try-complete-tag
+                    hippie-expand-try-functions-list))
+  ;; use helm for completion
+  (setq ggtags-completing-read-function nil))
+
+(use-package ggtags
+  :ensure t
+  :defer t
+  :init
+  (progn
+    (add-hook 'c-mode-common-hook
+              (lambda ()
+                (when (derived-mode-p 'c-mode 'c++-mode 'java-mode 'asm-mode)
+                  (eos/setup-semantic-mode)
+                  ;; helm-gtags
+                  (eos/setup-helm-gtags)
+                  ;; regular gtags
+                  ;;(my/setup-ggtags)
+                  )))))
+#+END_SRC
+
+* Connecting to a Java debugger
+:PROPERTIES:
+:CUSTOM_ID: h:7daa814f-0c94-45e4-9864-b5d3c8227251
+:END:
+
+Strangely enough (I didn't think it would actually exist), there does exist a
+command-line debugger for Java, called =jdb=. Even better, there's a packaged
+called "Realgud" that combines a bunch of different debuggers and the plumbing
+to hook them up to Emacs. So I'll install that.
+
+For [[https://github.com/elastic/elasticsearch][Elasticsearch]] in particular, this means running =gradle run --debug-jvm=
+which starts up ES listening for events, and then =M-x realgud:jdb= and using
+=jdb -attach 8000= to attach to the JVM.
+
+#+BEGIN_SRC emacs-lisp
+(use-package realgud
+  :ensure t)
+#+END_SRC
+
+* Java development with meghanada
+:PROPERTIES:
+:CUSTOM_ID: h:cfc790e0-9777-4cf1-a60d-25b0e9449462
+:END:
+
+[[https://github.com/mopemope/meghanada-emacs][Meghanada-mode]] is a new Java development mode that is supposed to be under
+active development, so I'm trying it out.
+
+#+BEGIN_SRC emacs-lisp
+(use-package meghanada
+  :ensure t
+  :init
+  ;; Don't auto-start
+  (setq meghanada-auto-start nil)
+  (when eos/use-meghanada
+    (add-hook 'java-mode-hook #'meghanada-mode)
+    (add-hook 'java-mode-hook 'flycheck-mode)
+    (bind-key "C-c M-." 'meghanada-jump-declaration java-mode-map)))
+#+END_SRC
+
+* LSP-mode and Java
+:PROPERTIES:
+:CUSTOM_ID: h:113092e8-da01-4e16-b80d-f2a6ad12fc51
+:END:
+
+LSP and Java doesn't really work too well right now, but I'm hopeful that in the future it will.
+
+#+BEGIN_SRC emacs-lisp
+(when (file-exists-p "~/.emacs.d/eclipse.jdt.ls")
+  (use-package lsp-mode
+    :ensure t
+    :init (setq lsp-inhibit-message t
+                lsp-eldoc-render-all nil
+                lsp-highlight-symbol-at-point nil))
+
+  (use-package company-lsp
+    :after  company
+    :ensure t
+    :config
+    (add-hook 'java-mode-hook (lambda () (push 'company-lsp company-backends)))
+    (setq company-lsp-enable-snippet t
+          company-lsp-cache-candidates t)
+    (push 'java-mode company-global-modes))
+
+  (use-package lsp-ui
+    :ensure t
+    :config
+    (setq lsp-ui-sideline-enable t
+          lsp-ui-sideline-show-symbol t
+          lsp-ui-sideline-show-hover t
+          lsp-ui-sideline-show-code-actions t
+          lsp-ui-sideline-update-mode 'point))
+
+  (use-package lsp-java
+    ;; :ensure t
+    :disabled t
+    :requires (lsp-ui-flycheck lsp-ui-sideline)
+    :config
+    (add-hook 'java-mode-hook  'lsp-java-enable)
+    (add-hook 'java-mode-hook  'flycheck-mode)
+    (add-hook 'java-mode-hook  'company-mode)
+    (add-hook 'java-mode-hook  (lambda () (lsp-ui-flycheck-enable t)))
+    (add-hook 'java-mode-hook  'lsp-ui-sideline-mode)
+    (setq lsp-java--workspace-folders (list "/home/hinmanm/es/elasticsearch"))))
+#+END_SRC
+
+* Running tests from a test file
+:PROPERTIES:
+:CUSTOM_ID: h:fbcda62e-7f57-4083-b5aa-6acf86900441
+:END:
+
+A lot of the time I want to run the particular test-at-point, or tests for the class-at-point. This
+allows me to do it.
+
+#+BEGIN_SRC emacs-lisp
+(use-package s
+  :ensure t
+  :init
+  (require 's)
+  (defun eos/run-java-tests-for-method ()
+    (interactive)
+    (if (projectile-project-p)
+        (let* ((bName (buffer-name))
+               (className (car (s-split "\\." bName)))
+               (testType (if (s-ends-with? "Tests" className)
+                             ":server:test"
+                           ":server:integTest"))
+               (methodName "test") // TODO: get real test name
+               (cmd (format "./gradlew %s -Dtests.class=*%s -Dtests.method=%s" testType className methodName))
+               (buff (window-buffer (eos/popup-project-eshell))))
+          (with-current-buffer buff
+            (insert cmd)))
+      (message "Not currently in a projectile project")))
+
+  (defun eos/run-java-tests-for-class ()
+    (interactive)
+    (if (projectile-project-p)
+        (let* ((bName (buffer-name))
+               (className (car (s-split "\\." bName)))
+               (testType (if (s-ends-with? "Tests" className)
+                             ":server:test"
+                           ":server:integTest"))
+               (cmd (format "./gradlew %s -Dtests.class=*%s" testType className))
+               (buff (window-buffer (eos/popup-project-eshell))))
+          (with-current-buffer buff
+            (insert cmd)))
+      (message "Not currently in a projectile project")))
+
+  (defun eos/run-java-test ()
+    (interactive)
+    (let ((toRun (completing-read "Test: " '("class" "method") nil t)))
+      (if (s-equals? toRun "method")
+          (eos/run-java-tests-for-method)
+        (eos/run-java-tests-for-class)))))
+#+END_SRC
+
+* Automatically disassemble class files
+:PROPERTIES:
+:CUSTOM_ID: h:4b087a83-74c3-4388-911b-5e0008515e9a
+:END:
+
+On the rare occasion I open a =.class= file, I want to be prompted to disassemble it.
+
+#+BEGIN_SRC emacs-lisp
+(use-package autodisass-java-bytecode
+  :ensure t)
+#+END_SRC

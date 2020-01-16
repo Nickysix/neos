@@ -1,0 +1,11 @@
+.ropeproject/*
+autoload/**
+eclim/**
+plugged/**
+plugin/**
+session/**
+undodir/**
+tags
+*.lock
+*.temp
+.netrwhist

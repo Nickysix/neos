@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+#name : sc
+# --
+`(cond ((equal sql-product 'mysql) "SHOW COLUMNS FROM")
+      ((equal sql-product 'postgres) "\\d+"))` ${1:table};$0

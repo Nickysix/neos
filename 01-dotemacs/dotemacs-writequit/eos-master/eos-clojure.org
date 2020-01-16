@@ -1,0 +1,61 @@
+#+TITLE: EOS: Clojure Development Module
+#+AUTHOR: Lee Hinman
+#+EMAIL: lee@writequit.org
+#+SETUPFILE: ~/eos/setupfiles/eos.setup
+
+#+BEGIN_SRC emacs-lisp
+(provide 'eos-clojure)
+#+END_SRC
+
+* Clojure
+:PROPERTIES:
+:CUSTOM_ID: clojure
+:END:
+Things for Clojure development, which I do a lot of.
+
+#+BEGIN_SRC emacs-lisp
+(defun eos/clojure-things-hook ()
+  "Set up clojure-y things"
+  (eldoc-mode 1)
+  (subword-mode t)
+  (paredit-mode 1)
+  (global-set-key (kbd "C-c t") 'clojure-jump-between-tests-and-code))
+
+(use-package clojure-mode
+  :ensure t
+  :init
+  (add-hook #'clojure-mode-hook #'eos/clojure-things-hook))
+#+END_SRC
+
+Let's define a couple of helper functions for setting up the cider:
+
+#+BEGIN_SRC emacs-lisp
+(defun eos/setup-cider ()
+  (interactive)
+  (setq cider-history-file "~/.nrepl-history"
+        cider-hide-special-buffers t
+        cider-repl-history-size 10000
+        cider-prefer-local-resources t
+        cider-popup-stacktraces-in-repl t)
+  (paredit-mode 1)
+  (eldoc-mode 1))
+#+END_SRC
+
+And then finally use them if cider and ac-nrepl packages are available:
+
+#+BEGIN_SRC emacs-lisp
+(use-package cider
+  :ensure t
+  :defer 30
+  :init
+  (add-hook #'cider-mode-hook #'eos/setup-cider)
+  (add-hook #'cider-repl-mode-hook #'eos/setup-cider)
+  (add-hook #'cider-mode-hook #'eos/clojure-things-hook)
+  (add-hook #'cider-repl-mode-hook #'eos/clojure-things-hook))
+#+END_SRC
+
+For looking up documentation, =helm-clojuredocs= is neat and handy
+#+BEGIN_SRC emacs-lisp
+(use-package helm-clojuredocs
+  :ensure t)
+#+END_SRC

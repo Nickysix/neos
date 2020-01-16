@@ -1,0 +1,74 @@
+#!/bin/sh
+
+usage () {
+	cat <<EOF>&2
+Usage: ${0##*/} [OPTIONS] FOLDERS
+
+Output index of folder hierarchies to stdout. This is used as a small "backup"
+purpose. In case of data loss, it is still possible to get the full file list
+thanks to the indexes.
+
+Options:
+
+ -f: When outputting to a file, overwrite if it exists.
+ -w: Output each index to individual files in current folder. It uses the folder
+     name as basename.
+EOF
+}
+
+opt_noclobber=true
+opt_file=false
+while getopts ":fhw" opt; do
+	case $opt in
+	f)
+		opt_noclobber=false ;;
+	h)
+		usage
+		exit ;;
+	w)
+		opt_file=true ;;
+	\?)
+		usage
+		exit 1 ;;
+	esac
+done
+
+shift $((OPTIND - 1))
+
+if [ $# -eq 0 ]; then
+	usage
+	exit 1
+fi
+
+## 'realpath' is required in case argument is ending with '.' or '..'.
+if ! command -v realpath >/dev/null 2>&1; then
+	echo >&2 "'realpath' not found"
+	exit 1
+fi
+
+for i ; do
+	[ ! -d "$i" ] && continue
+
+	## We strip "./" from find's listing since we don't need it. We could avoid
+	## printing it in the first place, but there are several shortcomings:
+	## - Find over '.*' and '*', is bad practice since if will fail on
+	## non-existing files or for files beginning with a dash.
+	## - The 'printf' command in find is for GNU find only.
+
+	## 'LC_ALL=C sort' is required to make sure to output is consistent across
+	## different systems.
+
+	## The two following lines do the same for the same time cost. The former is shorter.
+	# find "$i" -type f | awk -v str="$i" '{l=length(str)+2; print substr($0, l)}' | LC_ALL=C sort > "$OUTPUT"
+	(cd -- "$i" && find . -type f) | sed 's/^.\///' | LC_ALL=C sort | \
+		if $opt_file; then
+			i="$(realpath -- "$i")"
+			base="${i##*/}"
+			output="$base.index"
+			[ -e "$output" ] && $opt_noclobber && output="$base-$(date +%F-%T).index"
+			echo "$output"
+			cat > "$output"
+		else
+			cat
+		fi
+done

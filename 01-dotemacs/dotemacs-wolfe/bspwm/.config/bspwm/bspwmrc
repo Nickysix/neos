@@ -1,0 +1,7 @@
+#! /bin/sh
+
+sxhkd &
+
+~/.config/bspwm/bspwm_settings
+
+~/.config/bspwm/user_settings

@@ -1,0 +1,3438 @@
+#+TITLE: The Emacs Package Developer's Handbook
+#+OPTIONS: broken-links:t num:nil H:8
+#+TAGS: Emacs
+#+SETUPFILE: export/setup/theme-darksun-local.setup
+
+#+HTML: <a href=https://alphapapa.github.io/dont-tread-on-emacs/><img src="dont-tread-on-emacs-150.png" align="right"></a>
+
+After developing some little Emacs packages for a year or so, I began to notice how I'd forget little things that I learned, and then I'd have to go hunting for that information again.  I also noticed how there are some issues for which there doesn't seem to be a "best practice" or "Standard Operating Procedure" to refer to.
+
+So this is intended to be a place to collect and organize information related to Emacs package development.  Built with Emacs, by Emacs package developers, for Emacs package developers.
+
+You can read this Org file directly on the [[https://github.com/alphapapa/emacs-package-dev-handbook][repository]] rendered by GitHub (which lacks support for some features of the document, such as links between sections), or you can read the [[https://alphapapa.github.io/emacs-package-dev-handbook/][HTML version]].
+
+*Note:* The primary sections are listed at the top of the page in the horizontal bar.
+
+* Contents                                                         :noexport:
+:PROPERTIES:
+:TOC:      this
+:END:
+  -  [[#emacs-lisp][Emacs Lisp]]
+    -  [[#animations--screencasts][Animations / Screencasts]]
+    -  [[#asynchronicity][Asynchronicity]]
+    -  [[#binding][Binding]]
+    -  [[#buffers][Buffers]]
+    -  [[#checkers--linters][Checkers / linters]]
+    -  [[#collections-lists-vectors-hash-tables-etc][Collections (lists, vectors, hash-tables, etc.)]]
+    -  [[#data-structure][Data structure]]
+    -  [[#date--time][Date / Time]]
+    -  [[#debugging][Debugging]]
+    -  [[#destructuring][Destructuring]]
+    -  [[#documentation][Documentation]]
+    -  [[#editing][Editing]]
+    -  [[#functions][Functions]]
+    -  [[#general][General]]
+    -  [[#highlighting--font-locking][Highlighting / font-locking]]
+    -  [[#multiprocessing-generators-threads][Multiprocessing (generators, threads)]]
+    -  [[#networking][Networking]]
+    -  [[#packaging][Packaging]]
+    -  [[#pattern-matching][Pattern matching]]
+    -  [[#profiling--optimization][Profiling / Optimization]]
+    -  [[#refactoring][Refactoring]]
+    -  [[#regular-expressions][Regular expressions]]
+    -  [[#strings][Strings]]
+    -  [[#testing][Testing]]
+    -  [[#user-interface][User interface]]
+    -  [[#version-control][Version control]]
+    -  [[#xml--html][XML / HTML]]
+  -  [[#blogs][Blogs]]
+  -  [[#people][People]]
+  -  [[#contributions][Contributions]]
+  -  [[#tasks][Tasks]]
+  -  [[#code][Code]]
+
+* Emacs Lisp                                                          :elisp:
+:PROPERTIES:
+:TOC:      1
+:END:
+
+*Note:* Usable Emacs Lisp code snippets (not examples) are tangled to the file =epdh.el=, which may be found in the [[https://github.com/alphapapa/emacs-package-dev-handbook/blob/master/epdh.el][repository]].  You could even install the file as a package with [[https://framagit.org/steckerhalter/quelpa-use-package][quelpa-use-package]], like this:
+
+#+BEGIN_SRC elisp :exports code
+  (use-package epdh
+    :quelpa (epdh :fetcher github :repo "alphapapa/emacs-package-dev-handbook"))
+#+END_SRC
+
+# Elisp header
+
+#+BEGIN_SRC elisp :exports none :tangle epdh.el
+  ;;; epdh.el --- Code useful for developing Emacs packages -*- lexical-binding: t; -*-
+
+  ;; Copyright (C) 2018  Adam Porter
+
+  ;; Author: Adam Porter <adam@alphapapa.net>
+  ;; Keywords: convenience, development
+  ;; URL: https://github.com/alphapapa/emacs-package-dev-handbook
+  ;; Package-Requires: ((emacs "25.1") (dash "2.13") (s "1.10.0"))
+
+  ;;; License:
+
+  ;; This program is free software; you can redistribute it and/or modify
+  ;; it under the terms of the GNU General Public License as published by
+  ;; the Free Software Foundation, either version 3 of the License, or
+  ;; (at your option) any later version.
+
+  ;; This program is distributed in the hope that it will be useful,
+  ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ;; GNU General Public License for more details.
+
+  ;; You should have received a copy of the GNU General Public License
+  ;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+  ;;; Commentary:
+
+  ;; Code useful for developing Emacs packages.  Contributions welcome.
+
+  ;;; Code:
+
+  ;;;; Requirements
+
+  (require 'cl-lib)
+
+  (require 'dash)
+  (require 's)
+
+#+END_SRC
+
+** Animations / Screencasts                    :animations:screencasts:video:
+
+*** Tools                                                           :tools:
+
+**** [[https://gitlab.com/ambrevar/emacs-gif-screencast][emacs-gif-screencast]]                                           :GIFs:
+
+#+BEGIN_QUOTE
+Most Emacs screencasts are done by first recording a video, then converting it to a GIF.  It seems like a waste of resources considering the little animation Emacs features.
+
+Most of the time, one user action equals one visual change.  By exploiting this fact, this package tailors GIF-screencasting for Emacs and captures one frame per user action.  It’s much more efficient than capturing frames even at a frequency as low as 10 per second.  You could roughly expect 3 to 10 times smaller files compared to videos of the same quality.  (Benchmarks are welcome.)
+
+Another neat perk of action-based captures is that it produces editable GIF files: programs such as Gifsicle or The GIMP can be used to edit the delays or rearrange frames.  This is particularly useful to fix mistakes in “post-processing”, without having to record the demo all over again.
+#+END_QUOTE
+
+The author of this document can vouch for the fact that this package is the easiest, most powerful way to make screencast animations in Emacs!
+
+**** [[https://github.com/alphapapa/bashcaster][Bashcaster]]
+
+While =emacs-gif-screencast= should usually be your first choice, the way it works, recording one frame per Emacs command, isn't suitable for every case.  For general use, your editor can recommend Bashcaster, which is an easy-to-use script that can record the whole screen or individual windows, to videos or GIFs.
+
+** Asynchronicity                                                    :async:
+
+See [[id:94092c16-061c-45c9-9c66-77c5fdeceee8][Multiprocessing (generators, threads)]].
+
+** Binding                                             :scope:binding:
+:PROPERTIES:
+:ID:       50f0cde2-34ca-4131-a688-b434ecde6819
+:END:
+
+Information related to variable scope and binding in elisp code (e.g. lexical vs. dynamic scope).
+
+*** Articles                                                     :articles:
+
+**** [[https://nullprogram.com/blog/2017/10/27/][Make Flet Great Again « null program]]      :macros:flet:letf:
+:PROPERTIES:
+:archive.today: http://archive.today/T8dHM
+:END:
+
+Chris Wellons explains how the old ~cl~ macro ~flet~ changes in its new ~cl-lib~ version, ~cl-flet~, and how to use ~cl-letf~ to achieve the old functionality.  It's a way to override functions in both lexical and dynamic scope, which is especially useful for unit testing.
+
+*** Libraries                                                   :libraries:
+
+**** [[id:e85e4252-ea03-4473-b52f-9393e7527fad][dash.el]]
+
+**** [[https://github.com/emacs-mirror/emacs/blob/master/lisp/emacs-lisp/thunk.el][thunk]]                                                      :built_in:
+:PROPERTIES:
+:ID:       2f389382-af81-4f18-b6bc-ef33e39df1eb
+:END:
+
+#+BEGIN_QUOTE
+Thunk provides functions and macros to delay the evaluation of forms.
+
+Use =thunk-delay= to delay the evaluation of a form (requires lexical-binding), and =thunk-force= to evaluate it. The result of
+the evaluation is cached, and only happens once.
+
+Here is an example of a form which evaluation is delayed:
+
+    =(setq delayed (thunk-delay (message "this message is delayed")))=
+
+=delayed= is not evaluated until =thunk-force= is called, like the following:
+
+   =(thunk-force delayed)=
+
+This file also defines macros =thunk-let= and =thunk-let*= that are analogous to =let= and =let*= but provide lazy evaluation of bindings by using thunks implicitly (i.e. in the expansion).
+#+END_QUOTE
+
+*** Tools                                                           :tools:
+
+**** [[id:7247be4d-4f66-43ff-bb70-1b4a7458611b][Lexical binding]]                            :built_in:lexical_binding:
+
+** Buffers                                                         :buffers:
+
+*** Contents
+:PROPERTIES:
+:TOC:      siblings
+:END:
+      -  [[#best-practices][Best practices]]
+        -  [[#accessing-buffer-local-variables][Accessing buffer-local variables]]
+        -  [[#inserting-strings][Inserting strings]]
+      -  [[#libraries][Libraries]]
+
+*** Best practices                                         :best_practices:
+:PROPERTIES:
+:TOC: 1
+:END:
+
+**** Accessing buffer-local variables
+
+It's much faster to use ~buffer-local-value~ than ~with-current-buffer~ to access the value of a variable in a buffer.
+
+#+BEGIN_SRC elisp :exports both :eval no-export
+  (bench-multi :times 1000 :ensure-equal t
+    :forms (("buffer-local-value" (--filter (equal 'magit-status-mode (buffer-local-value 'major-mode it))
+                                            (buffer-list)))
+            ("with-current-buffer" (--filter (equal 'magit-status-mode (with-current-buffer it
+                                                                         major-mode))
+                                             (buffer-list)))))
+#+END_SRC
+
+#+RESULTS:
+| Form                | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|---------------------+--------------------+---------------+----------+------------------|
+| buffer-local-value  | 50.34              |   0.047657734 |        0 |              0.0 |
+| with-current-buffer | slowest            |   2.399323452 |        0 |              0.0 |
+
+**** Inserting strings                                           :strings:
+
+Inserting strings into buffers with ~insert~ is generally fast, but it can slow down in buffers with lots of markers or overlays.  In general, it can be faster to insert one large string (which may include newlines).  For example:
+
+#+BEGIN_SRC elisp :exports both :cache yes
+  (let ((strings (cl-loop for i from 1 to 1000
+                          collect (number-to-string i))))
+    (garbage-collect)
+    (--sort (< (caddr it) (caddr other))
+            (cl-loop for times in '(1 10 100)
+                     append (a-list "(loop do (insert ..."
+                                    (cons times
+                                          (benchmark-run-compiled times
+                                            (with-temp-buffer
+                                              (cl-loop for string in strings
+                                                       do (insert string)))))
+                                    "(apply #'insert ..."
+                                    (cons times
+                                          (benchmark-run-compiled times
+                                            (with-temp-buffer
+                                              (apply #'insert strings))))
+                                    "(insert (apply #'concat ..."
+                                    (cons times
+                                          (benchmark-run-compiled times
+                                            (with-temp-buffer
+                                              (insert (apply #'concat strings)))))))))
+#+END_SRC
+
+#+RESULTS[aa866ca87dbf71476c735ed51fca7373934bbf4f]:
+| (insert (apply #'concat ... | 100 | 0.000142085 | 0 | 0.0 |
+| (insert (apply #'concat ... |  10 | 0.000161172 | 0 | 0.0 |
+| (insert (apply #'concat ... |   1 |  0.00018764 | 0 | 0.0 |
+| (apply #'insert ...         |  10 | 0.000665472 | 0 | 0.0 |
+| (apply #'insert ...         | 100 | 0.000678471 | 0 | 0.0 |
+| (apply #'insert ...         |   1 | 0.000755329 | 0 | 0.0 |
+| (loop do (insert ...        |  10 | 0.000817031 | 0 | 0.0 |
+| (loop do (insert ...        | 100 | 0.000869779 | 0 | 0.0 |
+| (loop do (insert ...        |   1 | 0.001490397 | 0 | 0.0 |
+
+The fastest method here is to call ~insert~ once with the result of calling ~concat~ once, using ~apply~ to pass all of the strings.  With 100 iterations, it's about 6x faster than the next-fastest method, and even with 1 iteration, it's over 2x faster.
+
+*** Libraries                                                   :libraries:
+:PROPERTIES:
+:ID:       523aa766-36a3-4827-a114-6babf72edc6b
+:TOC:      0
+:END:
+
+**** [[https://github.com/phillord/m-buffer-el][m-buffer-el: List Oriented Buffer Operations]]
+:PROPERTIES:
+:ID:       6858c112-9756-43b4-a2e3-fa00a71e9367
+:END:
+
+**** [[https://github.com/alezost/bui.el][bui.el: Buffer interface library]]
+
+#+BEGIN_QUOTE
+BUI (Buffer User Interface) is an Emacs library that can be used to make user interfaces to display some kind of entries (like packages, buffers, functions, etc.).  The intention of BUI is to be a high-level library which is convenient to be used both by:
+
+package makers, as there is no need to bother about implementing routine details and usual features (like buffer history, filtering displayed entries, etc.);
+
+users, as it provides familiar and intuitive interfaces with usual keys (for moving by lines, marking, sorting, switching between buttons); and what is also important, the defined interfaces are highly configurable through various generated variables.
+#+END_QUOTE
+
+** Checkers / linters                                     :linters:checkers:
+
+*** TODO Flycheck-package
+
+** Collections (lists, vectors, hash-tables, etc.)             :collections:
+
+*** Contents
+:PROPERTIES:
+:TOC:      siblings
+:END:
+      -  [[#best-practices][Best practices]]
+      -  [[#examples][Examples]]
+        -  [[#alists][Alists]]
+      -  [[#libraries][Libraries]]
+      -  [[#tools][Tools]]
+
+*** Best practices                                         :best_practices:
+:PROPERTIES:
+:TOC: 0
+:END:
+
+**** Collecting items into a list                                  :lists:
+
+Here are some examples of fast ways to collect items into a list.
+
+#+CAPTION: Benchmarking code that collects items into a list.
+#+BEGIN_SRC elisp
+  (bench-multi-lexical :times 500000 :ensure-equal t
+    :forms (("cl-loop" (let ((l '(1 2 3 4)))
+                         (cl-loop for val in l
+                                  collect val)))
+            ("push-nreverse with setf/pop" (let ((l '(1 2 3 4))
+                                                val r)
+                                            (while (setf val (pop l))
+                                              (push val r))
+                                            (nreverse r)))
+            ("push-nreverse with when-let*/pop" (let ((l '(1 2 3 4))
+                                                      r)
+                                                  (while (when-let* ((val (pop l)))
+                                                           (push val r)))
+                                                  (nreverse r)))
+            ("nconc with when-let*/pop" (let ((l '(1 2 3 4))
+                                              r)
+                                          (while (when-let* ((val (pop l)))
+                                                   (setf r (nconc r (list val)))))
+                                          r))
+            ("nconc with setf/pop" (let ((l '(1 2 3 4))
+                                              val r)
+                                          (while (setf val (pop l))
+                                            (setf r (nconc r (list val))))
+                                          r))))
+#+END_SRC
+
+#+RESULTS:
+| Form                             | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|----------------------------------+--------------------+---------------+----------+------------------|
+| cl-loop                          |               1.01 |      0.154578 |        0 |                0 |
+| push-nreverse with setf/pop      |               1.02 |      0.155930 |        0 |                0 |
+| push-nreverse with when-let*/pop |               1.23 |      0.159211 |        0 |                0 |
+| nconc with setf/pop              |               1.06 |      0.195685 |        0 |                0 |
+| nconc with when-let*/pop         |            slowest |      0.207103 |        0 |                0 |
+
+As is usually the case, the =cl-loop= macro expands to the most efficient code, which uses =(setq val (car ...=, =push=, and =nreverse=:
+
+#+CAPTION: Expansion of =cl-loop= form in the benchmark.
+#+BEGIN_SRC elisp
+  (cl-block nil
+    (let* ((--cl-var-- l)
+           (val nil)
+           (--cl-var-- nil))
+      (while (consp --cl-var--)
+        (setq val (car --cl-var--))
+        (push val --cl-var--)
+        (setq --cl-var-- (cdr --cl-var--)))
+      (nreverse --cl-var--)))
+#+END_SRC
+
+However, in some cases =cl-loop= may expand to code which uses =nconc=, which, as the benchmark shows, is much slower.  In that case, you may write the loop without =cl-loop= to avoid using =nconc=.
+
+**** Diffing two lists                                             :lists:
+
+As expected, =seq-difference= is the slowest, because it's a generic function that dispatches based on the types of its arguments, which is relatively slow in Emacs.  And it's not surprising that =cl-nset-difference= is generally slightly faster than =cl-set-difference=, since it's destructive.
+
+However, it is surprising how much faster =-difference= is than =cl-nset-difference=.
+
+It's also nonintuitive that =-difference= suffers a large performance penalty by binding =-compare-fn= (the equivalent of the =:test= argument to =cl-set-difference=): while one might expect that setting it to =string== would give a slight performance increase, it's actually faster to let =-difference= use its default, =equal=.
+
+Note that since this benchmark compares lists of strings, =cl-nset-difference= requires setting the =:test= argument, since it uses =eql= by default, which does not work for comparing strings.
+
+#+BEGIN_SRC elisp :exports both :eval no-export
+  (defmacro test/set-lists ()
+    `(setf list1 (cl-loop for i from 0 below 1000
+                          collect (number-to-string i))
+           list2 (cl-loop for i from 500 below 1500
+                          collect (number-to-string i))))
+
+  (let (list1 list2)
+    (bench-multi-lexical :times 10 :ensure-equal t
+      :forms (("-difference"
+               (progn
+                 (test/set-lists)
+                 (-difference list1 list2)))
+              ("-difference string="
+               (progn
+                 ;; This is much slower because of the way `-contains?'
+                 ;; works when `-compare-fn' is non-nil.
+                 (test/set-lists)
+                 (let ((-compare-fn #'string=))
+                   (-difference list1 list2))))
+              ("cl-set-difference equal"
+               (progn
+                 (test/set-lists)
+                 (cl-set-difference list1 list2 :test #'equal)))
+              ("cl-set-difference string="
+               (progn
+                 (test/set-lists)
+                 (cl-set-difference list1 list2 :test #'string=)))
+              ("cl-nset-difference equal"
+               (progn
+                 (test/set-lists)
+                 (cl-nset-difference list1 list2 :test #'equal)))
+              ("cl-nset-difference string="
+               (progn
+                 (test/set-lists)
+                 (cl-nset-difference list1 list2 :test #'string=)))
+              ("seq-difference"
+               (progn
+                 (test/set-lists)
+                 (seq-difference list1 list2)))
+              ("seq-difference string="
+               (progn
+                 (test/set-lists)
+                 (seq-difference list1 list2 #'string=))))))
+#+END_SRC
+
+#+RESULTS:
+| Form                       | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|----------------------------+--------------------+---------------+----------+------------------|
+| -difference                |               7.16 |      0.084484 |        0 |                0 |
+| cl-nset-difference equal   |               1.05 |      0.605193 |        0 |                0 |
+| cl-set-difference string=  |               1.01 |      0.636973 |        0 |                0 |
+| cl-set-difference equal    |               1.01 |      0.644919 |        0 |                0 |
+| cl-nset-difference string= |               1.19 |      0.650708 |        0 |                0 |
+| -difference string=        |               1.59 |      0.773919 |        0 |                0 |
+| seq-difference             |               1.05 |      1.232616 |        0 |                0 |
+| seq-difference string=     |            slowest |      1.293030 |        0 |                0 |
+
+**** Filtering a list                                              :lists:
+
+Using ~-select~ from =dash.el= seems to be the fastest way:
+
+#+BEGIN_SRC elisp :exports both :cache yes
+  (let ((list (cl-loop for i from 1 to 1000
+                       collect i)))
+    (bench-multi :times 100
+      :ensure-equal t
+      :forms (("(-non-nil (--map (when ..." (-non-nil
+                                             (--map (when (cl-evenp it) it) list)))
+              ("(delq nil (--map (when ..." (delq nil
+                                                  (--map (when (cl-evenp it) it) list)))
+              ("cl-loop" (cl-loop for i in list
+                                  when (cl-evenp i)
+                                  collect i))
+              ("-select" (-select #'cl-evenp list))
+              ("cl-remove-if-not" (cl-remove-if-not #'cl-evenp list))
+              ("seq-filter" (seq-filter #'cl-evenp  list)))))
+#+END_SRC
+
+#+RESULTS[6b2e97c1ebead84a53fd771684cc3e155e7f6b1e]:
+| Form                       | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|----------------------------+--------------------+---------------+----------+------------------|
+| -select                    |               1.17 |    0.01540391 |        0 |              0.0 |
+| cl-loop                    |               1.05 |    0.01808226 |        0 |              0.0 |
+| seq-filter                 |               1.13 |    0.01891708 |        0 |              0.0 |
+| (delq nil (--map (when ... |               1.15 |    0.02134727 |        0 |              0.0 |
+| cl-remove-if-not           |               1.18 |    0.02459478 |        0 |              0.0 |
+| (-non-nil (--map (when ... |            slowest |    0.02903999 |        0 |              0.0 |
+
+*** Examples                                                     :examples:
+:PROPERTIES:
+:TOC: 1
+:END:
+
+**** Alists                                                       :alists:
+
+***** Creation
+
+#+BEGIN_SRC elisp :exports code
+  ;;;; Built-in methods
+
+  (list (cons 'one 1) (cons 'two 2))  ;; => ((one . 1) (two . 2))
+
+  '((one . 1) (two . 2))  ;; => ((one . 1) (two . 2))
+
+  (let ((numbers (list)))
+    (map-put numbers 'one 1)
+    (map-put numbers 'two 2))  ;; => ((two . 2) (one . 1))
+
+
+  ;;;; Packages
+
+  ;; `a-list' from a.el is the best way to make a new alist.
+
+  (a-list 'one 1
+          'two 2)  ;; => ((one . 1) (two . 2))
+#+END_SRC
+
+***** Adding to
+
+****** Single elements
+
+#+BEGIN_SRC elisp :exports code
+  ;;;; Built-in methods
+
+  ;; `map-put' is the best built-in way.  Requires Emacs 25.1+.
+
+  (let ((numbers (list (cons 'one 1))))
+    (map-put numbers 'two 2)
+    numbers)  ; => ((two . 2) (one . 1))
+
+  ;; More primitive methods
+
+  ;; Not recommended, but not too complicated:
+  (let ((numbers (list (cons 'one 1)))
+        (more-numbers (a-list 'two 2
+                              'three 3)))
+    (append numbers more-numbers)) ;; => ((one . 1) (two . 2) (three . 3))
+
+  ;; Don't do it this way, but it does demonstrate list/cons-cell
+  ;; structure:
+  (let ((numbers (list (cons 'one 1))))
+    (cons (cons 'three 3)
+          (cons (cons 'two 2)
+                numbers)))  ;; => ((three . 3) (two . 2) (one . 1))
+#+END_SRC
+
+****** Multiple elements
+
+#+BEGIN_SRC elisp :exports code
+  ;;;; Built-in methods
+
+  ;; `map-merge': if you're restricted to built-in packages, this works
+  ;; well (requires Emacs 25.1+):
+  (let ((numbers (list (cons 'one 1)))
+        (more-numbers (a-list 'two 2
+                              'three 3)))
+    (map-merge 'list numbers more-numbers))  ;; => ((three . 3) (two . 2) (one . 1))
+
+
+  ;; Without map.el, you could use `append':
+  (let ((numbers (list (cons 'one 1)))
+        (more-numbers (a-list 'two 2
+                              'three 3)))
+    (append numbers more-numbers)) ;; => ((one . 1) (two . 2) (three . 3))
+
+  ;;;; Packages
+
+  ;; `a-merge' from a.el is probably the best way:
+  (let ((numbers (list (cons 'one 1)))
+        (more-numbers (a-list 'two 2
+                              'three 3)))
+    (a-merge numbers more-numbers))  ;; => ((three . 3) (two . 2) (one . 1))
+#+END_SRC
+
+*** Libraries                                                   :libraries:
+:PROPERTIES:
+:TOC: 0
+:END:
+
+**** [[https://github.com/plexus/a.el][a.el: functions for dealing with association lists and hash tables. Inspired by Clojure.]] :alists:hash_tables:
+
+**** [[https://github.com/troyp/asoc.el][asoc.el: alist library]]                                       :alists:
+
+**** [[https://github.com/nicferrier/emacs-kv][emacs-kv: key/value collection-type functions, for alists, hash tables and plists]] :alists:hash_tables:plists:
+
+**** [[https://github.com/Wilfred/ht.el][ht.el: The missing hash table library]]                   :hash_tables:
+:PROPERTIES:
+:ID:       22b35972-c32f-467a-92ee-f8a155920756
+:END:
+
+This library provides a consistent and comprehensive set of functions for working with hash tables: they're named consistently, take a natural and consistent argument order, and cover operations that the standard Emacs functions don't.
+
+**** [[https://github.com/rolandwalker/list-utils][list-utils: List-manipulation utility functions]]               :lists:
+:PROPERTIES:
+:ID:       4b4cbe99-f048-4043-a946-97f9d1a4be52
+:END:
+
+Similar to =dash.el=, but with slightly different behavior that may be useful, and some unique features.  These functions are provided:
+
+| =make-tconc=                       | =list-utils-depth=                |
+| =tconc-p=                          | =list-utils-flat-length=          |
+| =tconc-list=                       | =list-utils-flatten=              |
+| =tconc=                            | =list-utils-alist-or-flat-length= |
+| =list-utils-cons-cell-p=           | =list-utils-alist-flatten=        |
+| =list-utils-cyclic-length=         | =list-utils-insert-before=        |
+| =list-utils-improper-p=            | =list-utils-insert-after=         |
+| =list-utils-make-proper-copy=      | =list-utils-insert-before-pos=    |
+| =list-utils-make-proper-inplace=   | =list-utils-insert-after-pos=     |
+| =list-utils-make-improper-copy=    | =list-utils-and=                  |
+| =list-utils-make-improper-inplace= | =list-utils-not=                  |
+| =list-utils-linear-p=              | =list-utils-xor=                  |
+| =list-utils-linear-subseq=         | =list-utils-uniq=                 |
+| =list-utils-cyclic-p=              | =list-utils-dupes=                |
+| =list-utils-cyclic-subseq=         | =list-utils-singlets=             |
+| =list-utils-make-linear-copy=      | =list-utils-partition-dupes=      |
+| =list-utils-make-linear-inplace=   | =list-utils-plist-reverse=        |
+| =list-utils-safe-length=           | =list-utils-plist-del=            |
+| =list-utils-safe-equal=            |                                   |
+
+**** [[https://elpa.gnu.org/packages/map.html][map.el: Map manipulation functions]]   :maps:hash_tables:alists:arrays:
+
+=map= is included with Emacs, but the latest version, which may include improvements since the last Emacs release, is now available separately on [[https://elpa.gnu.org/][GNU ELPA]].
+
+**** [[https://github.com/NicolasPetton/stream][stream: Lazy sequences]]                       :streams:sequences:lazy:
+
+#+BEGIN_QUOTE
+=stream.el= provides an implementation of streams, implemented as delayed evaluation of cons cells.
+
+Functions defined in seq.el can also take a stream as input.
+
+Streams could be created from any sequential input data:
+
+-  sequences, making operation on them lazy
+-  a set of 2 forms (first and rest), making it easy to represent infinite sequences
+-  buffers (by character)
+-  buffers (by line)
+-  buffers (by page)
+-  IO streams
+-  orgmode table cells
+-  ...
+#+END_QUOTE
+
+*** Tools                                                           :tools:
+:PROPERTIES:
+:TOC: 0
+:END:
+
+**** [[id:f8f0755b-c23b-45ad-98da-780d4044676a][let-alist]]
+
+**** [[id:a58f65dc-d4a4-4a40-a573-a66a28f3619c][=with-dict=, =with-plist-vals=]]
+
+** Data structure                                           :data_structure:
+
+*** Articles                                                     :articles:
+
+**** [[http://nullprogram.com/blog/2018/02/14/][Options for Structured Data in Emacs Lisp « null program]]
+:PROPERTIES:
+:archive.today: http://archive.today/YxwP5
+:END:
+
+** Date / Time                                                 :dates:times:
+
+*** Libraries                                                   :libraries:
+
+**** [[https://github.com/alphapapa/ts.el][ts.el: Timestamp and date-time library]]
+
+=ts= aids in parsing, formatting, and manipulating timestamps.
+
+#+BEGIN_QUOTE
+ts is a date and time library for Emacs. It aims to be more convenient than patterns like ~(string-to-number (format-time-string "%Y"))~ by providing easy accessors, like ~(ts-year (ts-now))~.
+
+To improve performance (significantly), formatted date parts are computed lazily rather than when a timestamp object is instantiated, and the computed parts are then cached for later access without recomputing. Behind the scenes, this avoids unnecessary ~(string-to-number (format-time-string...~ calls, which are surprisingly expensive.
+#+END_QUOTE
+
+***** Examples
+
+Get parts of the current date:
+
+#+BEGIN_SRC elisp
+  ;; When the current date is 2018-12-08 23:09:14 -0600:
+  (ts-year (ts-now))       ;=> 2018
+  (ts-month (ts-now))      ;=> 12
+  (ts-day (ts-now))        ;=> 8
+  (ts-hour (ts-now))       ;=> 23
+  (ts-minute (ts-now))     ;=> 9
+  (ts-second (ts-now))     ;=> 14
+  (ts-tz-offset (ts-now))  ;=> "-0600"
+
+  (ts-dow (ts-now))        ;=> 6
+  (ts-day-abbr (ts-now))   ;=> "Sat"
+  (ts-day-name (ts-now))   ;=> "Saturday"
+
+  (ts-month-abbr (ts-now)) ;=> "Dec"
+  (ts-month-name (ts-now)) ;=> "December"
+
+  (ts-tz-abbr (ts-now))    ;=> "CST"
+#+END_SRC
+
+Increment the current date:
+
+#+BEGIN_SRC elisp
+  ;; By 10 years:
+  (list :now (ts-format)
+        :future (ts-format (ts-adjust 'year 10 (ts-now))))
+  ;;=> (   :now "2018-12-15 22:00:34 -0600"
+  ;;    :future "2028-12-15 22:00:34 -0600")
+
+  ;; By 10 years, 2 months, 3 days, 5 hours, and 4 seconds:
+  (list :now (ts-format)
+        :future (ts-format
+                 (ts-adjust 'year 10 'month 2 'day 3
+                            'hour 5 'second 4
+                            (ts-now))))
+  ;;=> (   :now "2018-12-15 22:02:31 -0600"
+  ;;    :future "2029-02-19 03:02:35 -0600")
+#+END_SRC
+
+What day of the week was 2 days ago?
+
+#+BEGIN_SRC elisp
+  (ts-day-name (ts-dec 'day 2 (ts-now)))             ;=> "Thursday"
+
+  ;; Or, with threading macros:
+  (thread-last (ts-now) (ts-dec 'day 2) ts-day-name) ;=> "Thursday"
+  (->> (ts-now) (ts-dec 'day 2) ts-day-name)         ;=> "Thursday"
+#+END_SRC
+
+Get timestamp for this time last week:
+
+#+BEGIN_SRC elisp
+  (ts-unix (ts-adjust 'day -7 (ts-now)))
+  ;;=> 1543728398.0
+
+  ;; To confirm that the difference really is 7 days:
+  (/ (- (ts-unix (ts-now))
+        (ts-unix (ts-adjust 'day -7 (ts-now))))
+     86400)
+  ;;=> 7.000000567521762
+
+  ;; Or human-friendly as a list:
+  (ts-human-duration
+   (ts-difference (ts-now)
+                  (ts-dec 'day 7 (ts-now))))
+  ;;=> (:years 0 :days 7 :hours 0 :minutes 0 :seconds 0)
+
+  ;; Or as a string:
+  (ts-human-format-duration
+   (ts-difference (ts-now)
+                  (ts-dec 'day 7 (ts-now))))
+  ;;=> "7 days"
+
+  ;; Or confirm by formatting:
+  (list :now (ts-format)
+        :last-week (ts-format (ts-dec 'day 7 (ts-now))))
+  ;;=> (      :now "2018-12-08 23:31:37 -0600"
+  ;;    :last-week "2018-12-01 23:31:37 -0600")
+#+END_SRC
+
+**** [[https://github.com/emacs-php/emacs-datetime][emacs-datetime]]
+:PROPERTIES:
+:ID:       45613ae9-97a2-4807-b099-a6c051f1a2c4
+:END:
+
+The primary function provided is: ~(datetime-format SYM-OR-FMT &optional TIME &rest OPTION)~
+
+#+BEGIN_SRC elisp  :exports code
+  (datetime-format "%Y-%m-%d")  ;=> "2018-08-22"
+  (datetime-format 'atom)  ;=> "2018-08-22T18:23:47-05:00"
+  (datetime-format 'atom "2112-09-03 00:00:00" :timezone "UTC")  ;=> "2112-09-03T00:00:00+00:00"
+#+END_SRC
+
+There are several other symbols provided besides ~atom~, such as ~rfc-3339~, which formats dates according to that RFC.
+
+** Debugging                                                     :debugging:
+
+*** Tools                                                           :tools:
+
+**** Edebug                                                       :Edebug:
+
+Edebug is a built-in stepping debugger in Emacs.  It's thoroughly documented in the =elisp= manual.
+
+***** Declaring debug forms for keyword arguments                   :tip:
+
+Declaring ~debug~ forms for functions and macros that take keyword arguments can be confusing.  Here's a contrived example:
+
+#+BEGIN_SRC elisp  :exports code
+  (cl-defmacro make-fn (name docstring &key args bindings body)
+    (declare (indent defun)
+             (debug (&define symbolp stringp
+                             &rest [&or [":body" def-form] [keywordp listp]])))
+    `(defun ,name ,args
+       ,docstring
+       (let* ,bindings
+         ,body)))
+
+  (make-fn my-fn
+    "This is my function."
+    :bindings ((one 1)
+               (two 2))
+    :body (list one two))
+#+END_SRC
+
+****** TODO Submit this as an improvement to the Elisp manual
+
+Probably should first replace the ~:bindings~ part with this, which correctly matches ~let~ bindings: ~(&rest &or symbolp (gate symbolp &optional def-form))~.
+
+** Destructuring                                             :destructuring:
+
+See [[id:b699e1a1-e34c-4ce8-a5dd-41161d2a1cbf][Pattern matching]].
+
+** Documentation                                             :documentation:
+
+*** Tools                                                           :tools:
+
+**** [[https://github.com/tarsius/ox-texinfo-plus][ox-texinfo+]]                                            :TeX:Org:info:
+:PROPERTIES:
+:ID:       2aadfb89-3ed2-4cb8-bdea-6775ec6c3e57
+:END:
+
+This is helpful when exporting Org files to Info manuals.
+
+#+BEGIN_QUOTE
+This package provides some extensions for Org's ~texinfo~ exporter defined in ~ox-texinfo~.
+
+1.  Create ~@deffn~ and similar definition items by writing list items in Org that look similar to what they will look like in Info.
+2.  Optionally share a section's node with some or all of its child sections.
+3.  Optionally modify the Org file before exporting it.
+4.  Fully respect the local value of indent-tabs-mode from the Org file when editing source blocks and exporting. This affects all source blocks and all exporters.
+#+END_QUOTE
+
+** Editing                                                         :editing:
+:PROPERTIES:
+:TOC:      ignore-children
+:END:
+
+*** Tools                                                           :tools:
+
+**** [[https://github.com/Malabarba/aggressive-indent-mode][aggressive-indent-mode: minor mode that keeps your code always indented]] :formatting:indentation:parentheses:
+:PROPERTIES:
+:ID:       4dc7c607-a116-4c39-b063-fe34bd20cccf
+:END:
+
+**** [[https://emacs.cafe/emacs/package/2017/08/01/beginend.html][beginend.el]] :navigation:
+:PROPERTIES:
+:ID:       a32ed391-8ce6-46b7-9367-8117829ce2e7
+:END:
+
+This package, by Damien Cassou and Matus Goljer, helps navigation by redefining the ~M-<~ and ~M->~ keys do, depending on the major-mode.
+
+**** [[https://github.com/magnars/expand-region.el][expand-region.el: Increase selected region by semantic units]] :selection:region:
+:PROPERTIES:
+:ID:       88b496f4-8230-474e-b2ee-d8e4e8ca30d0
+:END:
+
+**** [[https://github.com/emacs-helm/helm-navi][helm-navi: Navigate file sections and language keywords using Helm]] :navigation:
+
+**** [[https://github.com/victorhge/iedit][iedit: Edit multiple regions simultaneously in a buffer or a region]] :refactoring:
+
+=iedit= makes it easy to rename symbols within a function or in a whole buffer.  Simply activate ~iedit-mode~ with point on a symbol, and it will be highlighted in the chosen scope, and any changes you make to the symbol are made in each highlighted occurrence.  It's like a smart, purposeful version of ~multiple-cursors~.
+
+The editor of this handbook uses ~iedit~ with these customizations:
+
++  ~ap/iedit-or-flyspell~ :: Globally bound to @@html:<kbd>@@C-;@@html:</kbd>@@.  In a ~prog-mode~-derived buffer, either corrects the last misspelled word with ~flyspell~ when point is in a comment or string, or activates ~iedit-mode~.  In non- ~prog-mode~-derived buffers, corrects with ~flyspell~.
+
+#+BEGIN_SRC elisp :exports code
+  (defun ap/iedit-or-flyspell ()
+    "Call `iedit-mode' or correct misspelling with flyspell, depending..."
+    (interactive)
+    (if (or iedit-mode
+            (and (derived-mode-p 'prog-mode)
+                 (not (or (nth 4 (syntax-ppss))
+                          (nth 3 (syntax-ppss))))))
+        ;; prog-mode is active and point is in a comment, string, or
+        ;; already in iedit-mode
+        (call-interactively #'ap/iedit-mode)
+      ;; Not prog-mode or not in comment or string
+      (if (not (equal flyspell-previous-command this-command))
+          ;; FIXME: This mostly works, but if there are two words on the
+          ;; same line that are misspelled, it doesn't work quite right
+          ;; when correcting the earlier word after correcting the later
+          ;; one
+
+          ;; First correction; autocorrect
+          (call-interactively 'flyspell-auto-correct-previous-word)
+        ;; First correction was not wanted; use popup to choose
+        (progn
+          (save-excursion
+            (undo)) ; This doesn't move point, which I think may be the problem.
+          (flyspell-region (line-beginning-position) (line-end-position))
+          (call-interactively 'flyspell-correct-previous-word-generic)))))
+#+END_SRC
+
++  ~ap/iedit-mode~ :: Calls ~iedit-mode~ with function-local scope by default, or global scope when called with a universal prefix.
+
+#+BEGIN_SRC elisp :exports code
+  (defun ap/iedit-mode (orig-fn)
+    "Call `iedit-mode' with function-local scope by default, or global scope if called with a universal prefix."
+    (interactive)
+    (pcase current-prefix-arg
+      ('nil (funcall orig-fn '(0)))
+      ('(4) (funcall orig-fn))
+      (_ (user-error "`ap/iedit-mode' called with prefix: %s" prefix))))
+
+  ;; Override default `iedit-mode' function with advice.
+  (advice-add #'iedit-mode :around #'ap/iedit-mode)
+#+END_SRC
+
++  Helpful minibuffer message :: Confirms when an ~iedit~ session has started.
+
+#+BEGIN_SRC elisp :exports code
+  (advice-add 'iedit-mode :after (lambda (&optional ignore)
+                                   (when iedit-mode
+                                     (minibuffer-message "iedit session started. Press C-; to end."))))
+#+END_SRC
+
+***** TODO Refer to version published in =unpackaged.el=
+
+**** [[https://github.com/abo-abo/lispy][lispy: short and sweet LISP editing]]    :elisp:navigation:parentheses:
+:PROPERTIES:
+:ID:       ca3809ba-5900-4dfd-84a1-1ceecc048296
+:END:
+
+**** [[https://github.com/IvanMalison/multi-line][multi-line: multi-line everything from function invocations and definitions to array and map literals in a wide variety of languages]] :formatting:
+
+**** [[https://github.com/magnars/multiple-cursors.el][multiple-cursors.el: Multiple cursors]]             :selection:editing:
+:PROPERTIES:
+:ID:       deefcbc5-0c37-4936-a820-df99ae31a401
+:END:
+
+**** [[https://github.com/Fuco1/smartparens][smartparens: Minor mode  that deals with parens pairs and tries to be smart about it]] :navigation:editing:parentheses:
+:PROPERTIES:
+:ID:       e806d7f3-43e9-4260-aae4-479efbd41653
+:END:
+
+** Functions                                                     :functions:
+
+Including anonymous functions (lambdas).
+
+*** Articles
+
+**** [[https://nullprogram.com/blog/2017/12/14/][What's in an Emacs Lambda « null program]] :lambdas:byte_compilation:lexical_binding:scope:
+:PROPERTIES:
+:archive.today: http://archive.today/ppIuJ
+:ID:       54fa2e85-066f-431e-9db3-8b1627fac4ca
+:END:
+
+** General                                                         :general:
+
+#+BEGIN_SRC elisp :exports none :eval never :tangle epdh.el
+;;;; General tools
+
+#+END_SRC
+
+*** Libraries                                                   :libraries:
+
+**** [[https://www.gnu.org/software/emacs/manual/html_node/cl/index.html][Common Lisp Extensions]] (=cl-lib=)                            :built_in:
+
+This is the built-in =cl-lib= package which implements Common Lisp functions and control structures for Emacs Lisp.
+
+**** [[https://github.com/magnars/dash.el][dash.el]]                                                        :dash:
+:PROPERTIES:
+:ID:       e85e4252-ea03-4473-b52f-9393e7527fad
+:END:
+
+Dash is a powerful general-purpose library that provides many useful functions and macros.
+
+**** [[https://github.com/emacs-mirror/emacs/blob/master/lisp/emacs-lisp/subr-x.el][subr-x]]                                :built_in:strings:flow_control:
+
+#+BEGIN_QUOTE
+Less commonly used functions that complement basic APIs, often implemented in C code (like hash-tables and strings), and are not eligible for inclusion in subr.el.
+#+END_QUOTE
+
+This is a built-in package that provides several useful functions and macros, such as =thread-first= / =last=, =if-let= / =when-let=, hash-table functions, and string functions.  It's easy to forget about this, since:
+
+#+BEGIN_QUOTE
+Do not document these functions in the lispref.  http://lists.gnu.org/archive/html/emacs-devel/2014-01/msg01006.html
+#+END_QUOTE
+
+*** Tools                                                           :tools:
+
+**** [[https://github.com/plexus/chemacs][chemacs: Emacs profile switcher]]                             :testing:
+
+This package may be especially helpful for developing in one's own environment and testing in another, like default Emacs, Spacemacs, etc.
+
+#+BEGIN_QUOTE
+Chemacs is an Emacs profile switcher, it makes it easy to run multiple Emacs configurations side by side.  Think of it as a bootloader for Emacs.
+
+Emacs configuration is either kept in a =~/.emacs= file or, more commonly, in a =~/.emacs.d= directory. These paths are hard-coded. If you want to try out someone else’s configuration, or run different distributions like Prelude or Spacemacs, then you either need to swap out =~/.emacs.d=, or run Emacs with a different =$HOME= directory set.  This last approach is quite common, but has some real drawbacks, since now packages will no longer know where your actual home directory is.  
+
+All of these makes trying out different Emacs configurations and distributions needlessly cumbersome.  Various approaches to solving this have been floated over the years. There’s an Emacs patch around that adds an extra command line option, and various examples of how to add a command line option in userspace from Emacs Lisp.
+
+Chemacs tries to implement this idea in a user-friendly way, taking care of the various edge cases and use cases that come up.
+#+END_QUOTE
+
+**** [[https://github.com/Lindydancer/el2markdown][el2markdown: Convert Emacs Lisp comments to MarkDown]]
+:PROPERTIES:
+:ID:       9aacf8f3-5244-4b71-8802-1c7876a9d19e
+:END:
+
+**** [[https://github.com/Lindydancer/multicolumn][multicolumn: Multiple side-by-side windows support]]
+:PROPERTIES:
+:ID:       267c8c25-53db-4ced-9242-176094e101e3
+:END:
+
+**** [[https://github.com/phillord/lentic][lentic: Create views of the same content in two buffers]]
+:PROPERTIES:
+:ID:       0c220bc9-7173-4b0f-8955-e10ab6db640f
+:END:
+
+**** [[https://github.com/Wilfred/suggest.el][suggest.el: discover elisp functions that do what you want]]
+:PROPERTIES:
+:ID:       57ecc064-7291-4cc5-a545-958e2bca295b
+:END:
+
+**** Byte-compile and load directory
+:PROPERTIES:
+:ID:       e9b527d5-ae5e-4052-95f3-781ebc1b4ce1
+:END:
+
+Byte-compile and load all elisp files in ~DIRECTORY~.  Interactively, directory defaults to ~default-directory~ and asks for confirmation.
+
+#+BEGIN_SRC elisp :exports code :tangle epdh.el
+  ;;;###autoload
+  (defun epdh/byte-compile-and-load-directory (directory)
+    "Byte-compile and load all elisp files in DIRECTORY.
+  Interactively, directory defaults to `default-directory' and asks
+  for confirmation."
+    (interactive (list default-directory))
+    (if (or (not (called-interactively-p))
+            (yes-or-no-p (format "Compile and load all files in %s?" directory)))
+        ;; Not sure if binding `load-path' is necessary.
+        (let* ((load-path (cons directory load-path))
+               (files (directory-files directory 't (rx ".el" eos))))
+          (dolist (file files)
+            (byte-compile-file file 'load)))))
+#+END_SRC
+
+**** =emacs-lisp-macroreplace=
+
+Replace macro form before or after point with its expansion.
+
+#+BEGIN_SRC elisp :exports code :eval no-export :tangle epdh.el
+  ;;;###autoload
+  (defun epdh/emacs-lisp-macroreplace ()
+    "Replace macro form before or after point with its expansion."
+    (interactive)
+    (if-let* ((beg (point))
+              (end t)
+              (form (or (ignore-errors
+                          (save-excursion
+                            (prog1 (read (current-buffer))
+                              (setq end (point)))))
+                        (ignore-errors
+                          (forward-sexp -1)
+                          (setq beg (point))
+                          (prog1 (read (current-buffer))
+                            (setq end (point))))))
+              (expansion (macroexpand-all form)))
+        (setf (buffer-substring beg end) (pp-to-string expansion))
+      (user-error "Unable to expand")))
+#+END_SRC
+
+** Highlighting / font-locking                      :highlighting:font_lock:
+
+*** Packages                                                     :packages:
+
+Packages that do highlighting/font-locking.
+
+**** [[https://github.com/Lindydancer/lisp-extra-font-lock][lisp-extra-font-lock: Highlight bound variables and quoted expressions in lisp]]
+:PROPERTIES:
+:ID:       5b4a9320-1d3d-441b-8505-7b35a8d323d3
+:END:
+
+*** Tools                                                           :tools:
+
+Tools for developing highlighting/font-locking packages.
+
+**** [[https://github.com/Lindydancer/face-explorer][face-explorer: Library and tools for faces and text properties]]
+:PROPERTIES:
+:ID:       66fef80f-0f92-4492-8199-01c24c635914
+:END:
+
+**** [[https://github.com/Lindydancer/faceup][faceup: Regression test system for font-lock keywords]]
+:PROPERTIES:
+:ID:       5ab6c330-15ae-455a-981c-bf298d9a2788
+:END:
+
+**** [[https://github.com/Lindydancer/font-lock-profiler][font-lock-profiler: Coverage and timing tool for font-lock keywords]]
+:PROPERTIES:
+:ID:       0f3ba4be-949b-4efe-8301-acf3873ab345
+:END:
+
+**** [[https://github.com/Lindydancer/font-lock-regression-suite][font-lock-regression-suite: Regression test suite for font-lock keywords of Emacs standard modes]]
+:PROPERTIES:
+:ID:       e54a2697-8b4a-4b65-a971-f79e0fa22120
+:END:
+
+**** [[https://github.com/Lindydancer/font-lock-studio][font-lock-studio: Debugger for Font Lock keywords]]
+:PROPERTIES:
+:ID:       fb9315d1-111d-4eab-8f99-00710e39b04c
+:END:
+
+**** [[https://github.com/Lindydancer/highlight-refontification][highlight-refontification: Visualize how font-lock refontifies a buffer]]
+:PROPERTIES:
+:ID:       85a2421d-6fbd-4c4d-a6f9-587258c8f625
+:END:
+
+** Multiprocessing (generators, threads)           :multiprocessing:
+:PROPERTIES:
+:ID:       94092c16-061c-45c9-9c66-77c5fdeceee8
+:END:
+
+*** Articles                                                     :articles:
+
+**** [[https://nullprogram.com/blog/2018/05/31/][Emacs 26 Brings Generators and Threads « null program]] :threads:generators:byte_compilation:closures:iterators:
+:PROPERTIES:
+:archive.today: http://archive.today/Irane
+:END:
+
+Chris Wellons explains the new generators and threads that Emacs 26 provides.  He also shows an example of writing a ~cl-case~ form that uses the new ~switch~ jump table opcode in Emacs 26.
+
+**** [[https://nullprogram.com/blog/2013/01/14/][Turning Asynchronous into Synchronous in Elisp « null program]] :async:
+:PROPERTIES:
+:archive.today: http://archive.today/AfL0y
+:END:
+
+**** [[https://nullprogram.com/blog/2017/02/14/][Asynchronous Requests from Emacs Dynamic Modules « null program]] :modules:async:
+:PROPERTIES:
+:archive.today: http://archive.today/ZS6pU
+:END:
+
+*** Libraries                                                   :libraries:
+
+**** [[https://github.com/skeeto/emacs-aio][emacs-aio: async/await for Emacs Lisp]]
+
+#+BEGIN_QUOTE
+=aio= is to Emacs Lisp as asyncio is to Python. This package builds upon Emacs 25 generators to provide functions that pause while they wait on asynchronous events. They do not block any thread while paused.
+#+END_QUOTE
+
+*** Manual                                                         :manual:
+
+**** [[https://www.gnu.org/software/emacs/draft/manual/html_node/elisp/Generators.html][GNU Emacs Lisp Reference Manual: Generators]]              :generators:
+
+**** [[https://www.gnu.org/software/emacs/draft/manual/html_node/elisp/Threads.html][GNU Emacs Lisp Reference Manual: Threads]]                    :threads:
+
+** Networking                                                   :networking:
+
+*** HTTP                                                             :HTTP:
+
+**** Libraries                                                 :libraries:
+
+For simple use cases, and some more complex ones, the built-in [[*=url=][url]] library should be sufficient.  Libraries that use =curl=, such as [[*%5B%5Bhttps://github.com/tkf/emacs-request%5D%5BRequest.el%20--%20Easy%20HTTP%20requests%5D%5D][request]], can provide better performance and more flexibility.  However, in this author's experience, both of those tools, while mostly reliable, tend to have some obscure bugs that can occasionally be problematic.
+
+***** [[https://github.com/skeeto/elfeed/blob/master/elfeed-curl.el][elfeed-curl]]                                                  :curl:
+
+Not a standalone package, but part of [[https://github.com/skeeto/elfeed/blob/master/elfeed-curl.el][Elfeed]].  A solid, well-designed library, but purpose-built for Elfeed.  Could easily be adapted to other packages or factored out as a separate package.
+
+***** [[https://github.com/cinsk/emacs-curl][emacs-curl: CURL wrapper]]                                     :curl:
+
+A very simple =curl= wrapper, last updated in 2012.  Not published on MELPA.
+
+****** COMMENT Maybe remove this
+
+It's unlikely to be useful at this point.  Maybe list it in an appendix or something, for completeness's sake.
+
+***** [[https://github.com/leathekd/grapnel][grapnel: HTTP request lib built on curl with flexible callback dispatch]] :curl:
+
+A flexible, featureful =curl= wrapper, last updated in 2015.
+
+***** [[https://github.com/tkf/emacs-request][Request.el -- Easy HTTP requests]]                      :curl:url_el:
+
+=request= is the most commonly used third-party HTTP library.  It has both =curl= and =url.el= backends.
+
+***** =url=                                               :url_el:built_in:
+
+=url= is included with Emacs and used by a variety of packages.
+
+** Packaging                                                     :packaging:
+:PROPERTIES:
+:TOC:      ignore-children
+:END:
+
+*** Contents
+:PROPERTIES:
+:TOC:      siblings
+:END:
+      -  [[#best-practices][Best practices]]
+        -  [[#autoloads][Autoloads]]
+        -  [[#integration-with-other-packages][Integration with other packages]]
+        -  [[#httpswwwgnuorgsoftwareemacsmanualhtml_nodeelisplexical-bindinghtmllexical-binding][Lexical binding]]
+        -  [[#template][Template]]
+        -  [[#readme][Readme]]
+        -  [[#version-numbers][Version numbers]]
+      -  [[#libraries][Libraries]]
+      -  [[#reference][Reference]]
+        -  [[#package-headers-and-structure][Package headers and structure]]
+      -  [[#tools][Tools]]
+        -  [[#package-installationmanagement][Package installation/management]]
+
+*** Best practices                                         :best_practices:
+:PROPERTIES:
+:TOC:      1
+:END:
+
+**** Autoloads                                                 :autoloads:
+
+***** TODO Autoloading macro-generated functions
+
+This may actually be a bug, or at least an unanswered question.
+
+[[https://www.reddit.com/r/emacs/comments/63u5yn/how_to_use_autoload_cookies_for_custom_defunlike/][How to use autoload cookies for custom defun-like macros? : emacs]]:
+
+#+BEGIN_QUOTE
+Say I have a macro =deffoo= that expands to some custom kind of =defun=, and I want to use an autoload cookie to autoload the result. According to the manual,
+
+#+BEGIN_EXAMPLE
+    ;;;###autoload (deffoo bar   ...)
+#+END_EXAMPLE
+
+copies the entire form to =autoloads.el=, and something like
+
+#+BEGIN_EXAMPLE
+    ;;;###autoload (autoload 'bar "this-file") (deffoo bar   ...)
+#+END_EXAMPLE
+
+should be used instead. What confuses me is [[http://stackoverflow.com/a/38805102][this StackOverflow comment]] by who appears to be Stefan Monnier, saying that Emacs /should/ expand the macro before generating the autoload, and that it's probably a bug when this does not happen.
+
+Can anyone clear up what the intended behaviour is?
+#+END_QUOTE
+
+[2018-01-15 Mon 03:37]  The correct way to do this is documented in [[https://github.com/alphapapa/helm-org-rifle/issues/13][this bug report]].
+
+***** Articles                                                 :articles:
+
+****** [[https://www.lunaryorn.com/posts/autoloads-in-emacs-lisp][Autoloads in Emacs Lisp | Sebastian Wiesner]]
+:PROPERTIES:
+:archive.today: http://archive.today/UZHhS
+:END:
+
+**** Integration with other packages
+
+***** Optional support
+
+Sometimes you want your package to integrate with other packages, but you don't want to require users to install those other packages.  For example, you might want your package to work with Helm, Ivy, or the built-in Emacs =completing-read=, but you don't want to declare a dependency on and =require= Helm or Ivy, which would force users to install them to use your package.
+
+The best way to handle this is with the [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Hooks-for-Loading.html][=with-eval-after-load=]] macro.  The [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Hooks-for-Loading.html][Emacs manual]] has a page on it, and [[https://stackoverflow.com/questions/21880139/what-is-with-eval-after-load-in-emacs-lisp][this StackOverflow question]] has some more info.  You can also see an [[https://github.com/alphapapa/org-recent-headings/blob/master/org-recent-headings.el#L350][example]], which also [[https://github.com/alphapapa/org-recent-headings/blob/master/org-recent-headings.el#L377][uses]] [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Declaring-Functions.html][=declare-function=]] to prevent byte-compiler errors.
+
+**** [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Lexical-Binding.html][Lexical binding]]                            :lexical_binding:built_in:
+:PROPERTIES:
+:ID:       7247be4d-4f66-43ff-bb70-1b4a7458611b
+:END:
+
+You should always use lexical binding by setting the header in the first line of the file:
+
+#+BEGIN_EXAMPLE
+  ;;; filename.el --- File description  -*- lexical-binding: t; -*-
+#+END_EXAMPLE
+
+***** Articles                                                 :articles:
+
+****** [[https://yoo2080.wordpress.com/2013/09/11/emacs-lisp-lexical-binding-gotchas-and-related-best-practices/][Emacs Lisp lexical binding gotchas and related best practices | Yoo Box]]
+:PROPERTIES:
+:archive.today: http://archive.today/0nfB4
+:END:
+
+****** [[https://emacs.stackexchange.com/questions/2129/why-is-let-faster-with-lexical-scope][elisp - Why is `let' faster with lexical scope? - Emacs Stack Exchange]]
+:PROPERTIES:
+:archive.today: http://archive.today/LUtfZ
+:END:
+
+Sebastian Wiesner provides a detailed explanation.
+
+****** [[https://www.emacswiki.org/emacs/DynamicBindingVsLexicalBinding][EmacsWiki: Dynamic Binding Vs Lexical Binding]]
+:PROPERTIES:
+:archive.today: http://archive.today/2VtOU
+:END:
+
+A lot of good examples and discussion.
+
+****** [[https://nullprogram.com/blog/2016/12/22/][Some Performance Advantages of Lexical Scope « null program]]
+:PROPERTIES:
+:ID:       3659d32e-3e9e-466f-94ff-33cfed5dc49d
+:archive.today: http://archive.today/xm5zq
+:END:
+
+#+BEGIN_QUOTE
+I recently had a discussion with Xah Lee about lexical scope in Emacs Lisp. The topic was why lexical-binding exists at a file-level when there was already lexical-let (from cl-lib), prompted by my previous article on JIT byte-code compilation. The specific context is Emacs Lisp, but these concepts apply to language design in general.
+#+END_QUOTE
+
+**** Template
+:PROPERTIES:
+:ID:       aacd55b6-a56f-4064-bf0d-25173ce83ef3
+:END:
+
+When you make a new package, the =auto-insert= command will insert a set of standard package headers for you.  However, here is a more comprehensive template you can use:
+
+#+BEGIN_SRC elisp :exports code
+  ;;; package-name.el --- Package description (don't include the word "Emacs")  -*- lexical-binding: t; -*-
+
+  ;; Copyright (C) 2017 First Last
+
+  ;; Author: First Last <name@example.com>
+  ;; URL: http://example.com/package-name.el
+  ;; Version: 0.1-pre
+  ;; Package-Requires: ((emacs "25.2"))
+  ;; Keywords: something
+
+  ;; This file is not part of GNU Emacs.
+
+  ;;; Commentary:
+
+  ;; This is my package.  It is nice.  You should try it.
+
+  ;;;; Installation
+
+  ;;;;; MELPA
+
+  ;; If you installed from MELPA, you're done.
+
+  ;;;;; Manual
+
+  ;; Install these required packages:
+
+  ;; + foo
+  ;; + bar
+
+  ;; Then put this file in your load-path, and put this in your init
+  ;; file:
+
+  ;; (require 'package-name)
+
+  ;;;; Usage
+
+  ;; Run one of these commands:
+
+  ;; `package-name-command': Frobnicate the flange.
+
+  ;;;; Tips
+
+  ;; + You can customize settings in the `package-name' group.
+
+  ;;;; Credits
+
+  ;; This package would not have been possible without the following
+  ;; packages: foo[1], which showed me how to bifurcate, and bar[2],
+  ;; which takes care of flanges.
+  ;;
+  ;;  [1] https://example.com/foo.el
+  ;;  [2] https://example.com/bar.el
+
+  ;;; License:
+
+  ;; This program is free software; you can redistribute it and/or modify
+  ;; it under the terms of the GNU General Public License as published by
+  ;; the Free Software Foundation, either version 3 of the License, or
+  ;; (at your option) any later version.
+
+  ;; This program is distributed in the hope that it will be useful,
+  ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ;; GNU General Public License for more details.
+
+  ;; You should have received a copy of the GNU General Public License
+  ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+  ;;; Code:
+
+  ;;;; Requirements
+
+  (require 'foo)
+  (require 'bar)
+
+  ;;;; Customization
+
+  (defgroup package-name nil
+    "Settings for `package-name'."
+    :link '(url-link "http://example.com/package-name.el"))
+
+  (defcustom package-name-something nil
+    "This setting does something."
+    :type 'something)
+
+  ;;;; Variables
+
+  (defvar package-name-var nil
+    "A variable.")
+
+  ;;;;; Keymaps
+
+  ;; This technique makes it easier and less verbose to define keymaps.
+
+  (defvar package-name-map
+    ;; This makes it easy and much less verbose to define keys
+    (let ((map (make-sparse-keymap "package-name map"))
+          (maps (list
+                 ;; Mappings go here, e.g.:
+                 "RET" #'package-name-RET-command
+                 [remap search-forward] #'package-name-search-forward
+                 )))
+      (cl-loop for (key fn) on maps by #'cddr
+               do (progn
+                    (when (stringp key)
+                      (setq key (kbd key)))
+                    (define-key map key fn)))
+      map))
+
+  ;;;; Functions
+
+  ;;;;; Commands
+
+  ;;;###autoload
+  (defun package-name-command (args)
+    "Frobnicate the flange."
+    (interactive)
+    (package-name--something)
+    (bar))
+
+  ;;;;; Support
+
+  (defun package-name--something (args)
+    "This function helps frobnicate the flange."
+    (foo))
+
+  ;;;; Footer
+
+  (provide 'package-name)
+
+  ;;; package-name.el ends here
+#+END_SRC
+
+**** Readme
+
+You should always include a readme with your project.  Typically it will be include most of the commentary section.  Here's a template that goes with the package template above:
+
+#+BEGIN_SRC org
+  ,#+TITLE: package-name
+
+  ,#+PROPERTY: LOGGING nil
+
+  # Note: This readme works with the org-make-toc <https://github.com/alphapapa/org-make-toc> package, which automatically updates the table of contents.
+
+  [[https://melpa.org/#/package-name][file:https://melpa.org/packages/package-name-badge.svg]] [[https://stable.melpa.org/#/package-name][file:https://stable.melpa.org/packages/package-name-badge.svg]]
+
+  This is my package.  It is nice.  You should try it.
+
+  ,* Screenshots
+
+  This screenshot shows how to frobnicate the fripulator:
+
+  [[screenshot1.png]]
+
+  ,* Contents                                                         :noexport:
+  :PROPERTIES:
+  :TOC:      this
+  :END:
+    -  [[#installation][Installation]]
+    -  [[#usage][Usage]]
+    -  [[#changelog][Changelog]]
+    -  [[#credits][Credits]]
+    -  [[#development][Development]]
+    -  [[#license][License]]
+
+  ,* Installation
+  :PROPERTIES:
+  :TOC:      0
+  :END:
+
+  ,** MELPA
+
+  If you installed from MELPA, you're done.  Just run one of the commands below.
+
+  ,** Manual
+
+    Install these required packages:
+
+    + =foo=
+    + =bar=
+
+    Then put this file in your load-path, and put this in your init file:
+
+    ,#+BEGIN_SRC elisp
+  (require 'package-name)
+    ,#+END_SRC
+
+  ,* Usage
+  :PROPERTIES:
+  :TOC:      0
+  :END:
+
+    Run one of these commands:
+
+    + =package-name-command=: Frobnicate the flange.
+
+  ,** Tips
+
+  + You can customize settings in the =package-name= group.
+
+  ,* Changelog
+  :PROPERTIES:
+  :TOC:      0
+  :END:
+
+  ,** 1.1.0
+
+  ,*Additions*
+  +  Add command =package-name-debarnacle= to de-barnacle the hull.
+
+  ,*Changes*
+  + Command =package-name-anchor= now takes an argument, =weigh= or =let-go=.
+
+  ,*Internal*
+  +  Rewrote input parsing.
+  +  Factored out anchor-weighing.
+
+  ,** 1.0.1
+
+  ,*Fixes*
+  +  Ensure anchor is secure before returning from =package-name-anchor=.
+
+  ,** 1.0.0
+
+  Initial release.
+
+  ,* Credits
+
+    This package would not have been possible without the following packages: [[https://example.com/foo.el][foo]] which showed me how to bifurcate, and [[https://example.com/bar.el][bar]], which takes care of flanges.
+
+  ,* Development
+
+  Bug reports, feature requests, suggestions — /oh my/!
+
+  ,* License
+
+  GPLv3
+
+  # Local Variables:
+  # eval: (require 'org-make-toc)
+  # before-save-hook: org-make-toc
+  # org-export-with-properties: ()
+  # org-export-with-title: t
+  # End:
+
+#+END_SRC
+
+**** Version numbers
+
+Version numbers which are valid in Emacs are those accepted by the function ~version-to-list~, which uses the variables ~version-separator~ and ~version-regexp-alist~.  See their documentation for specific, up-to-date information.  ~version-to-list~'s documentation (as of Emacs 26.1) is reproduced here for convenience:
+
+#+BEGIN_EXAMPLE
+  The version syntax is given by the following EBNF:
+
+  VERSION ::= NUMBER ( SEPARATOR NUMBER )*.
+
+  NUMBER ::= (0|1|2|3|4|5|6|7|8|9)+.
+
+  SEPARATOR ::= ‘version-separator’ (which see)
+  | ‘version-regexp-alist’ (which see).
+
+  The NUMBER part is optional if SEPARATOR is a match for an element
+  in ‘version-regexp-alist’.
+
+  Examples of valid version syntax:
+
+  1.0pre2 1.0.7.5 22.8beta3 0.9alpha1 6.9.30Beta 2.4.snapshot .5
+
+  Examples of invalid version syntax:
+
+  1.0prepre2 1.0..7.5 22.8X3 alpha3.2
+
+  Examples of version conversion:
+
+  Version String Version as a List of Integers
+  ".5" (0 5)
+  "0.9 alpha" (0 9 -3)
+  "0.9AlphA1" (0 9 -3 1)
+  "0.9snapshot" (0 9 -4)
+  "1.0-git" (1 0 -4)
+  "1.0.7.5" (1 0 7 5)
+  "1.0.cvs" (1 0 -4)
+  "1.0PRE2" (1 0 -1 2)
+  "1.0pre2" (1 0 -1 2)
+  "22.8 Beta3" (22 8 -2 3)
+  "22.8beta3" (22 8 -2 3)
+#+END_EXAMPLE
+
+*** Libraries                                                   :libraries:
+:PROPERTIES:
+:TOC:      0
+:END:
+
+**** =lisp-mnt.el= (=lm=)                                           :built_in:
+
+This library includes functions helpful for working with and verifying the format of Emacs Lisp package files, including headers, commentary, etc.  It's easy to overlook and hard to re-discover this package because of its =lm= symbol prefix.  It's listed here because your editor keeps forgetting what it's called.
+
+*** Reference                                                   :reference:
+:PROPERTIES:
+:TOC:      1
+:END:
+
+**** Package headers and structure
+:PROPERTIES:
+:ID:       036e2a71-f392-4c9a-a524-c5354f291e2f
+:END:
+
+The [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Simple-Packages.html][Emacs manual]] gives this example (I've added the lexical-binding part).  Also see [[id:aacd55b6-a56f-4064-bf0d-25173ce83ef3][template]].
+
+#+BEGIN_EXAMPLE
+  ;;; superfrobnicator.el --- Frobnicate and bifurcate flanges  -*- lexical-binding: t; -*-
+
+  ;; Copyright (C) 2011 Free Software Foundation, Inc.
+
+  ;; Author: J. R. Hacker <jrh@example.com>
+  ;; Version: 1.3
+  ;; Package-Requires: ((flange "1.0"))
+  ;; Keywords: multimedia, frobnicate
+  ;; URL: http://example.com/jrhacker/superfrobnicate
+
+  ...
+
+  ;;; Commentary:
+
+  ;; This package provides a minor mode to frobnicate and/or
+  ;; bifurcate any flanges you desire. To activate it, just type
+  ...
+
+  ;;;###autoload
+  (define-minor-mode superfrobnicator-mode
+  ...
+#+END_EXAMPLE
+
+*** Tools                                                           :tools:
+:PROPERTIES:
+:TOC:      1
+:END:
+
+**** Package installation/management             :installation:management:
+
+***** [[https://github.com/Malabarba/paradox][paradox: modernizing Emacs' Package Menu. With package ratings, usage statistics, customizability, and more.]]
+:PROPERTIES:
+:ID:       2c31eae6-eeba-433f-bc26-9465d5aa8537
+:END:
+
+***** [[https://github.com/dimitri/el-get][el-get: Manage the external elisp bits and pieces upon which you depend!]]
+
+***** TODO [[https://github.com/raxod502/straight.el][straight.el: Next-generation, purely functional package manager for the Emacs hacker]] :needs_examples:
+:LOGBOOK:
+-  State "TODO"       from              [2018-07-29 Sun 13:11]
+:END:
+
+***** TODO [[https://github.com/jwiegley/use-package][use-package: A use-package declaration for simplifying your .emacs]] :needs_examples:
+:PROPERTIES:
+:ID:       540617fd-d4ff-47df-89da-6c48c8f27785
+:END:
+:LOGBOOK:
+-  State "TODO"       from              [2018-07-29 Sun 13:11]
+:END:
+
+Developed by the current maintainer of Emacs, himself, John Wiegley.
+
+** Pattern matching                         :destructuring:pattern_matching:
+:PROPERTIES:
+:TOC:      ignore-children
+:ID:       b699e1a1-e34c-4ce8-a5dd-41161d2a1cbf
+:END:
+
+*** Contents
+:PROPERTIES:
+:TOC:      siblings
+:END:
+      -  [[#articles][Articles]]
+      -  [[#libraries][Libraries]]
+      -  [[#tools][Tools]]
+
+*** Articles                                                     :articles:
+:PROPERTIES:
+:TOC:      0
+:END:
+
+**** [[http://www.wilfred.me.uk/blog/2017/03/19/pattern-matching-in-emacs-lisp/][Pattern Matching in Emacs Lisp – Wilfred Hughes::Blog]] :pcase:shadchen:cl:dash:
+:PROPERTIES:
+:archive.today: http://archive.today/J4DqY
+:END:
+
+#+BEGIN_QUOTE
+Pattern matching is invaluable in elisp. Lists are ubiquitous, and a small amount of pattern matching can often replace a ton of verbose list fiddling.
+
+Since this is Lisp, we have lots of choices! In this post, we'll compare [[https://www.gnu.org/software/emacs/manual/cl.html][cl.el]], [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Pattern-matching-case-statement.html][pcase.el]], [[https://github.com/magnars/dash.el][dash.el]], and [[https://github.com/VincentToups/shadchen-el][shadchen]], so you can choose the best fit for your project. We'll look at the most common use cases, and end with some recommendations.
+
+For the sake of this post, we'll consider both pattern matching and destructuring, as they're closely related concepts.
+#+END_QUOTE
+
+**** [[http://kitchingroup.cheme.cmu.edu/blog/2017/04/16/A-callable-plist-data-structure-for-Emacs/][A callable plist data structure for Emacs]]             :plists:macros:
+:PROPERTIES:
+:archive.today: http://archive.today/vmITX
+:ID:       9391ab92-5d51-4786-a3c5-4822ec500500
+:END:
+
+John Kitchin demonstrates some [[id:a58f65dc-d4a4-4a40-a573-a66a28f3619c][macros]] that make it easy to access plist values.
+
+*** Libraries                                                   :libraries:
+:PROPERTIES:
+:TOC:      0
+:END:
+
+**** [[https://github.com/magnars/dash.el][dash.el]] :dash:
+
+Dash is a powerful library, and one of its features is powerful destructuring with its ~-let~ macro, and several others that work the same way.
+
+**** [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Pattern-matching-case-statement.html][pcase]]                                                :built_in:pcase:
+
+~pcase~ is built-in to Emacs.  Its syntax can be confusing, but it is very powerful.
+
+***** Articles                                                 :articles:
+
+****** [[https://www.emacswiki.org/emacs/PatternMatching][EmacsWiki: Pattern Matching]]                  :examples:EmacsWiki:
+
+There are /lots/ of examples here.
+
+****** [[http://newartisans.com/2016/01/pattern-matching-with-pcase/][Emacs: Pattern Matching with pcase - Lost in Technopolis]]
+:PROPERTIES:
+:archive.today: http://archive.today/FAzd8
+:END:
+
+****** Nic Ferrier, [[http://nic.ferrier.me.uk/blog/2013_03/refactoring-elisp-polymorphically][Using Polymorphism as a Lisp refactoring tool]]
+:PROPERTIES:
+:archive.today: http://archive.today/0Y3Md
+:END:
+
+***** Examples                                                 :examples:
+
+****** TODO ~dash~
+
+[2018-07-27 Fri 23:29]  Dash has new abilities, including ~-setq~, and destructuring plists with implied variable names (i.e. just the keys can be specified, reducing repetition).
+
+****** =pcase-let=                                         :destructuring:
+
+This example shows the use of =pcase-let*= to destructure and bind a nested alist:
+
+#+BEGIN_SRC elisp :exports code
+  (let ((alphabets (a-list 'English (a-list 'first "a"
+                                            'second "b")
+                           'Greek (a-list 'first "α"
+                                          'second "β"))))
+    (pcase-let* (((map English) alphabets)
+                 ((map ('first letter) second) English))
+      (list letter second)))  ;; => ("a" "b")
+#+END_SRC
+
+**** [[https://github.com/VincentToups/shadchen-el][shadchen-el]]                                             :shadchen:el:
+
+A powerful, Racket-style pattern-matching library.
+
+*** Tools                                                           :tools:
+:PROPERTIES:
+:TOC:      0
+:END:
+
+**** let-alist                               :alists:macros:destructuring:
+:PROPERTIES:
+:ID:       f8f0755b-c23b-45ad-98da-780d4044676a
+:END:
+
+#+BEGIN_QUOTE
+let-alist is the best thing to happen to associative lists since the invention of the cons cell. This little macro lets you easily access the contents of an alist, concisely and efficiently, without having to specify them preemptively. It comes built-in with 25.1, and is also available on GNU Elpa for older Emacsen.
+#+END_QUOTE
+
+[[http://endlessparentheses.com/new-on-elpa-and-in-emacs-25-1-let-alist.html][Example]]:
+
+#+BEGIN_SRC elisp :exports code
+  (defun sx-question-list--print-info (question-data)
+    "DOC"
+    (let-alist question-data
+      (list
+       question-data
+       (vector
+        (int-to-string .score)
+        (int-to-string .answer_count)
+        .title " "
+        .owner.display_name
+        .last_activity_date sx-question-list-ago-string
+        " " .tags))))
+#+END_SRC
+
+***** Articles                                                 :articles:
+
+****** [[http://endlessparentheses.com/new-on-elpa-and-in-emacs-25-1-let-alist.html][New on Elpa and in Emacs 25.1: let-alist · Endless Parentheses]]
+:PROPERTIES:
+:archive.today: http://archive.today/2wNFm
+:END:
+
+Here Artur introduces the macro and gives examples.
+
+**** =with-dict=, =with-plist-vals=              :macros:plists:
+:PROPERTIES:
+:ID:       a58f65dc-d4a4-4a40-a573-a66a28f3619c
+:END:
+
+Courtesy of [[id:9391ab92-5d51-4786-a3c5-4822ec500500][John Kitchin]]:[fn:1:Copyright by John Kitchin, licensed under a Creative Commons Attribution-ShareAlike 4.0 International License.]
+
+#+BEGIN_SRC elisp :exports code
+  (defmacro with-dict (key-vals &rest body)
+    "A context-manager for a plist where each key is a callable
+  function that returns the value."
+    (declare (indent 1))
+    (let* ((g (if (symbolp key-vals)
+                  (symbol-value key-vals)
+                key-vals))
+           (keys (-slice g 0 nil 2)))
+      `(labels ,(loop for key in keys
+                      collect
+                      (list key '() `(plist-get ',g ,key)))
+         ,@body)))
+
+  ;; Used as:
+
+  (with-dict (:a 1 :b 'some-symbol :c 3)
+             (:b))
+
+  (let ((d '(:key1 1 :key2 some-other-symbol :key3 3)))
+    (with-dict d
+               (format "We got %s" (:key2))))
+#+END_SRC
+
+And:
+
+#+BEGIN_SRC elisp :exports code
+  (defmacro with-plist-vals (plist &rest body)
+    "Bind the values of a plist to variables with the name of the keys."
+    (declare (indent 1))
+    `(let ,(loop for key in (-slice plist 0 nil 2)
+                 for val in (-slice plist 1 nil 2)
+                 collect (list (intern
+                                (substring (symbol-name key) 1))
+                               val))
+       ,@body))
+
+  ;; Used like:
+
+  (with-plist-vals (:a 4 :b 6)
+                   (* 2 a))
+#+END_SRC
+
+** Profiling / Optimization                         :profiling:optimization:
+
+#+BEGIN_SRC elisp :exports none :eval never :tangle epdh.el
+;;;; Profiling / Optimization
+
+#+END_SRC
+
+*** Contents
+:PROPERTIES:
+:TOC:      siblings
+:END:
+      -  [[#articles][Articles]]
+      -  [[#macros][Macros]]
+        -  [[#bench][bench]]
+        -  [[#bench-multi-macros][bench-multi macros]]
+          -  [[#bench-multi-lexical][bench-multi-lexical]]
+          -  [[#bench-dynamic-vs-lexical-binding][bench-dynamic-vs-lexical-binding]]
+          -  [[#bench-multi-lets][bench-multi-lets]]
+        -  [[#elp-profile][elp-profile]]
+
+*** Articles                                                     :articles:
+:PROPERTIES:
+:TOC:      0
+:END:
+
+**** [[https://nullprogram.com/blog/2017/01/30/][How to Write Fast(er) Emacs Lisp « null program]]
+:PROPERTIES:
+:archive.today: http://archive.today/xe0Js
+:END:
+
+Chris Wellons explains five ways to write faster Emacs Lisp code.
+
+**** [[*%5B%5Bhttps://nullprogram.com/blog/2016/12/22/%5D%5BSome%20Performance%20Advantages%20of%20Lexical%20Scope%20%C2%AB%20null%20program%5D%5D][Some Performance Advantages of Lexical Scope « null program]] :lexical_binding:
+
+**** [[id:54fa2e85-066f-431e-9db3-8b1627fac4ca][What's in an Emacs Lambda « null program]]
+
+*** Macros                                                         :macros:
+
+**** =bench=
+:PROPERTIES:
+:ID:       89f94efd-fd6b-4fca-9a75-60790d7cafeb
+:END:
+
+From Phil Lord's [[http://phillord.github.io/m-buffer-el/#sec-5-1-2][m-buffer-el]]:
+
+#+BEGIN_SRC elisp :exports code :tangle epdh.el
+  ;;;###autoload
+  (cl-defmacro bench (&optional (times 100000) &rest body)
+    "Call `benchmark-run-compiled' on BODY with TIMES iterations, returning list suitable for Org source block evaluation.
+  Garbage is collected before calling `benchmark-run-compiled' to
+  avoid counting existing garbage which needs collection."
+    (declare (indent defun))
+    `(progn
+       (garbage-collect)
+       (list '("Total runtime" "# of GCs" "Total GC runtime")
+             'hline
+             (benchmark-run-compiled ,times
+               (progn
+                 ,@body)))))
+#+END_SRC
+
+Used like this:
+
+#+BEGIN_SRC elisp :exports both :eval never
+  (bench 1000000
+    (cons 'time (current-time)))
+#+END_SRC
+
+When called from an Org source block, it gives output like this:
+
+#+RESULTS:
+| Total runtime | # of GCs |   Total GC runtime |
+|---------------+----------+--------------------|
+|   1.657838266 |        3 | 1.4723854609999876 |
+
+**** ~bench-multi~ macros
+
+These macros make comparing multiple forms easy:
+
+#+BEGIN_SRC elisp :exports code :results silent :tangle epdh.el
+  ;;;###autoload
+  (cl-defmacro bench-multi (&key (times 1) forms ensure-equal raw)
+    "Return Org table as a list with benchmark results for FORMS.
+  Runs FORMS with `benchmark-run-compiled' for TIMES iterations.
+
+  When ENSURE-EQUAL is non-nil, the results of FORMS are compared,
+  and an error is raised if they aren't `equal'. If the results are
+  sequences, the difference between them is shown with
+  `seq-difference'.
+
+  When RAW is non-nil, the raw results from
+  `benchmark-run-compiled' are returned instead of an Org table
+  list.
+
+  If the first element of a form is a string, it's used as the
+  form's description in the bench-multi-results; otherwise, forms
+  are numbered from 0.
+
+  Before each form is run, `garbage-collect' is called."
+    ;; MAYBE: Since `bench-multi-lexical' byte-compiles the file, I'm not sure if
+    ;; `benchmark-run-compiled' is necessary over `benchmark-run', or if it matters.
+    (declare (indent defun))
+    (let*((keys (gensym "keys"))
+          (result-times (gensym "result-times"))
+          (header '(("Form" "x faster than next" "Total runtime" "# of GCs" "Total GC runtime")
+                    hline))
+          ;; Copy forms so that a subsequent call of the macro will get the original forms.
+          (forms (copy-list forms))
+          (descriptions (cl-loop for form in forms
+                                 for i from 0
+                                 collect (if (stringp (car form))
+                                             (prog1 (car form)
+                                               (setf (nth i forms) (cadr (nth i forms))))
+                                           i))))
+      `(unwind-protect
+           (progn
+             (defvar bench-multi-results nil)
+             (let* ((bench-multi-results (make-hash-table))
+                    (,result-times (sort (list ,@(cl-loop for form in forms
+                                                          for i from 0
+                                                          for description = (nth i descriptions)
+                                                          collect `(progn
+                                                                     (garbage-collect)
+                                                                     (cons ,description
+                                                                           (benchmark-run-compiled ,times
+                                                                             ,(if ensure-equal
+                                                                                  `(puthash ,description ,form bench-multi-results)
+                                                                                form))))))
+                                         (lambda (a b)
+                                           (< (second a) (second b))))))
+               ,(when ensure-equal
+                  `(cl-loop with ,keys = (hash-table-keys bench-multi-results)
+                            for i from 0 to (- (length ,keys) 2)
+                            unless (equal (gethash (nth i ,keys) bench-multi-results)
+                                          (gethash (nth (1+ i) ,keys) bench-multi-results))
+                            do (if (sequencep (gethash (car (hash-table-keys bench-multi-results)) bench-multi-results))
+                                   (let* ((k1) (k2)
+                                          ;; If the difference in one order is nil, try in other order.
+                                          (difference (or (setq k1 (nth i ,keys)
+                                                                k2 (nth (1+ i) ,keys)
+                                                                difference (seq-difference (gethash k1 bench-multi-results)
+                                                                                           (gethash k2 bench-multi-results)))
+                                                          (setq k1 (nth (1+ i) ,keys)
+                                                                k2 (nth i ,keys)
+                                                                difference (seq-difference (gethash k1 bench-multi-results)
+                                                                                           (gethash k2 bench-multi-results))))))
+                                     (user-error "Forms' bench-multi-results not equal: difference (%s - %s): %S"
+                                                 k1 k2 difference))
+                                 ;; Not a sequence
+                                 (user-error "Forms' bench-multi-results not equal: %s:%S %s:%S"
+                                             (nth i ,keys) (nth (1+ i) ,keys)
+                                             (gethash (nth i ,keys) bench-multi-results)
+                                             (gethash (nth (1+ i) ,keys) bench-multi-results)))))
+               ;; Add factors to times and return table
+               (if ,raw
+                   ,result-times
+                 (append ',header
+                         (bench-multi-process-results ,result-times)))))
+         (unintern 'bench-multi-results nil))))
+
+  (defun bench-multi-process-results (results)
+    "Return sorted RESULTS with factors added."
+    (setq results (sort results (-on #'< #'second)))
+    (cl-loop with length = (length results)
+             for i from 0 to (1- length)
+             for description = (car (nth i results))
+             for factor = (if (< i (1- length))
+                              (format "%.2f" (/ (second (nth (1+ i) results))
+                                                (second (nth i results))))
+                            "slowest")
+             collect (append (list description factor)
+                             (list (format "%.6f" (second (nth i results)))
+                                   (third (nth i results))
+                                   (if (> (fourth (nth i results)) 0)
+                                       (format "%.6f" (fourth (nth i results)))
+                                     0)))))
+#+END_SRC
+
+Used like:
+
+#+BEGIN_SRC elisp :exports both :cache yes
+  (bench-multi
+    :forms (("org-map-entries" (sort (org-map-entries (lambda ()
+                                                        (nth 4 (org-heading-components)))
+                                                      "/+MAYBE" 'agenda)
+                                     #'string<))
+            ("regexp" (sort (-flatten
+                             (-non-nil
+                              (mapcar (lambda (file)
+                                        (let ((case-fold-search t))
+                                          (with-current-buffer (find-buffer-visiting file)
+                                            (org-with-wide-buffer
+                                             (goto-char (point-min))
+                                             (cl-loop with regexp = (format org-heading-keyword-regexp-format "MAYBE")
+                                                      while (re-search-forward regexp nil t)
+                                                      collect (nth 4 (org-heading-components)))))))
+                                      (org-agenda-files))))
+                            #'string<))))
+#+END_SRC
+
+#+RESULTS[3316dc4375a3b162e32790bb7e72d715d7f756fb]:
+| Form            | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|-----------------+--------------------+---------------+----------+------------------|
+| regexp          | 61.97              |      0.042440 |        0 |                0 |
+| org-map-entries | slowest            |      2.630019 |        0 |                0 |
+
+It can also help catch bugs by ensuring that each form returns the same results.  For example, the benchmark above contains a subtle bug: because ~case-fold-search~ in the =regexp= form is non-nil, the regexp is compared case-insensitively, so it matches Org headings which start with =Maybe= rather than only ones which start with =MAYBE=.  Using the ~:ensure-equal t~ argument to ~bench-multi~ compares the results and raises an error showing the difference between the two sequences the forms evaluate to:
+
+#+BEGIN_SRC elisp :exports code :results silent
+  (bench-multi :ensure-equal t
+    :forms (("org-map-entries" (sort (org-map-entries (lambda ()
+                                                        (nth 4 (org-heading-components)))
+                                                      "/+MAYBE" 'agenda)
+                                     #'string<))
+            ("regexp" (sort (-flatten
+                             (-non-nil
+                              (mapcar (lambda (file)
+                                        (let ((case-fold-search t))
+                                          (with-current-buffer (find-buffer-visiting file)
+                                            (org-with-wide-buffer
+                                             (goto-char (point-min))
+                                             (cl-loop with regexp = (format org-heading-keyword-regexp-format "MAYBE")
+                                                      while (re-search-forward regexp nil t)
+                                                      collect (nth 4 (org-heading-components)))))))
+                                      (org-agenda-files))))
+                            #'string<))))
+#+END_SRC
+
+: user-error: Forms’ results not equal: difference (regexp - org-map-entries): ("Maybe this is not the case?")
+
+Fixing the error, by setting ~case-fold-search~ to ~nil~, not only makes the forms give the same result but, in this case, doubles the performance of the faster form:
+
+#+BEGIN_SRC elisp :exports both :cache yes
+  (bench-multi :ensure-equal t
+    :forms (("org-map-entries" (sort (org-map-entries (lambda ()
+                                                        (nth 4 (org-heading-components)))
+                                                      "/+MAYBE" 'agenda)
+                                     #'string<))
+            ("regexp" (sort (-flatten
+                             (-non-nil
+                              (mapcar (lambda (file)
+                                        (let ((case-fold-search nil))
+                                          (with-current-buffer (find-buffer-visiting file)
+                                            (org-with-wide-buffer
+                                             (goto-char (point-min))
+                                             (cl-loop with regexp = (format org-heading-keyword-regexp-format "MAYBE")
+                                                      while (re-search-forward regexp nil t)
+                                                      collect (nth 4 (org-heading-components)))))))
+                                      (org-agenda-files))))
+                            #'string<))))
+#+END_SRC
+
+#+RESULTS[773b94ff27f73dcfcb694429054710a581b7bec5]:
+| Form            | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|-----------------+--------------------+---------------+----------+------------------|
+| regexp          | 134.09             |      0.019550 |        0 |                0 |
+| org-map-entries | slowest            |      2.621377 |        0 |                0 |
+
+So this macro showed which code is faster and helped catch a subtle bug.
+
+***** ~bench-multi-lexical~
+
+To evaluate forms with lexical binding enabled, use this macro:
+
+#+BEGIN_SRC elisp :exports code :tangle epdh.el
+  ;;;###autoload
+  (cl-defmacro bench-multi-lexical (&key (times 1) forms ensure-equal raw)
+    "Return Org table as a list with benchmark results for FORMS.
+  Runs FORMS from a byte-compiled temp file with `lexical-binding'
+  enabled, using `bench-multi', which see.
+
+  Afterward, the temp file is deleted and the function used to run
+  the benchmark is uninterned."
+    (declare (indent defun))
+    `(let* ((temp-file (concat (make-temp-file "bench-multi-lexical-") ".el"))
+            (fn (gensym "bench-multi-lexical-run-")))
+       (with-temp-file temp-file
+         (insert ";; -*- lexical-binding: t; -*-" "\n\n"
+                 "(defvar bench-multi-results)" "\n\n"
+                 (format "(defun %s () (bench-multi :times %d :ensure-equal %s :raw %s :forms %S))"
+                         fn ,times ,ensure-equal ,raw ',forms)))
+       (unwind-protect
+           (if (byte-compile-file temp-file 'load)
+               (funcall (intern (symbol-name fn)))
+             (user-error "Error byte-compiling and loading temp file"))
+         (delete-file temp-file)
+         (unintern (symbol-name fn) nil))))
+#+END_SRC
+
+Used just like ~bench-multi~:
+
+#+BEGIN_SRC elisp :exports both :cache yes
+  (bench-multi-lexical :ensure-equal t
+    :forms (("org-map-entries" (sort (org-map-entries (lambda ()
+                                                        (nth 4 (org-heading-components)))
+                                                      "/+MAYBE" 'agenda)
+                                     #'string<))
+            ("regexp" (sort (-flatten
+                             (-non-nil
+                              (mapcar (lambda (file)
+                                        (let ((case-fold-search nil))
+                                          (with-current-buffer (find-buffer-visiting file)
+                                            (org-with-wide-buffer
+                                             (goto-char (point-min))
+                                             (cl-loop with regexp = (format org-heading-keyword-regexp-format "MAYBE")
+                                                      while (re-search-forward regexp nil t)
+                                                      collect (nth 4 (org-heading-components)))))))
+                                      (org-agenda-files))))
+                            #'string<))))
+#+END_SRC
+
+#+RESULTS[a8ffc10fa4e21eb632122657312040f139b33204]:
+| Form            | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|-----------------+--------------------+---------------+----------+------------------|
+| regexp          | 134.26             |      0.019640 |        0 |                0 |
+| org-map-entries | slowest            |      2.636943 |        0 |                0 |
+
+This shows that lexical-binding doesn't make much difference in this example.  But in another example, it does:
+
+#+BEGIN_SRC elisp :exports both :cache yes
+  (bench-multi :times 1000 :ensure-equal t
+    :forms (("buffer-local-value" (--filter (equal 'magit-status-mode (buffer-local-value 'major-mode it))
+                                            (buffer-list)))
+            ("with-current-buffer" (--filter (equal 'magit-status-mode (with-current-buffer it
+                                                                         major-mode))
+                                             (buffer-list)))))
+#+END_SRC
+
+#+RESULTS[5ef620a1a1ab52900312e3adb52dd2e6a39dd9b2]:
+| Form                | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|---------------------+--------------------+---------------+----------+------------------|
+| buffer-local-value  | 69.64              |      0.013255 |        0 |                0 |
+| with-current-buffer | slowest            |      0.923159 |        0 |                0 |
+
+#+BEGIN_SRC elisp :exports both :cache yes
+  (bench-multi-lexical :times 1000 :ensure-equal t
+    :forms (("buffer-local-value" (--filter (equal 'magit-status-mode (buffer-local-value 'major-mode it))
+                                            (buffer-list)))
+            ("with-current-buffer" (--filter (equal 'magit-status-mode (with-current-buffer it
+                                                                         major-mode))
+                                             (buffer-list)))))
+#+END_SRC
+
+#+RESULTS[aa64952f5203400ddb1e700814a460fe81f9d2e6]:
+| Form                | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|---------------------+--------------------+---------------+----------+------------------|
+| buffer-local-value  | 86.98              |      0.010512 |        0 |                0 |
+| with-current-buffer | slowest            |      0.914274 |        0 |                0 |
+
+The ~buffer-local-value~ form improved by about 24% when using lexical binding.
+
+***** ~bench-dynamic-vs-lexical-binding~
+
+This macro compares dynamic and lexical binding.
+
+#+BEGIN_SRC elisp :exports code :tangle epdh.el
+  ;;;###autoload
+  (cl-defmacro bench-dynamic-vs-lexical-binding (&key (times 1) forms ensure-equal)
+    "Benchmark FORMS with both dynamic and lexical binding.
+  Calls `bench-multi' and `bench-multi-lexical', which see."
+    (declare (indent defun))
+    `(let ((dynamic (bench-multi :times ,times :ensure-equal ,ensure-equal :raw t
+                      :forms ,forms))
+           (lexical (bench-multi-lexical :times ,times :ensure-equal ,ensure-equal :raw t
+                      :forms ,forms))
+           (header '("Form" "x faster than next" "Total runtime" "# of GCs" "Total GC runtime")))
+       (cl-loop for result in-ref dynamic
+                do (setf (car result) (format "Dynamic: %s" (car result))))
+       (cl-loop for result in-ref lexical
+                do (setf (car result) (format "Lexical: %s" (car result))))
+       (append (list header)
+               (list 'hline)
+               (bench-multi-process-results (append dynamic lexical)))))
+#+END_SRC
+
+Example:
+
+#+BEGIN_SRC elisp :exports both :cache yes
+  (bench-dynamic-vs-lexical-binding :times 1000 :ensure-equal t
+    :forms (("buffer-local-value" (--filter (equal 'magit-status-mode (buffer-local-value 'major-mode it))
+                                            (buffer-list)))
+            ("with-current-buffer" (--filter (equal 'magit-status-mode (with-current-buffer it
+                                                                         major-mode))
+                                             (buffer-list)))))
+#+END_SRC
+
+#+RESULTS[73cc92a5949dd2d48f029cab9557eb6132bdf1cf]:
+| Form                         | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|------------------------------+--------------------+---------------+----------+------------------|
+| Lexical: buffer-local-value  |               1.29 |      0.011170 |        0 |                0 |
+| Dynamic: buffer-local-value  |              67.10 |      0.014407 |        0 |                0 |
+| Lexical: with-current-buffer |               1.01 |      0.966651 |        0 |                0 |
+| Dynamic: with-current-buffer |            slowest |      0.974830 |        0 |                0 |
+
+***** ~bench-multi-lets~
+
+This macro benchmarks multiple forms in multiple environments, which is helpful for testing code that behaves differently depending on global variables.
+
+#+BEGIN_SRC elisp :exports code :results silent :tangle epdh.el
+  ;;;###autoload
+  (cl-defmacro bench-multi-lets (&key (times 1) lets forms ensure-equal)
+    "Benchmark FORMS in each of lexical environments defined in LETS.
+  LETS is a list of (\"NAME\" BINDING-FORM) forms.
+
+  FORMS is a list of (\"NAME\" FORM) forms.
+
+  Calls `bench-multi-lexical', which see."
+    (declare (indent defun))
+    (let ((benchmarks (cl-loop for (let-name let) in lets
+                               collect (list 'list let-name
+                                             `(let ,let
+                                                (bench-multi-lexical :times ,times :ensure-equal ,ensure-equal :raw t
+                                                  :forms ,forms))))))
+      `(let* ((results (list ,@benchmarks))
+              (header '("Form" "x faster than next" "Total runtime" "# of GCs" "Total GC runtime"))
+              (results (cl-loop for (let-name let) in results
+                                append (cl-loop for result in-ref let
+                                                do (setf (car result) (format "%s: %s" let-name (car result)))
+                                                collect result))))
+         (append (list header)
+                 (list 'hline)
+                 (bench-multi-process-results results)))))
+#+END_SRC
+
+Used like:
+
+#+BEGIN_SRC elisp :exports both :cache yes
+  (bench-multi-lets :times 100000 :ensure-equal t
+    :lets (("1" ((var "1")))
+           ("12345" ((var "12345")))
+           ("1234567890" ((var "1234567890"))))
+    :forms (("concat" (concat "VAR: " var))
+            ("format" (format "VAR: %s" var))))
+#+END_SRC
+
+#+RESULTS[1e38aeddf90e38a2d2e1cf00aa77f13e7da51cb3]:
+| Form               | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|--------------------+--------------------+---------------+----------+------------------|
+| 1: concat          |               1.03 |      0.023708 |        0 |                0 |
+| 12345: concat      |               1.07 |      0.024533 |        0 |                0 |
+| 1234567890: concat |               1.28 |      0.026210 |        0 |                0 |
+| 1: format          |               1.31 |      0.033463 |        0 |                0 |
+| 12345: format      |               1.21 |      0.043897 |        0 |                0 |
+| 1234567890: format |            slowest |      0.053263 |        0 |                0 |
+
+**** =elp-profile=
+:PROPERTIES:
+:ID:       fd3fdece-0342-441c-8540-5a5c463890a5
+:END:
+
+Call this macro from an Org source block and you'll get a results block showing which 20 functions were called the most times, how long they took to run, etc.  =prefixes= should be a list of symbols matching the prefixes of the functions you want to instrument.
+
+#+BEGIN_SRC elisp :exports both :eval no-export :tangle epdh.el
+  ;;;###autoload
+  (defmacro elp-profile (times prefixes &rest body)
+    (declare (indent defun))
+    `(let (output)
+       (dolist (prefix ,prefixes)
+         (elp-instrument-package (symbol-name prefix)))
+       (dotimes (x ,times)
+         ,@body)
+       (elp-results)
+       (elp-restore-all)
+       (point-min)
+       (forward-line 20)
+       (delete-region (point) (point-max))
+       (setq output (buffer-substring-no-properties (point-min) (point-max)))
+       (kill-buffer)
+       (delete-window)
+       (let ((rows (s-lines output)))
+         (append (list (list "Function" "Times called" "Total time" "Average time")
+                       'hline)
+                 (cl-loop for row in rows
+                          collect (s-split (rx (1+ space)) row 'omit-nulls))))))
+#+END_SRC
+
+#+BEGIN_SRC elisp :exports both :eval no-export
+  ;; Use like this:
+  (elp-profile 10 '(map search goto-char car append)
+    (goto-char (point-min))
+    (search-forward "something"))
+#+END_SRC
+
+This gives a table like:
+
+#+RESULTS:
+| Function       | Times called |   Total time | Average time |
+|----------------+--------------+--------------+--------------|
+| mapcar         |           30 | 0.0036004130 | 0.0001200137 |
+| search-forward |           10 | 2.089...e-05 | 2.089...e-06 |
+| goto-char      |           10 |    6.926e-06 |    6.926e-07 |
+| car            |           13 | 3.956...e-06 | 3.043...e-07 |
+| append         |            1 |     5.96e-07 |     5.96e-07 |
+| mapatoms       |            1 |            0 |          0.0 |
+
+** Refactoring                                                 :refactoring:
+
+*** Tools                                                           :tools:
+
+**** [[https://github.com/Wilfred/emacs-refactor][emacs-refactor: language-specific refactoring]]
+:PROPERTIES:
+:ID:       d329f03e-ed1e-4205-a232-6eee16717795
+:END:
+
+#+BEGIN_QUOTE
+Emacs Refactor (EMR) is a framework for providing language-specific refactoring in Emacs. It includes refactoring commands for a variety of languages, including elisp itself!
+#+END_QUOTE
+
+** Regular expressions                                 :regular_expressions:
+
+*** Contents
+:PROPERTIES:
+:TOC:      siblings
+:END:
+      -  [[#articles][Articles]]
+      -  [[#libraries][Libraries]]
+      -  [[#tools][Tools]]
+
+*** Articles                                                     :articles:
+:PROPERTIES:
+:TOC:      0
+:END:
+
+**** TODO [[http://francismurillo.github.io/2017-03-30-Exploring-Emacs-rx-Macro/][Exploring Emacs rx Macro]]                                    :rx:
+:PROPERTIES:
+:archive.today: http://archive.today/xPWJP
+:END:
+
+*** Libraries                                                   :libraries:
+:PROPERTIES:
+:TOC:  0
+:END:
+
+**** [[https://elpa.gnu.org/packages/lex.html][lex]]
+
+=lex= is a regular expression matching engine with syntax similar to =rx=.  It appears to be more implemented in elisp than standard Emacs regexp tools, so it may be slower, but its additional capabilities may be useful.
+
+#+BEGIN_QUOTE
+Format of regexps is the same as used for `rx' and `sregex'.  Additions:
+
+-  =(ere RE)= specify regexps using the ERE syntax.
+-  =(inter REs...)= (aka =&=) make a regexp that only matches if all its branches match.  E.g. =(inter (ere ".*a.*") (ere ".*b.*"))= match any string that contain both an =a= and a =b=, in any order.
+-  =(case-fold REs...)= and =(case-sensitive REs...)= make a regexp that is case sensitive or not, regardless of case-fold-search.
+#+END_QUOTE
+
+**** TODO [[https://github.com/joddie/pcre2el][pcre2el: Convert between PCRE, Emacs and rx regexp syntax]]
+
+*** Tools                                                           :tools:
+:PROPERTIES:
+:TOC: 0
+:END:
+
+**** [[https://github.com/immerrr/ample-regexps.el][ample-regexps.el: Compose and reuse regular expressions with ease]]
+
+=ample-regexps= complements the built-in ~rx~ macro by flexibly defining regular expressions with reusable parts.  In the following example, the ~define-arx~ macro defines three things:
+
++  A macro ~url-rx~, which expands to a regular expression string at compile time
++  A function ~url-rx-to-string~, which can be used at runtime
++  A variable ~url-rx-constituents~, containing form definitions to use
+
+#+BEGIN_SRC elisp :exports code
+  (define-arx url-rx
+    '((http (seq bos (group "http") "://") )
+      (https (seq bos (group "https") "://") )
+      (https? (seq bos (group "http" (optional "s")) "://") )
+      (protocol (seq bos (group (1+ (not (any ":")))) "://"))
+      (host (group (1+ (not (any "/")))))
+      (path (group "/" (1+ (not (any "?")))))
+      (query (seq "?" (group (1+ (not (any "#"))))))
+      (fragment (seq "#" (group (1+ anything))))))
+#+END_SRC
+
+The ~url-rx~ macro can then be used to test and select parts of URLs:
+
+#+BEGIN_SRC elisp :exports code
+  ;; Accept HTTP or HTTPS
+  (let ((url "http://server/path?query#fragment"))
+    (when (string-match (url-rx https? host path (optional query) (optional fragment)) url)
+      (list (match-string 0 url)
+            (match-string 1 url)
+            (match-string 2 url)
+            (match-string 3 url)
+            (match-string 4 url)
+            (match-string 5 url)))) ;=> ("http://server/path?query#fragment" "http" "server" "/path" "query" "fragment")
+
+  ;; Only accept HTTPS, not plain HTTP
+  (let ((url "http://server/path?query#fragment"))
+    (when (string-match (url-rx https host path (optional query) (optional fragment)) url)
+      (list (match-string 0 url)))) ;=> nil
+
+  ;; Accept any protocol, not just HTTP
+  (let ((url "ftp://server/path"))
+    (when (string-match (url-rx protocol host path (optional query) (optional fragment)) url)
+      (list (match-string 0 url)
+            (match-string 1 url)
+            (match-string 2 url)
+            (match-string 3 url)
+            (match-string 4 url)
+            (match-string 5 url)))) ;=> ("ftp://server/path" "ftp" "server" "/path" nil nil)
+#+END_SRC
+
+This example shows the use of a function to expand a list of strings into a sequence:
+
+#+BEGIN_SRC elisp :exports code
+  (define-arx cond-assignment-rx
+    '((alpha_ (regexp "[[:alpha:]_]"))
+      (alnum_ (regexp "[[:alnum:]_]"))
+      (ws (* blank))
+      (sym (:func (lambda (_form &rest args)
+                    `(seq symbol-start (or ,@args) symbol-end))))
+      (cond-keyword (sym "if" "elif" "while"))
+      (id (sym (+ alpha_) (* alnum_))))) ;; -> cond-assignment-rx
+
+  (cond-assignment-rx cond-keyword ws id ":" id ws "=" ws id) ;; -> "\\_<\\(?:elif\\|if\\|while\\)\\_>[[:blank:]]*\\_<\\(?:[[:alpha:]_]+\\|[[:alnum:]_]*\\)\\_>:\\_<\\(?:[[:alpha:]_]+\\|[[:alnum:]_]*\\)\\_>[[:blank:]]*=[[:blank:]]*\\_<\\(?:[[:alpha:]_]+\\|[[:alnum:]_]*\\)\\_>"
+#+END_SRC
+
+** Strings                                                         :strings:
+
+*** Contents
+:PROPERTIES:
+:TOC:      siblings
+:END:
+      -  [[#libraries][Libraries]]
+      -  [[#tools][Tools]]
+        -  [[#format-macro][format$ macro]]
+
+*** Libraries                                                   :libraries:
+:PROPERTIES:
+:TOC: 0
+:END:
+
+**** [[https://github.com/magnars/s.el][s.el: The long lost Emacs string manipulation library]]
+
+*** Tools                                                           :tools:
+:PROPERTIES:
+:TOC: 1
+:END:
+
+**** ~format$~ macro                                  :macros:interpolation:
+
+The ~format$~ macro (currently hosted [[https://github.com/alphapapa/elexandria/blob/master/elexandria.el][here]]) allows for easy string interpolation, including optional ~%~ sequences as used by ~format~.  For example, this:
+
+#+BEGIN_SRC elisp :exports code
+  (format$ "Amount: ${amount% .02f} $name %s" date)
+#+END_SRC
+
+Expands to:
+
+#+BEGIN_SRC elisp :exports code
+  (format "Amount: % .02f %s %s" amount name date)
+#+END_SRC
+
+Since this happens at macro expansion time rather than at runtime, there is no performance penalty, in contrast to using ~s-lex-format~.
+
+** Testing                                                         :testing:
+:PROPERTIES:
+:TOC:      0
+:END:
+
+*** Libraries                                                   :libraries:
+:PROPERTIES:
+:TOC: 0
+:END:
+
+**** [[https://github.com/phillord/assess][assess: Test support functions]]
+
+#+BEGIN_QUOTE
+Assess provides additional support for testing Emacs packages.
+
+It provides:
+
+- a set of predicates for comparing strings, buffers and file contents.
+- explainer functions for all predicates giving useful output
+- macros for creating many temporary buffers at once, and for restoring the buffer list.
+- methods for testing indentation, by comparision or "roundtripping".
+- methods for testing fontification.
+
+Assess aims to be a stateless as possible, leaving Emacs unchanged whether the tests succeed or fail, with respect to buffers, open files and so on; this helps to keep tests independent from each other.
+#+END_QUOTE
+
+**** [[https://github.com/DarwinAwardWinner/with-simulated-input][with-simulated-input: Test interactive functions non-interactively]]
+
+#+BEGIN_QUOTE
+This package provides an Emacs Lisp macro, ~with-simulated-input~, which evaluates one or more forms while simulating a sequence of input events for those forms to read. The result is the same as if you had evaluated the forms and then manually typed in the same input. This macro is useful for non-interactive testing of normally interactive commands and functions, such as ~completing-read~.
+
+Some interactive functions rely on idle timers to do their work, so you might need a way to simulate idleness. For that, there is the ~wsi-simulate-idle-time~ function. You can insert calls to this function in between input strings.
+#+END_QUOTE
+
+*** Tools                                                    :tools:
+:PROPERTIES:
+:TOC: 0
+:END:
+
+**** [[https://github.com/jorgenschaefer/emacs-buttercup][buttercup: Behavior-Driven Emacs Lisp Testing]]
+:PROPERTIES:
+:ID:       108f5eb6-7307-4d4b-aaf1-dd2a8bb65a58
+:END:
+
+#+BEGIN_QUOTE
+Buttercup is a behavior-driven development framework for testing Emacs Lisp code. It allows to group related tests so they can share common set-up and tear-down code, and allows the programmer to “spy” on functions to ensure they are called with the right arguments during testing.
+
+The framework is heavily inspired by Jasmine.
+#+END_QUOTE
+
+**** [[https://github.com/cask/cask][cask: Project management tool for Emacs]]
+
+#+BEGIN_QUOTE
+Cask is a project management tool for Emacs that helps automate the package development cycle; development, dependencies, testing, building, packaging and more.
+#+END_QUOTE
+
+**** [[https://github.com/ecukes/ecukes][ecukes: Cucumber for Emacs]]
+:PROPERTIES:
+:ID:       f0cdf4dd-38ff-41a1-a4c1-8f7677940863
+:END:
+
+#+BEGIN_QUOTE
+There are plenty of unit/regression testing tools for Emacs, and even some for functional testing. What Emacs is missing though is a really good testing framework for integration testing. This is where Ecukes comes in.
+
+Cucumber is a great integration testing tool, used mostly for testing web applications. Ecukes is Cucumber for Emacs. No, it's not a major mode to edit feature files. It is a package that makes it possible to write Cucumber like tests for your Emacs packages.
+#+END_QUOTE
+
+**** [[https://www.gnu.org/software/emacs/manual/html_node/ert/][Emacs Lisp Regression Testing]] (ERT)                        :built_in:
+:PROPERTIES:
+:ID:       386b23bd-5254-457f-9ba1-ca5cbf87fed3
+:END:
+
+This is the standard, built-in Emacs testing library, used by core code and third-party packages alike.
+
+**** [[https://github.com/vermiculus/emake.el][emake.el: Test Elisp without the hoops]]
+
+#+BEGIN_QUOTE
+Test Elisp with services like Travis CI without the fuss of Cask – just you, your project, and (Emacs-)Make.
+
+Things EMake does:
+
++ parses, installs, and runs tests for your package
++ provides all the power of Elisp to extend its capabilities on-demand
+
+Things EMake will never do (or ‘reasons you may still need Cask’):
+
++ manage your development environment or provide tools to do so
++ provide ’bundler-like’ exec abilities (this includes Cask’s emacs and eval commands)
+#+END_QUOTE
+
+**** [[https://gitlab.petton.fr/DamienCassou/makel/][makel: A makefile to facilitate checking Emacs packages]]
+
+#+BEGIN_QUOTE
+makel is a project consisting of a Makefile (=makel.mk=) that Emacs package authors can use to facilitate quality checking (linting and tests). The Makefile can be used both locally on the developer machine and remotely on a continuous integration machine.
+#+END_QUOTE
+
+**** [[https://github.com/alphapapa/makem.sh][makem.sh: Makefile-like script for building and testing packages]]
+
+#+BEGIN_QUOTE
+=makem.sh= is a script to help build and test Emacs Lisp packages (not Emacs itself). It aims to make linting and testing as simple as possible. Source files and test files are discovered automatically from the project’s Git repo. Output is simple: by default, there is no output unless errors occur. With increasing verbosity levels (with =-v= or =-vv= options), more detail gives positive feedback. Output is colored by default to make reading easy.
+#+END_QUOTE
+
+** User interface                                                       :UI:
+
+*** Libraries                                                   :libraries:
+
+**** [[https://github.com/alezost/bui.el][bui: Buffer interface library]]
+
+#+BEGIN_QUOTE
+BUI (Buffer User Interface) is an Emacs library that can be used to make user interfaces to display some kind of entries (like packages, buffers, functions, etc.).
+
+The intention of BUI is to be a high-level library which is convenient to be used both by:
+
+-  package makers, as there is no need to bother about implementing routine details and usual features (like buffer history, filtering displayed entries, etc.);
+-  users, as it provides familiar and intuitive interfaces with usual keys (for moving by lines, marking, sorting, switching between buttons); and what is also important, the defined interfaces are highly configurable through various generated variables. A summary of available key bindings can be displayed by pressing h.
+
+*Usage*
+
+BUI provides means to display entries in 2 types of buffers:
+
+-  =list=: it is based on =tabulated-list-mode=, thus it looks similar to a list of Emacs packages (=M-x list-packages=);
+-  =info=: it can be used to display more verbose info, like various buttons, text and other stuff related to the displayed entry (or entries).
+
+In short, you define how a =list= / =info= interface looks like (using =bui-define-interface= macro), and then you can make some user commands that will display entries (using =bui-get-display-entries= and similar functions).
+#+END_QUOTE
+
+**** [[https://github.com/kiwanami/emacs-calfw][calfw: Calendar framework]]
+
+#+BEGIN_QUOTE
+This program displays a calendar view in the Emacs buffer.
+#+END_QUOTE
+
+It is also usable as a library to display items on a calendar.
+
+**** [[https://github.com/kiwanami/emacs-ctable][ctable: Table Component]]
+
+#+BEGIN_QUOTE
+ctable.el is a table component for Emacs Lisp.  Emacs Lisp programs can display a nice table view from an abstract data model.  The many emacs programs have the code for displaying table views, such as dired, list-process, buffer-list and so on.  So, ctable.el would provide functions and a table framework for the table views.
+#+END_QUOTE
+
+**** Emacs's Widget for Object Collections (=ewoc=)               :built_in:
+
+#+BEGIN_QUOTE
+The Ewoc package constructs buffer text that represents a structure of Lisp objects, and updates the text to follow changes in that structure. This is like the “view” component in the “model–view–controller” design paradigm. Ewoc means “Emacs's Widget for Object Collections”.
+
+An ewoc is a structure that organizes information required to construct buffer text that represents certain Lisp data. The buffer text of the ewoc has three parts, in order: first, fixed header text; next, textual descriptions of a series of data elements (Lisp objects that you specify); and last, fixed footer text.
+#+END_QUOTE
+
++ [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Abstract-Display.html][Manual]]
+
+**** [[https://github.com/abo-abo/hydra][hydra]]                                                   :key_binding:
+
+#+BEGIN_QUOTE
+This is a package for GNU Emacs that can be used to tie related commands into a family of short bindings with a common prefix - a Hydra.
+#+END_QUOTE
+
+**** [[https://gitlab.petton.fr/DamienCassou/navigel/][navigel]]
+
+#+BEGIN_QUOTE
+The navigel package is a library that makes it simpler for Emacs Lisp developers to define user-interfaces based on tablists (also known as tabulated-lists).  Overriding a few (CL) methods and calling =navigel-open= is all that’s required to get a nice UI to navigate your domain objects (files, music library, database, etc.).
+#+END_QUOTE
+
+**** =tabulated-list-mode=                                        :built_in:
+
+#+BEGIN_QUOTE
+Tabulated List mode is a major mode for displaying tabulated data, i.e., data consisting of entries, each entry occupying one row of text with its contents divided into columns. Tabulated List mode provides facilities for pretty-printing rows and columns, and sorting the rows according to the values in each column.
+#+END_QUOTE
+
++ [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Tabulated-List-Mode.html][Manual]]
+
+**** [[https://github.com/magit/transient][Transient]]
+
+The library that powers Magit's command/option UI.
+
+#+BEGIN_QUOTE
+Taking inspiration from prefix keys and prefix arguments, Transient implements a similar abstraction involving a prefix command, infix arguments and suffix commands.
+#+END_QUOTE
+
+**** [[https://github.com/ebpa/tui.el][tui: An experimental text-based UI framework modeled after React]]
+
+#+BEGIN_QUOTE
+This is an experiment in building purely text-based user interfaces (TUI’s). The ultimate goal is to explore new paradigms for user interface design and development using Emacs. To this end, tui.el implements an API based on the popular React JavaScript framework in order to reduce the demands involved with designing and building complex text-based UI’s.
+This is all currently experimental! Expect things to change as I get feedback about what works, what does not!
+#+END_QUOTE
+
+**** =widget=                                                     :built_in:
+
+#+BEGIN_QUOTE
+Most graphical user interface toolkits provide a number of standard user interface controls (sometimes known as “widgets” or “gadgets”). Emacs doesn't really support anything like this, except for an incredibly powerful text “widget.” On the other hand, Emacs does provide the necessary primitives to implement many other widgets within a text buffer. The =widget= package simplifies this task.
+#+END_QUOTE
+
++ [[https://www.gnu.org/software/emacs/manual/html_mono/widget.html][Manual]]
+
+**** [[https://github.com/kiwanami/emacs-widget-mvc][widget-mvc: Web-like MVC framework]]
+
+#+BEGIN_QUOTE
+This is a GUI framework for Emacs Lisp.  It is designed for programmers who are familiar with conventional Web MVC frameworks.
+#+END_QUOTE
+
+** Version control                                         :version_control:
+
+*** Tools                                                     :tools:
+
+**** [[https://github.com/magit/magit][Magit]]                                                           :git:
+:PROPERTIES:
+:ID:       43daf455-caeb-4399-b1bb-15a10603018b
+:END:
+
+One of the "killer apps" for Emacs--and for git!
+
+** XML / HTML                                                     :xml:html:
+
+*** Libraries                                                   :libraries:
+
+**** [[https://github.com/tali713/esxml][esxml: An elisp library for working with xml, esxml and sxml]]
+
+Probably the most featureful, usable library at the moment.
+
+#+BEGIN_QUOTE
+This library provides to formats for xml code generation. The primary form is esxml. esxml is the form that is returned by such functions as libxml-parse-xml-region and is used internally by emacs in many xml related libraries.
+#+END_QUOTE
+
+It also provides =esxml-query=:
+
+#+BEGIN_SRC elisp :exports code
+  ;; Traditionally people pick one of the following options when faced
+  ;; with the task of extracting data from XML in Emacs Lisp:
+  ;;
+  ;; - Using regular expressions on the unparsed document
+  ;; - Manual tree traversal with `assoc', `car' and `cdr'
+  ;;
+  ;; Browsers faced a similar problem until jQuery happened, shortly
+  ;; afterwards they started providing the `node.querySelector' and
+  ;; `node.querySelectorAll' API for retrieving one or all nodes
+  ;; matching a given CSS selector. This code implements the same API
+  ;; with the `esxml-query' and `esxml-query-all' functions. The
+  ;; following table summarizes the currently supported modifiers and
+  ;; combinators:
+  ;;
+  ;; | Name                               | Supported? | Syntax      | 
+  ;; |------------------------------------+------------+-------------|
+  ;; | Namespaces                         | No         | foo|bar     | 
+  ;; | Commas                             | Yes        | foo, bar    | 
+  ;; | Descendant combinator              | Yes        | foo bar     | 
+  ;; | Child combinator                   | Yes        | foo>bar     | 
+  ;; | Adjacent sibling combinator        | No         | foo+bar     | 
+  ;; | General sibling combinator         | No         | foo~bar     | 
+  ;; | Universal selector                 | Yes        | *           | 
+  ;; | Type selector                      | Yes        | tag         | 
+  ;; | ID selector                        | Yes        | #foo        | 
+  ;; | Class selector                     | Yes        | .foo        | 
+  ;; | Attribute selector                 | Yes        | [foo]       | 
+  ;; | Exact match attribute selector     | Yes        | [foo=bar]   | 
+  ;; | Prefix match attribute selector    | Yes        | [foo^=bar]  | 
+  ;; | Suffix match attribute selector    | Yes        | [foo$=bar]  | 
+  ;; | Substring match attribute selector | Yes        | [foo*=bar]  | 
+  ;; | Include match attribute selector   | Yes        | [foo~=bar]  | 
+  ;; | Dash match attribute selector      | Yes        | [foo|=bar]  | 
+  ;; | Attribute selector modifiers       | No         | [foo=bar i] | 
+  ;; | Pseudo elements                    | No         | ::foo       | 
+  ;; | Pseudo classes                     | No         | :foo        | 
+#+END_SRC
+
+Example:
+
+#+BEGIN_SRC elisp :exports code
+  (defun org-books--amazon (url)
+    "Return plist of data for book at Amazon URL."
+    (cl-flet ((field (target-field list)
+                     (cl-loop for li in list
+                              for (field value) = (ignore-errors
+                                                    (-let (((_ _ (_ _ field) value) li))
+                                                      (list field value)))
+                              when (equal field target-field)
+                              return (s-trim value))))
+      (let* ((html (org-web-tools--get-url url))
+             (tree (with-temp-buffer
+                     (insert html)
+                     (libxml-parse-html-region (point-min) (point-max))))
+             (author (esxml-query "span.author a.contributorNameID *" tree))
+             (title (esxml-query "div#booksTitle h1#title > span *" tree))
+             (details (esxml-query-all "table#productDetailsTable ul li" tree))
+             (date (if-let ((printed (third (esxml-query-all "div#booksTitle h1#title span *" tree))))
+                       ;; Printed book
+                       (s-replace "– " "" printed)
+                     ;; Kindle book
+                     (field "Publication Date:" details)))
+             (asin (field "ASIN:" details))
+             (publisher (-some->> (field "Publisher:" details)
+                                  (replace-regexp-in-string (rx " (" (1+ anything) ")") "")))
+             (isbn-10 (field "ISBN-10:" details))
+             (isbn-13 (field "ISBN-13:" details)))
+        (list :author author :title title :publisher publisher :date date
+              :asin asin :isbn-10 isbn-10 :isbn-13 isbn-13))))
+#+END_SRC
+
+**** [[https://github.com/AdamNiederer/elquery][elquery: Read and manipulate HTML]]
+
+#+BEGIN_QUOTE
+It’s like jQuery, but way less useful.
+#+END_QUOTE
+
+Example:
+
+#+BEGIN_SRC html
+  <html style="height: 100vh">
+    <head class="kek"><title class="kek" data-bar="foo">Complex HTML Page</title></head>
+    <body class="kek bur" style="height: 100%">
+      <h1 id="bar" class="kek wow">Wow this is an example</h1>
+      <input id="quux" class="kek foo"/>
+      <iframe id="baz" sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+              width="100%" height="100%" src="example.org">
+      </iframe>
+    </body>
+  </html>
+#+END_SRC
+
+#+BEGIN_SRC elisp :exports code
+  (let ((html (elq-read-file "~/kek.html")))
+    (elq-el (car (elq-$ ".kek#quux" html))) ; => "input"
+    (mapcar 'elq-el (elq-$ ".kek" html)) ; => ("input" "h1" "body" "title" "head")
+    (mapcar (lambda (el) (elq-el (elq-parent el)))
+            (elq-$ ".kek" html)) ; => ("body" "body" "html" "head" "html")
+    (mapcar (lambda (el) (mapcar 'elq-el (elq-siblings el)))
+            (elq-$ ".kek" html)) ; => (("h1" "input" "iframe") ("h1" "input" "iframe") ("head" "body") ("title") ("head" "body"))
+    (elq-$ ".kek" html) ; => Hope you didn't like your messages buffer
+    (elq-write html nil)) ; => "<html style=\"height: 100vh\"> ... </html>"
+#+END_SRC
+
+**** [[https://github.com/skeeto/elfeed/blob/master/xml-query.el][elfeed/xml-query.el]]
+
+Provides lisp-based (rather than string-based) selectors.  This library is primarily aimed at internal =elfeed= use rather than general use, however it may be useful to others.  The author is [[https://github.com/skeeto/elfeed/issues/189][considering]] publishing it separately.
+
+#+BEGIN_SRC elisp :exports code
+  ;; Grab the top-level paragraph content from XHTML.
+  (xml-query-all '(html body p *) xhtml)
+
+  ;; Extract all the links from an Atom feed.
+  (xml-query-all '(feed entry link [rel "alternate"] :href) xml)
+#+END_SRC
+
+**** [[https://github.com/zweifisch/enlive][enlive: query html document with css selectors]]
+
+This provides a limited set of lisp-based selectors (rather than string-based selectors).
+
+Example:
+
+#+BEGIN_SRC elisp :exports code
+  (require 'enlive)
+
+  (enlive-text
+   (enlive-query (enlive-fetch "http://gnu.org/") [title])) ; => "The GNU Operating System and the Free Software Movement"
+#+END_SRC
+
+**** [[https://github.com/bddean/xml-plus][xml-plus: XML/HTML utilities]]
+
+Mostly undocumented, providing three main functions:
+
+#+BEGIN_SRC elisp :exports code
+  ;; Utility functions for xml parse trees.
+  ;; - `xml+-query-all' and `xml+-query-first' are query functions that search
+  ;; descendants in node lists. They don't work with namespace-aware parsing yet
+  ;;
+  ;; - `xml+-node-text' gets node text
+#+END_SRC
+
+# Elisp footer
+
+#+BEGIN_SRC elisp :exports none :tangle epdh.el :eval never
+  ;;;; Footer
+
+  (provide 'epdh)
+
+  ;;; epdh.el ends here
+#+END_SRC
+
+* Blogs                                                               :blogs:
+:PROPERTIES:
+:TOC:      0
+:END:
+
+** [[http://planet.emacsen.org/][Planet Emacsen]]
+
+This is the main community aggregator.  You can find just about everyone's Emacs-related blog posts here.
+
+** Sacha Chua's [[http://sachachua.com/blog/category/geek/emacs/emacs-news/][/Emacs News/]]
+
+This is Sacha's weekly Emacs news digest.  Don't miss it!
+
+** [[id:53c0b780-7d67-47a5-ad30-090526e2018f][Artur Malabarba's /Endless Parentheses/]]
+
+** [[http://irreal.org/blog/][Irreal]]
+
+One of the top Emacs blogs, frequently updated, and often highlights other interesting blog entries in the community.
+
+** [[id:a8a8dd9f-4113-4d4c-9882-ac59a4e86c0e][Oleh Krehel]]'s [[https://oremacs.com][/(or emacs/]]
+:PROPERTIES:
+:ID:       b6e88f95-8c4f-4d18-a7df-de0820d76291
+:END:
+
+** [[id:12c7b803-9af2-4010-bca4-06304fbb69c7][Sacha Chua's /Living an Awesome Life/]]
+
+* People                                                             :people:
+:PROPERTIES:
+:TOC: ignore-children
+:END:
+
+The Emacs community is so full of brilliant, generous people that I can't keep track of them all!  I will surely overlook many, and I will add them in no particular order, but merely as I come across them again and again.
+
+** Anders Lindgren
+
+Anders, aka Lindydancer, has written numerous packages to help with developing highlighting and font-lock packages, as well as some other useful tools.
+
++ [[https://github.com/Lindydancer][GitHub]]
+
+*** Packages
+
+**** [[id:9aacf8f3-5244-4b71-8802-1c7876a9d19e][el2markdown: Convert Emacs Lisp comments to MarkDown]]
+
+**** [[id:66fef80f-0f92-4492-8199-01c24c635914][face-explorer: Library and tools for faces and text properties]]
+
+**** [[id:5ab6c330-15ae-455a-981c-bf298d9a2788][faceup: Regression test system for font-lock keywords]]
+
+**** [[id:0f3ba4be-949b-4efe-8301-acf3873ab345][font-lock-profiler: Coverage and timing tool for font-lock keywords]]
+
+**** [[id:e54a2697-8b4a-4b65-a971-f79e0fa22120][font-lock-regression-suite: Regression test suite for font-lock keywords of Emacs standard modes]]
+
+**** [[id:fb9315d1-111d-4eab-8f99-00710e39b04c][font-lock-studio: Debugger for Font Lock keywords]]
+
+**** [[id:85a2421d-6fbd-4c4d-a6f9-587258c8f625][highlight-refontification: Visualize how font-lock refontifies a buffer]]
+
+**** [[id:5b4a9320-1d3d-441b-8505-7b35a8d323d3][lisp-extra-font-lock: Highlight bound variables and quoted expressions in lisp]]
+
+**** [[id:267c8c25-53db-4ced-9242-176094e101e3][multicolumn: Multiple side-by-side windows support]]
+
+** Artur Malabarba
+:PROPERTIES:
+:ID:       53c0b780-7d67-47a5-ad30-090526e2018f
+:END:
+
+Another prolific Emacs contributor, package developer, and blogger.
+
++  [[http://endlessparentheses.com/new-on-elpa-and-in-emacs-25-1-let-alist.html][Blog: /Endless Parentheses/]]
++  [[https://github.com/Malabarba][GitHub]]
+
+
+*** Packages
+:PROPERTIES:
+:ID:       ae5465ac-9fda-4c1a-9900-4fd1eeb173da
+:END:
+
+**** [[id:4dc7c607-a116-4c39-b063-fe34bd20cccf][aggressive-indent-mode]]
+
+**** [[id:2c31eae6-eeba-433f-bc26-9465d5aa8537][paradox]]
+
+** Damien Cassou
+
++  [[https://github.com/DamienCassou][GitHub]]
+
+*** Packages
+
+**** [[id:a32ed391-8ce6-46b7-9367-8117829ce2e7][beginend.el]]
+
+**** [[*%5B%5Bhttps://gitlab.petton.fr/DamienCassou/navigel/%5D%5Bnavigel%5D%5D][navigel]]
+
+** John Wiegley
+
+John is the current Emacs maintainer.
+
++  [[http://newartisans.com/][Blog]]
++  [[https://github.com/jwiegley][GitHub]]
+
+*** Packages
+
+**** [[id:540617fd-d4ff-47df-89da-6c48c8f27785][use-package]]
+
+** Jonas Bernoulli
+
+Jonas is a prolific Emacs package developer and maintainer.  You could spend hours on his GitHub repo.
+
++ [[https://github.com/tarsius][GitHub]]
+
+*** Packages
+
+**** [[id:43daf455-caeb-4399-b1bb-15a10603018b][Magit]]
+
+**** [[id:2aadfb89-3ed2-4cb8-bdea-6775ec6c3e57][ox-texinfo+]]
+
+** Jorgen Schäfer
+
+*** Packages                                                     :packages:
+
+**** [[id:108f5eb6-7307-4d4b-aaf1-dd2a8bb65a58][buttercup: Behavior-Driven Emacs Lisp Testing]]
+
+**** [[https://github.com/jorgenschaefer/circe][Circe, a Client for IRC in Emacs]]
+
+**** [[https://github.com/jorgenschaefer/elpy][elpy: Emacs Python Development Environment]]
+
+**** [[https://github.com/jorgenschaefer/pyvenv][pyvenv: Python virtual environment interface]]
+
+** Magnar Sveen
+
++  [[https://github.com/magnars][GitHub]]
+
+
+*** Packages
+
+**** [[id:e85e4252-ea03-4473-b52f-9393e7527fad][dash.el]]
+
+**** [[id:88b496f4-8230-474e-b2ee-d8e4e8ca30d0][expand-region.el]]
+
+**** [[id:deefcbc5-0c37-4936-a820-df99ae31a401][multiple-cursors.el]]
+
+**** [[*%5B%5Bhttps://github.com/magnars/s.el%5D%5Bs.el:%20The%20long%20lost%20Emacs%20string%20manipulation%20library%5D%5D][s.el]]
+
+** Matus Goljer
+
++ [[https://github.com/Fuco1/][GitHub]]
+
+
+*** Packages
+
+**** [[*%5B%5Bhttps://github.com/magnars/dash.el%5D%5Bdash.el%5D%5D][dash.el]]
+:PROPERTIES:
+:ID:       827c9455-2747-4514-8d71-4558eff5a263
+:END:
+
+**** [[id:e806d7f3-43e9-4260-aae4-479efbd41653][smartparens]]
+
+** Oleh Krehel
+:PROPERTIES:
+:ID:       a8a8dd9f-4113-4d4c-9882-ac59a4e86c0e
+:END:
+
+Oleh is a prolific package author, having contributed many very high-quality packages.  He also writes at [[id:b6e88f95-8c4f-4d18-a7df-de0820d76291][his blog]].
+
+*** Packages                                                     :packages:
+
+**** [[https://github.com/abo-abo/ace-window][ace-window: Quickly switch windows]]       :navigation:windows:buffers:
+
+**** [[https://github.com/abo-abo/avy][avy: Jump to things tree-style]]                           :navigation:
+
+**** [[id:ca3809ba-5900-4dfd-84a1-1ceecc048296][lispy: short and sweet LISP editing]]
+
+**** [[https://github.com/abo-abo/swiper][swiper: Ivy - a generic completion frontend, Swiper - isearch with an overview, and more. Oh, man!]] :navigation:
+
+** Phil Lord
+
++ [[https://github.com/phillord][GitHub]]
+
+*** Packages
+
+**** [[id:0c220bc9-7173-4b0f-8955-e10ab6db640f][lentic: Create views of the same content in two buffers]]
+
+**** [[id:6858c112-9756-43b4-a2e3-fa00a71e9367][m-buffer-el]]
+
+** Roland Walker
+:PROPERTIES:
+:ID:       518289de-100e-4387-9917-2adaffc28f48
+:END:
+
+Roland has published a wide variety of useful Emacs packages.
+
++ [[https://github.com/rolandwalker?utf8=%25E2%259C%2593&tab=repositories&q=&type=source&language=emacs+lisp][GitHub]]
+
+*** Packages
+
+**** [[id:4b4cbe99-f048-4043-a946-97f9d1a4be52][list-utils: List-manipulation utility functions]]
+
+** Sacha Chua
+:PROPERTIES:
+:ID:       12c7b803-9af2-4010-bca4-06304fbb69c7
+:END:
+
+Sacha could easily be nominated the official Emacs ambassador, were there to be one.  Her contributions to the Emacs and Org-mode communities are innumerable.  One of her greatest recent contributions is her weekly [[http://sachachua.com/blog/category/geek/emacs/emacs-news/][Emacs news]] posts that serve as a digest of everything that happened in the Emacs world over the past week.
+
++  [[http://sachachua.com/blog/][Blog: /Living an Awesome Life/]]
++  [[http://github.com/sachac/][GitHub]]
+
+** Wilfred Hughes
+
+Wilfred has published several useful packages, and he's also leading the [[https://github.com/Wilfred/remacs][Rust Emacs port]].
+
+*** Packages
+
+**** [[id:d329f03e-ed1e-4205-a232-6eee16717795][emacs-refactor]]
+
+**** [[id:22b35972-c32f-467a-92ee-f8a155920756][ht.el]]
+
+**** [[id:57ecc064-7291-4cc5-a545-958e2bca295b][suggest.el]]
+:PROPERTIES:
+:ID:       80aa6c33-72d6-4792-8f41-e8ac4f7a1b0d
+:END:
+
+* Contributions
+:PROPERTIES:
+:TOC:      0
+:END:
+
+Yes, please!  Send pull requests and file issues on the [[https://github.com/alphapapa/emacs-package-dev-handbook][GitHub repo]].  This is intended to be a community project.
+
+** Guidelines
+
++ Catalog and tag appropriately ::  New entries in the outline should have the appropriate tags and should follow the existing hierarchy.  For example, articles should be tagged =articles=, and generally filed under an =Articles= heading using tag inheritance to apply the tag.
++  "Loosely" or "usefully" opinionated ::  Rather than being a place to dump links for users to sort out, we should do that ourselves.  Links should have summaries and examples.  Where there are multiple links to similar projects, we should compare them and guide users to what we think is generally the best solution, or the best solution for each use case.
++  Archive reference material ::  Much of the shared wisdom in the Emacs community is written in a variety of blogs by users and developers, as well as posts on Reddit, StackOverflow, etc.  These tend to hang around for a long time, but being the Internet, this is never guaranteed.  When linking to an article or other reference material, we should store a link to an archived version using [[*Get archive.today link for page][this code]].
+
+** Requirements
+
++  [[https://github.com/alphapapa/org-make-toc][org-make-toc]] :: This package updates the table of contents.  It's automatically used by this document through file-local variables, which you should be prompted to allow when opening the file.
+
+* Tasks
+:PROPERTIES:
+:TOC:      ignore-children
+:END:
+
+These resources should be added to the appropriate sections above.  Since it takes some work to catalog and organize them, they are dumped here for future reference.  Pull requests for these are welcome!
+
+** TODO =easy-mmode.el=
+
+Especially =easy-mmode-defmap=.
+
+** TODO [[https://github.com/ellerh/peg.el][GitHub - ellerh/peg.el]]
+
+** TODO Articles to add [0/13]
+
+*** TODO [[https://www.lunaryorn.com/posts/read-and-write-files-in-emacs-lisp][Read and write files in Emacs Lisp]] (5 min read)
+
+*** TODO [[https://www.lunaryorn.com/posts/a-future-for-concurrency-in-emacs-lisp][A Future For Concurrency In Emacs Lisp]] (6 min read)
+
+*** TODO [[https://www.lunaryorn.com/posts/a-blast-from-the-past-the-tale-of-concurrency-in-emacs][A Blast From The Past: The Tale Of Concurrency In Emacs]] (7 min read)
+
+*** TODO [[https://www.lunaryorn.com/posts/I-wished-gnu-emacs-had][I wished GNU Emacs had…]] (2 min read)
+
+*** TODO [[https://www.lunaryorn.com/posts/reproduce-bugs-in-emacs-Q][Reproduce bugs in emacs -Q]] (4 min read)
+
+*** TODO [[https://www.lunaryorn.com/posts/use-package-el-really][Why package.el?]] (1 min read)
+
+*** TODO [[https://www.lunaryorn.com/posts/my-emacs-configuration-with-use-package][My Emacs Configuration with use-package]] (8 min read)
+
+*** TODO [[https://www.lunaryorn.com/posts/emacs-script-pitfalls][Emacs script pitfalls]] (13 min read)
+
+*** TODO [[https://www.lunaryorn.com/posts/autoloads-in-emacs-lisp][Autoloads in Emacs Lisp]] (5 min read)
+
+*** TODO [[https://www.lunaryorn.com/posts/advanced-syntactic-fontification][Advanced syntactic fontification]] (11 min read)
+
+*** TODO [[https://www.lunaryorn.com/posts/calling-python-from-haskell][Calling Python from Haskell]] (12 min read)
+
+*** TODO [[https://www.lunaryorn.com/posts/search-based-fontification-with-keywords][Search-based fontification with keywords]] (18 min read)
+
+*** TODO [[https://www.lunaryorn.com/posts/syntactic-fontification-in-emacs][Syntactic fontification in Emacs]] (10 min read)
+
+** TODO Add people [0/6]
+
+*** TODO Add [[http://nic.ferrier.me.uk/][Nic Ferrier]]
+
+**** TODO [[https://github.com/nicferrier/emacs-noflet][GitHub - nicferrier/emacs-noflet: noflet - nic's overriding flet, for fleting functions for the purpose of decorating them]]
+
+**** TODO [[https://github.com/nicferrier/emacs-db][GitHub - nicferrier/emacs-db: very simple database for emacslisp, can also wrap other databases.]]
+
+*** TODO Add [[https://github.com/vermiculus][Sean Allred]]
+
+*** TODO Add [[http://nullprogram.com/][Chris Wellons]]
+
++  http://github.com/skeeto
++  Elfeed
++  [[*%5B%5Bhttps://github.com/skeeto/emacs-aio%5D%5Bemacs-aio:%20async/await%20for%20Emacs%20Lisp%5D%5D][emacs-aio: async/await for Emacs Lisp]]
++  Other Emacs packages
+
+*** TODO Add [[https://github.com/wasamasa?][Vasilij Schneidermann]]
+
+*** TODO [[https://github.com/VincentToups/emacs-utils][Vincent Toups' projects]]
+
+He has a lot of interesting libraries on his repo, and some of them are /extensively/ documented.  An aspiring Emacs Lisp developer could learn a lot from his code.
+
+*** TODO Add more of [[id:518289de-100e-4387-9917-2adaffc28f48][Roland Walker]]'s packages
+
+*** Clemens Radermacher
+
++  [[https://www.with-emacs.com/][blog /With Emacs/]]
++  [[https://github.com/clemera][GitHub]]
+     -  [[https://github.com/clemera?utf8=%25E2%259C%2593&tab=repositories&q=&type=source&language=emacs+lisp][Packages]]
+
+** TODO Add tips for new developers
+
+e.g.:
+
+-  Commonly used minor modes
+     +  =highlight-funcalls=
+     +  =highlight-quoted=
+     +  =outline-minor-mode=
+
+** TODO [[https://emacs.stackexchange.com/questions/3821/a-faster-method-to-obtain-line-number-at-pos-in-large-buffers][elisp - A faster method to obtain `line-number-at-pos` in large buffers - Emacs Stack Exchange]]
+
+** TODO Add [[https://github.com/joddie/pcre2el]]
+
+** TODO Add [[https://github.com/bbatsov/emacs-lisp-style-guide][GitHub - bbatsov/emacs-lisp-style-guide: A community-driven Emacs Lisp style guide]]
+
+** TODO Add MELPA
+
+Mention @milkypostman, @purcell, @syohex, etc. Mention sandbox.
+
+** TODO Add [[https://github.com/vermiculus/apiwrap.el][GitHub - vermiculus/apiwrap.el: Generate wrappers for your API endpoints!]]
+
+** TODO Add [[http://www.modernemacs.com/][Modern Emacs]] site
+
+** TODO Add [[https://github.com/sigma/pcache][GitHub - sigma/pcache: persistent caching for Emacs]]
+
+** TODO Dynamic modules section
+
+*** TODO [[https://github.com/jkitchin/emacs-modules][GitHub - jkitchin/emacs-modules: Dynamic modules for emacs]]
+
+**** TODO Add resources from its readme
+
+#+BEGIN_QUOTE org
+For my own notes here are all the resources on dynamic modules I know of:
+
+Here are the official Emacs header and example:
+emacs-module.h: http://git.savannah.gnu.org/cgit/emacs.git/tree/src/emacs-module.h?id=e18ee60b02d08b2f075903005798d3d6064dc013
+mod_test.c: http://git.savannah.gnu.org/cgit/emacs.git/tree/modules/mod-test/mod-test.c?id=e18ee60b02d08b2f075903005798d3d6064dc013
+
+This simple example in C  http://diobla.info/blog-archive/modules-tut.html
+
+- joymacs ::  http://nullprogram.com/blog/2016/11/05/
+- mruby :: https://github.com/syohex/emacs-mruby-test
+- https://github.com/tromey/emacs-ffi :: an actual ffi for emacs
+- elfuse :: https://github.com/vkazanov/elfuse a file system in Emacs
+  - asynchronous events :: http://nullprogram.com/blog/2017/02/14/ related to elfuse
+
+- [[https://github.com/syohex/emacs-sqlite3][emacs-sqlite3]] ::  sqlite3 binding of Emacs Lisp
+- [[https://github.com/syohex/emacs-parson][emacs-parson]] :: JSON parser with dynamic module feature with [[http://kgabis.github.com/parson/][parson]]
+- [[https://github.com/syohex/emacs-libyaml][libyaml]] :: libyaml
+- [[https://github.com/syohex/emacs-perl][emacs-perl]] :: Embed Perl into Emacs
+- [[https://github.com/syohex/emacs-eject]] :: eject a cd
+- [[https://github.com/collarchoke/emacs-capstone][emacs-capstone]] :: elisp bindings for the [[http://www.capstone-engine.org/][capstone]] disassembler
+- [[https://github.com/hlolli/csoundAPI_emacsLisp][emacs-csound]] :: EmacsLisp link to Csound's API via Emacs Modules
+- [[https://github.com/rzl24ozi/cmigemo-module][emacs-cmigemo]] :: Emacs dynamic module for cmigemo
+- [[https://github.com/syohex/emacs-cipher][emacs-cipher]] :: OpenSSL cipher binding of Emacs Lisp
+- [[https://github.com/syohex/emacs-lua][emacs-lua]] ::  Lua engine from Emacs Lisp
+- [[https://github.com/syohex/emacs-zstd][emacs-ztd]] :: libzstd binding of Emacs Lisp
+- [[https://github.com/syohex/emacs-memcached][mem-cached]] :: libmemcached
+- https://coldnew.github.io/2d16cc25/ :: in Chinese, but with code
+     
+A collection of module resources: https://github.com/emacs-pe/emacs-modules
+- Nim https://github.com/yuutayamada/nim-emacs-module
+- OCaml https://github.com/janestreet/ecaml
+- Rust
+  https://github.com/lunaryorn/emacs-module.rs
+  https://github.com/jjpe/emacs_module_bindings
+- golang :: https://github.com/sigma/go-emacs writing modules in go
+
+This may not be a dynamic module but claims an ffi
+haskell https://github.com/knupfer/haskell-emacs
+#+END_QUOTE
+
+** TODO Documentation best practices
+
+Describe things like exporting an Org readme to an Info manual, e.g. like Magit, =org-super-agenda=, etc.
+
+** Testing
+
+*** TODO Everything at [[https://www.emacswiki.org/emacs/UnitTesting][EmacsWiki: Unit Testing]]
+
+*** TODO [[https://github.com/rejeep/el-mock.el][GitHub - rejeep/el-mock.el: Mocking library for Emacs]]
+
+*** TODO [[https://github.com/sigma/mocker.el][GitHub - sigma/mocker.el: a simple mocking framework for Emacs]]
+
+*** TODO [[https://www.emacswiki.org/emacs/EmacsLispExpectations][EmacsWiki: Emacs Lisp Expectations]]
+
+** TODO Add databases section
+
+*** TODO [[https://github.com/skeeto/emacsql][GitHub - skeeto/emacsql: A high-level Emacs Lisp RDBMS front-end]]
+
+*** TODO [[https://github.com/pekingduck/emacs-sqlite3-api][GitHub - pekingduck/emacs-sqlite3-api: Native SQLite3 API for GNU Emacs]]
+:PROPERTIES:
+:ID:       caeb4340-1f2e-4c84-a604-80594b465a10
+:END:
+
+*** TODO [[https://github.com/syohex/emacs-sqlite3][GitHub - syohex/emacs-sqlite3: sqlite3 binding of Emacs Lisp]]
+
+*** TODO [[https://github.com/kiwanami/emacs-edbi][GitHub - kiwanami/emacs-edbi: Database Interface for Emacs Lisp]]
+
+** TODO Add [[https://github.com/ijp/mbe.el][GitHub - ijp/mbe.el: macros by example in elisp]]
+
+** TODO Tree-traversal
+
+*** [[https://github.com/volrath/treepy.el][GitHub - volrath/treepy.el: Generic tree traversing tools for Emacs Lisp]]
+:LOGBOOK:
+-  State "TODO"       from              [2017-09-06 Wed 00:21]
+:END:
+
+** TODO Test in MELPA sandbox
+:PROPERTIES:
+:ID:       cddadde7-ec36-47a4-8d98-7acc39f03fed
+:END:
+:LOGBOOK:
+-  State "TODO"       from              [2017-12-16 Sat 20:16]
+:END:
+
+[2017-07-29 Sat 00:33] Not only should you test installing and using your package in the sandbox, but you should /also/ test then exiting the sandbox Emacs, running it again with the package already installed, and loading it.  This is because, when the sandbox installs the package, the byte-compilation seems to load some things that won't be loaded the same way when only loading the byte-compiled file (especially if you have any ~eval-when-compile~ lines, or unusual macros or things that modify the environment when loaded).
+
+** TODO Sequence shuffling examples and benchmarks
+
+*** Benchmarking sequence shuffling
+
+See https://github.com/melpa/melpa/pull/6191#issuecomment-498101336
+
+#+BEGIN_SRC elisp
+(defun key-quiz--shuffle-list (list)
+  "Shuffles LIST randomly, modying it in-place."
+  (dolist (i (reverse (number-sequence 1 (1- (length list)))))
+    (let ((j (random (1+ i)))
+	  (tmp (elt list i)))
+      (setf (elt list i) (elt list j))
+      (setf (elt list j) tmp)))
+  list)
+
+(defun key-quiz--shuffle-list-nreverse (list)
+  "Shuffles LIST randomly, modying it in-place."
+  (dolist (i (nreverse (number-sequence 1 (1- (length list)))))
+    (let ((j (random (1+ i)))
+	  (tmp (elt list i)))
+      (setf (elt list i) (elt list j))
+      (setf (elt list j) tmp)))
+  list)
+
+(defun elfeed--shuffle (seq)
+  "Destructively shuffle SEQ."
+  (let ((n (length seq)))
+    (prog1 seq                  ; don't use dotimes result (bug#16206)
+      (dotimes (i n)
+        (cl-rotatef (elt seq i) (elt seq (+ i (random (- n i)))))))))
+
+(defun faster-seq-sort-by (function pred sequence)
+  "Sort SEQUENCE using PRED as a comparison function.
+Elements of SEQUENCE are transformed by FUNCTION before being
+sorted.  FUNCTION must be a function of one argument."
+  ;; This version is modified to avoid calling "random" twice every time the predicate is called.
+  (seq-map 'cdr
+           (sort (seq-map (lambda (x) (cons (funcall function x) x)) sequence)
+                 (lambda (a b)
+                   (funcall pred (car a) (car b))))))
+
+(defun seq-sort-by--shuffle (seq)
+  (seq-sort-by (lambda (_) (random)) #'<= seq))
+
+(defun faster-seq-sort-by--shuffle (seq)
+  (faster-seq-sort-by (lambda (_) (random)) #'<= seq))
+#+END_SRC
+
+#+RESULTS:
+: faster-seq-sort-by--shuffle
+
+**** Lists
+
+#+BEGIN_SRC elisp
+  (let ((big-list (seq-into (seq-take obarray 5000) 'list)))
+    (bench-multi-lexical :times 100
+      :forms (("key-quiz--shuffle-list" (key-quiz--shuffle-list big-list))
+              ("key-quiz--shuffle-list-nreverse" (key-quiz--shuffle-list-nreverse big-list))
+              ("elfeed--shuffle" (elfeed--shuffle big-list))
+              ("seq-sort-by--shuffle" (seq-sort-by--shuffle big-list))
+              ("faster-seq-sort-by--shuffle" (faster-seq-sort-by--shuffle big-list)))))
+#+END_SRC
+
+#+RESULTS:
+| Form                            | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|---------------------------------+--------------------+---------------+----------+------------------|
+| faster-seq-sort-by--shuffle     |               1.38 |      1.725037 |        0 |                0 |
+| seq-sort-by--shuffle            |              15.01 |      2.378234 |        0 |                0 |
+| key-quiz--shuffle-list-nreverse |               1.03 |     35.703316 |       27 |        17.892723 |
+| key-quiz--shuffle-list          |               1.24 |     36.630320 |       28 |        18.768216 |
+| elfeed--shuffle                 |            slowest |     45.439405 |       32 |        21.130538 |
+
+
+**** Vectors
+
+#+BEGIN_SRC elisp
+  (let ((big-list (seq-into (seq-take obarray 5000) 'vector)))
+    (bench-multi-lexical :times 100
+      :forms (("key-quiz--shuffle-list" (key-quiz--shuffle-list big-list))
+              ("key-quiz--shuffle-list-nreverse" (key-quiz--shuffle-list-nreverse big-list))
+              ("elfeed--shuffle" (elfeed--shuffle big-list))
+              ("seq-sort-by--shuffle" (seq-sort-by--shuffle big-list))
+              ("faster-seq-sort-by--shuffle" (faster-seq-sort-by--shuffle big-list)))))
+#+END_SRC
+
+#+RESULTS:
+| Form                            | x faster than next | Total runtime | # of GCs | Total GC runtime |
+|---------------------------------+--------------------+---------------+----------+------------------|
+| faster-seq-sort-by--shuffle     |               1.39 |      1.718990 |        0 |                0 |
+| seq-sort-by--shuffle            |              10.42 |      2.390860 |        0 |                0 |
+| key-quiz--shuffle-list-nreverse |               1.02 |     24.918774 |       27 |        17.971779 |
+| key-quiz--shuffle-list          |               1.10 |     25.452665 |       28 |        18.487015 |
+| elfeed--shuffle                 |            slowest |     27.991305 |       32 |        21.215224 |
+
+** TODO [[https://github.com/chrisbarrett/elisp-namespaces][GitHub - chrisbarrett/elisp-namespaces: UNMAINTAINED]]
+
+** TODO [[https://github.com/marketplace/actions/set-up-emacs][Set up Emacs · Actions · GitHub Marketplace · GitHub]]
+:LOGBOOK:
+-  State "TODO"       from              [2019-10-05 Sat 12:20]
+:END:
+* Code
+:PROPERTIES:
+:TOC:      0
+:END:
+
+This section contains code used to add to and update this document.
+
+** UNDERWAY Automate adding new links and summaries
+:LOGBOOK:
+-  State "UNDERWAY"   from "TODO"       [2017-08-03 Thu 15:12]
+:END:
+
+*** TODO Get summary of page
+
+*** DONE Get archive.today link for page
+CLOSED: [2017-08-03 Thu 15:11]
+:PROPERTIES:
+:ID:       a0e9486f-24f0-47a6-8f21-50bcc7ac2ca0
+:END:
+:LOGBOOK:
+-  Note taken on [2018-11-24 Sat 10:44] \\
+   Using =org-web-tools= instead of the Python script.
+-  State "DONE"       from "TODO"       [2017-08-03 Thu 15:11]
+:END:
+
+#+BEGIN_SRC elisp :exports code :results silent
+  (require 'org-web-tools)
+
+  (defun emacs-package-dev-handbook--archive.today-capture (url)
+    "Return archive.today archived URL for URL."
+    (when-let* ((id (org-web-tools-archive--archive.today-url-id url)))
+      (format "http://%s/%s" org-web-tools-archive-hostname id)))
+
+  (cl-defun emacs-package-dev-handbook-insert-archive.today-property (url)
+    "Set the \"archive.today\" property for entry at point to the archived version of URL.
+  Interactively, assumes heading on/before point is an Org link to
+  a web page."
+    (interactive (list (save-excursion
+                         (unless (org-at-heading-p)
+                           (org-back-to-heading))
+                         (beginning-of-line)
+                         (when (re-search-forward org-bracket-link-regexp (line-end-position) 'noerror)
+                           (org-link-unescape (match-string-no-properties 1))))))
+    (when-let ((archive-url (emacs-package-dev-handbook--archive.today-capture url)))
+      (org-set-property "archive.today" archive-url)))
+#+END_SRC
+
+*** TODO Insert new entry at point
+
+Maybe use capture templates and refile?
+
+** Table of Contents
+
+The ToC is generated using [[https://github.com/alphapapa/org-make-toc][org-make-toc]].
+
+** Config                                                         :noexport:
+
+I love Emacs and Org mode.  This makes it so easy to make the document...alive!  And automated!  Beautiful.
+
+*** File-local properties
+
+#+PROPERTY: header-args:elisp :tangle no
+
+*** File-local variables
+
+# Local Variables:
+# eval: (require 'org-make-toc)
+# eval: (unpackaged/org-export-html-with-useful-ids-mode 1)
+# before-save-hook: org-make-toc
+# after-save-hook: (lambda nil (org-babel-tangle) (when (org-html-export-to-html) (rename-file "README.html" "index.html" t)))
+# org-export-with-properties: ()
+# org-export-with-title: t
+# org-export-with-broken-links: t
+# org-id-link-to-org-use-id: nil
+# org-export-initial-scope: buffer
+# End:

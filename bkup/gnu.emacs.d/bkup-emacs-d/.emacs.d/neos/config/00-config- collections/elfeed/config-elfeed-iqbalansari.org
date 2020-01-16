@@ -1,0 +1,270 @@
+* Install required packages
+  #+BEGIN_SRC emacs-lisp
+    (iqbal-install-packages '(elfeed elfeed-goodies))
+  #+END_SRC
+
+
+* Store the database in data directory
+   So that it is synced with rest of the files
+   #+BEGIN_SRC emacs-lisp
+     (setq elfeed-db-directory (iqbal-get-file-in-data-directory "elfeed" t))
+   #+END_SRC
+
+
+* Make url-queue more linient
+  #+BEGIN_SRC emacs-lisp
+    (setq url-queue-parallel-processes 3)
+    (setq url-queue-timeout 30)
+  #+END_SRC
+
+
+* Open current article in w3m in elfeed-search-mode
+  Fallback to eww, if available or fallback to system browser
+  #+BEGIN_SRC emacs-lisp
+    (defun iqbal-elfeed-search-open-article-in-w3m ()
+      (interactive)
+      (let ((browse-url-browser-function (cond ((locate-library "w3m") #'w3m-browse-url)
+                                               ((locate-library "eww") #'eww-browse-url)
+                                               (t (progn (message "`w3m' not installed, falling back to system browser")
+                                                         #'browse-url-default-browser)))))
+        (elfeed-search-untag-all 'unread)
+        (save-excursion
+          (forward-line -1)
+          (elfeed-search-browse-url))))
+  #+END_SRC
+
+
+* Open current article in w3m in elfeed-show mode
+  Fallback to eww, if available or fallback to system browser
+  #+BEGIN_SRC emacs-lisp
+    (defun iqbal-elfeed-show-reddit-get-orig-article ()
+      (save-excursion
+        (goto-char (point-min))
+        (when (search-forward "[link]" (point-max) t)
+          (goto-char (match-beginning 0))
+          (let ((text-prop (text-properties-at (point))))
+            (and (member 'shr-link (text-properties-at (point)))
+                 (plist-get (text-properties-at (point)) 'shr-url))))))
+
+    (defun iqbal-elfeed-show-open-article-in-w3m ()
+      (interactive)
+      (let* ((feed-link (elfeed-entry-link elfeed-show-entry))
+             ;; If this is a reddit feed try jumping to original
+             ;; article instead of reddit link
+             (link (if (and (not current-prefix-arg)
+                            (string-match-p "reddit\.com/r/" feed-link))
+                       (or (iqbal-elfeed-show-reddit-get-orig-article) feed-link)
+                     feed-link)))
+        (if link
+            (cond ((locate-library "w3m") (w3m-browse-url link))
+                  ((locate-library "eww") (eww-browse-url link))
+                  (t (progn (message "`w3m' not installed, falling back to system browser")
+                            (elfeed-show-visit))))
+          (message "Not visiting an article!"))))
+  #+END_SRC
+
+
+* Jump directly to original article when viewing reddit feed
+  #+BEGIN_SRC emacs-lisp
+    (defun iqbal-elfeed-show-visit ()
+      "Visit the current entry in the browser."
+      (interactive)
+      (let* ((feed-link (elfeed-entry-link elfeed-show-entry))
+             ;; If this is a reddit feed try jumping to original
+             ;; article instead of reddit link
+             (link (if (and (not current-prefix-arg)
+                            (string-match-p "reddit\.com/r/" feed-link))
+                       (or (iqbal-elfeed-show-reddit-get-orig-article) feed-link)
+                     feed-link)))
+        (when link
+          (message "Sent to browser: %s" link)
+          (browse-url link))))
+  #+END_SRC
+
+
+* Load the feeds from elfeed.org file
+** Path to elfeed feeds file
+   #+BEGIN_SRC emacs-lisp
+     (setq iqbal-elfeed-file (iqbal-get-file-in-data-directory "elfeed.org"))
+   #+END_SRC
+
+** Function to extract all links from an org file
+   #+BEGIN_SRC emacs-lisp
+     (defun iqbal-org-get-all-feeds (file)
+       (with-temp-buffer
+         (erase-buffer)
+         (insert-file-contents file)
+         (goto-char (point-min))
+
+         (let (feeds)
+
+           (while (re-search-forward org-plain-link-re nil t)
+             (let ((link (match-string 0))
+                   (tags (iqbal-org-get-parents-tags)))
+
+               (add-to-list 'feeds (if tags (append (list link) tags) link))))
+           (nreverse feeds))))
+   #+END_SRC
+
+** Function to extract all tags for given org-element
+   This returns the tags from all ancestors of given element
+   #+BEGIN_SRC emacs-lisp
+     (defun iqbal-org-get-parents-tags ()
+       (mapcar #'intern
+               (save-excursion
+                 (let (tags)
+                   (while (not (equal (org-back-to-heading t) t))
+                     (setq tags (append tags (org-get-tags))))
+                   tags))))
+   #+END_SRC
+
+** Function to import feeds from elfeed.org
+   #+BEGIN_SRC emacs-lisp 
+     (defun iqbal-import-elfeed-feeds ()
+       (interactive)
+       (let ((feeds (when (file-exists-p iqbal-elfeed-file)
+                      (iqbal-org-get-all-feeds iqbal-elfeed-file))))
+         (setq elfeed-feeds feeds)
+         (message (format "Imported %d feeds" (length feeds)))))
+   #+END_SRC
+
+** Import all feeds after init
+   #+BEGIN_SRC emacs-lisp
+     (add-hook 'after-init-hook #'iqbal-import-elfeed-feeds)
+   #+END_SRC
+
+** Re-import feeds on saving feeds file
+   #+BEGIN_SRC emacs-lisp
+     (defun iqbal-import-elfeed-feeds-maybe ()
+       (when (and (eq major-mode 'org-mode)
+                  buffer-file-name
+                  (string= (file-truename iqbal-elfeed-file)
+                           (file-truename buffer-file-name)))
+         (iqbal-import-elfeed-feeds)))
+
+     (add-hook 'after-save-hook #'iqbal-import-elfeed-feeds-maybe)
+   #+END_SRC
+
+
+* Elfeed goodies configuration
+** Use wider columns in elfeed search
+   #+BEGIN_SRC emacs-lisp
+     (setq elfeed-goodies/feed-source-column-width 24)
+     (setq elfeed-goodies/tag-column-width 30)
+   #+END_SRC
+
+** Load elfeed-goodies
+  #+BEGIN_SRC emacs-lisp
+    (with-eval-after-load 'elfeed
+      (elfeed-goodies/setup))
+  #+END_SRC
+
+
+* A more colorful elfeed search buffer
+  Credits: https://github.com/skeeto/.emacs.d
+  #+BEGIN_SRC emacs-lisp
+    (with-eval-after-load 'elfeed
+      (push '(unread font-lock-type-face) elfeed-search-face-alist)
+      (push '(comics font-lock-function-name-face) elfeed-search-face-alist)
+      (push '(podcasts font-lock-type-face) elfeed-search-face-alist)
+      (push '(blog font-lock-doc-face) elfeed-search-face-alist)
+      (set-face-foreground 'elfeed-search-title-face (face-foreground font-lock-type-face)))
+  #+END_SRC
+
+
+* Integration with org-mode
+  Credits: The code for storing elfeed links and open them is
+  based on code mentioned [[https://github.com/skeeto/elfeed/issues/34#issuecomment-158824561][here]].
+** Org capture template adding new feed sources
+   #+BEGIN_SRC emacs-lisp
+     (with-eval-after-load 'org-capture
+       (add-to-list 'org-capture-templates (list "f"
+                                                 "Elfeed feed"
+                                                 'entry
+                                                 (list 'file iqbal-elfeed-file)
+                                                 "* %? %^g\n  %(iqbal-get-url-from-clipboard) - Added on %U\n\n"
+                                                 :empty-lines-after 2)))
+   #+END_SRC
+
+** Re-import elfeed feeds after capturing a feed
+   #+BEGIN_SRC emacs-lisp
+     (defun iqbal-maybe-reimport-feeds-after-capture ()
+       (when (string= (org-capture-get :key) "f")
+         (iqbal-import-elfeed-feeds)))
+
+     (add-hook 'org-capture-after-finalize-hook #'iqbal-maybe-reimport-feeds-after-capture)
+   #+END_SRC
+
+** Storing links to feed being currently viewed
+   #+BEGIN_SRC emacs-lisp
+     (defun iqbal-org-elfeed-show-store-link ()
+       "Store a link to an elfeed search or entry buffer."
+       (when (derived-mode-p 'elfeed-show-mode)
+         (org-store-link-props
+          :type "elfeed"
+          :link (format "elfeed:%s#%s"
+                        (car (elfeed-entry-id elfeed-show-entry))
+                        (cdr (elfeed-entry-id elfeed-show-entry)))
+          :description (elfeed-entry-title elfeed-show-entry))))
+
+     (add-hook 'org-store-link-functions #'iqbal-org-elfeed-show-store-link)
+   #+END_SRC
+
+** Storing link to current elfeed search
+   #+BEGIN_SRC emacs-lisp
+     (defun iqbal-org-elfeed-search-store-link ()
+       (when (derived-mode-p 'elfeed-search-mode)
+         (org-store-link-props
+          :type "elfeed"
+          :link (format "elfeed:%s" elfeed-search-filter)
+          :description elfeed-search-filter)))
+
+     (add-hook 'org-store-link-functions 'iqbal-org-elfeed-search-store-link)
+   #+END_SRC
+
+** Opening elfeed links
+   #+BEGIN_SRC emacs-lisp
+     (defun iqbal-org-elfeed-open-link (filter-or-id)
+       "Jump to an elfeed entry or search, depending on what FILTER-OR-ID looks like."
+       (if (string-match "\\([^#]+\\)#\\(.+\\)" filter-or-id)
+           (elfeed-show-entry (elfeed-db-get-entry (cons (match-string 1 filter-or-id)
+                                                         (match-string 2 filter-or-id))))
+         (switch-to-buffer (elfeed-search-buffer))
+         (unless (eq major-mode 'elfeed-search-mode)
+           (elfeed-search-mode))
+         (elfeed-search-set-filter filter-or-id)))
+
+     (with-eval-after-load 'org
+       (org-add-link-type "elfeed" #'iqbal-org-elfeed-open-link))
+   #+END_SRC
+
+
+* Keybindings
+** Launch elfeed
+  #+BEGIN_SRC emacs-lisp
+    (define-key iqbal-launcher-map "e" #'elfeed)
+  #+END_SRC
+
+** Keybindings for elfeed-search mode
+   #+BEGIN_SRC emacs-lisp
+     (defun elfeed-save-db-interactive ()
+       (interactive)
+       (elfeed-db-save)
+       (message "Elfeed database saved!"))
+
+     (with-eval-after-load 'elfeed-search
+       (define-key elfeed-search-mode-map (kbd "w") #'iqbal-elfeed-search-open-article-in-w3m)
+       (define-key elfeed-search-mode-map (kbd "/") #'elfeed-search-live-filter)
+       (define-key elfeed-search-mode-map (kbd "U") #'elfeed-update)
+       (define-key elfeed-search-mode-map (kbd "V") #'elfeed-search-browse-url)
+       (define-key elfeed-search-mode-map (kbd "C-x C-s") #'elfeed-save-db-interactive))
+   #+END_SRC
+
+** Keybindings for elfeed-show mode
+   #+BEGIN_SRC emacs-lisp
+     (with-eval-after-load 'elfeed-show
+       (define-key elfeed-show-mode-map (kbd "w") #'iqbal-elfeed-show-open-article-in-w3m)
+       (define-key elfeed-show-mode-map (kbd "/") #'elfeed-show-new-live-search)
+       (define-key elfeed-show-mode-map (kbd "V") #'iqbal-elfeed-show-visit)
+       (define-key elfeed-show-mode-map (kbd "C-x C-s") #'elfeed-save-db-interactive))
+   #+END_SRC

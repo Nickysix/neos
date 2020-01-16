@@ -1,0 +1,300 @@
+[colors]
+background = #37648A
+background-alt = #434c5e
+foreground = #dfdfdf
+foreground-alt = #555
+primary = #ffb52a
+red = #CC6666
+yellow = #F0C674
+secondary = #e60053
+alert = #bd2c40
+
+[bar/top]
+monitor = ${env:MONITOR:eDP1}
+monitor-fallback = ${env:MONITOR:HDMI1}
+width = 50%
+height = 26
+radius = 0.0
+offset-x=50%
+fixed-center = false
+
+background = ${colors.background}
+foreground = ${colors.foreground}
+
+line-size = 3
+line-color = #f00
+
+border-size = 0
+
+padding-left = 2
+padding-right = 2
+
+module-margin-left = 2
+module-margin-right = 2
+enable-ipc = true
+
+font-0 =  "SauceCodePro Nerd Font:size=10;3:antialias=true:autohint=true"
+font-1 =  "Wuncon Siji=10:antialias=true:autohint=true"
+font-2 =  "Hack:pixelsize=10:antialias=true:autohint=true"
+
+modules-left = pulseaudio
+modules-center = date
+modules-right = gmail battery
+
+tray-position = right
+tray-padding = 1
+tray-background = ${colors.background}
+
+override-redirect = true
+
+
+;; ewmh
+[module/ewmh]
+type = internal/xworkspaces
+
+pin-workspaces = false
+enable-click = true
+enable-scroll = true
+reverse-scroll = true
+
+icon-0 = net;
+icon-1 = chat;
+icon-2 = admin;
+icon-3 = srv;
+icon-4 = media;
+icon-5 = code;
+icon-6 = misc;
+icon-default = 
+icon-occupied = 
+
+format = <label-state>
+label-monitor = %icon%
+
+; active
+label-active = %icon%
+label-active-foreground = ${colors.foreground}
+label-active-background = ${colors.background}
+label-active-underline = #d79921
+label-active-padding = 2
+
+; occupied
+label-occupied = %icon%
+label-occupied-background = ${colors.background}
+label-occupied-padding = 2
+label-occupied-underline = #689d6a
+
+; urgent
+label-urgent = %icon%
+label-urgent-foreground = ${colors.foreground}
+label-urgent-background = ${colors.alert}
+label-urgent-underline = ${colors.alert}
+label-urgent-padding = 2
+
+; empty
+label-empty = %icon%
+label-empty-foreground = ${colors.foreground}
+label-empty-padding = 2
+
+format-foreground = ${colors.foreground}
+format-background = ${colors.background}
+
+[module/workspaces-xmonad]
+type = custom/script
+exec = tail -F /tmp/.xmonad-workspace-log
+exec-if = [ -p /tmp/.xmonad-workspace-log ]
+tail = true
+enable-click = true
+
+[module/xwindow]
+type = internal/xwindow
+label = %title:0:30:...%
+
+[module/mpd]
+type = internal/mpd
+format-online = <label-song>  <icon-prev> <icon-stop> <toggle> <icon-next>
+
+icon-prev = 
+icon-stop = 
+icon-play = 
+icon-pause = 
+icon-next = 
+
+label-song-maxlen = 25
+label-song-ellipsis = true
+
+[module/xbacklight]
+type = internal/xbacklight
+
+[module/network]
+type = internal/network
+interface = wlp0s20f3
+interval = 3.0
+accumulate-stats = true
+format-connected = <ramp-signal>
+label-disconnected =
+format-disconnected = <label-disconnected>
+ramp-signal-0 =
+ramp-signal-1 =
+ramp-signal-2 =
+ramp-signal-3 =
+
+[module/date]
+type = internal/date
+interval = 59
+time = %H:%M
+time-alt = %H:%M:%S
+
+format-time-prefix=
+format-time-prefix-foreground = ${colors.foreground-alt}
+label = %time%
+
+[module/pulseaudio]
+type = internal/pulseaudio
+use-ui-max = false
+interval = 5
+format-volume = <label-volume> <bar-volume>
+label-volume =
+label-volume-foreground = ${root.foreground}
+format-muted=<label-muted>
+label-muted= 
+
+bar-volume-width = 10
+bar-volume-foreground-0 = #55aa55
+bar-volume-foreground-1 = #55aa55
+bar-volume-foreground-2 = #55aa55
+bar-volume-foreground-3 = #55aa55
+bar-volume-foreground-4 = #55aa55
+bar-volume-foreground-5 = #f5a70a
+bar-volume-foreground-6 = #ff5555
+bar-volume-gradient = false
+bar-volume-indicator = |
+bar-volume-indicator-font = 2
+bar-volume-fill = |
+bar-volume-fill-font = 2
+bar-volume-empty =
+bar-volume-empty-font = 2
+bar-volume-empty-foreground = ${colors.foreground-alt}
+
+[module/alsa]
+type = internal/alsa
+master-soundcard=hw:1
+format-volume = <label-volume> <bar-volume>
+label-volume =
+label-volume-foreground = ${root.foreground}
+
+format-muted=<label-muted>
+label-muted= 
+
+bar-volume-width = 10
+bar-volume-foreground-0 = #55aa55
+bar-volume-foreground-1 = #55aa55
+bar-volume-foreground-2 = #55aa55
+bar-volume-foreground-3 = #55aa55
+bar-volume-foreground-4 = #55aa55
+bar-volume-foreground-5 = #f5a70a
+bar-volume-foreground-6 = #ff5555
+bar-volume-gradient = false
+bar-volume-indicator = |
+bar-volume-indicator-font = 2
+bar-volume-fill = |
+bar-volume-fill-font = 2
+bar-volume-empty =
+bar-volume-empty-font = 2
+bar-volume-empty-foreground = ${colors.foreground-alt}
+
+[module/battery]
+type = internal/battery
+battery = BAT0
+adapter = AC
+full-at = 89
+poll-interval = 5
+format-charging = <animation-charging>
+
+label-charging = %percentage%%
+label-discharging = %percentage%%
+format-charging-underline = ${colors.yellow}
+
+format-discharging = <ramp-capacity> <label-discharging>
+
+format-full = <ramp-capacity>
+ramp-capacity-0 =
+ramp-capacity-1 =
+ramp-capacity-2 =
+ramp-capacity-3 =
+ramp-capacity-4 =
+ramp-capacity-font=4
+ramp-capacity-foreground=#279124
+
+; Only applies if <animation-charging> is used
+animation-charging-0 = 
+animation-charging-1 = 
+animation-charging-2 = 
+animation-charging-3 = 
+animation-charging-4 = 
+; Framerate in milliseconds
+animation-charging-framerate = 750
+
+[module/temperature]
+type = internal/temperature
+thermal-zone = 0
+warn-temperature = 60
+
+format = <ramp> <label>
+format-warn = <ramp> <label-warn>
+
+label = %temperature-c%
+label-warn = %temperature-c%
+label-warn-foreground = ${colors.secondary}
+
+ramp-0 =
+ramp-1 =
+ramp-2 =
+ramp-foreground = ${colors.secondary}
+
+[module/gmail]
+type = custom/script
+exec = $HOME/.config/polybar/check-mail.sh
+tail = true
+
+[module/updates-arch]
+type = custom/script
+exec = ~/.config/polybar/updates-arch.sh
+interval = 600
+format = <label>
+
+[module/isactive-bluetooth]
+type = custom/script
+exec = ~/.config/polybar/polybar-scripts/isactive-bluetooth.sh
+interval = 10
+
+[module/weather]
+type = custom/script
+exec = ~/.config/polybar/polybar-scripts/openweathermap-simple.sh
+interval = 600
+label-font=5
+padding-top=5
+click-left=sh ~/.config/polybar/polybar-scripts/openweathermap-forecast.sh
+
+[module/system-usb-udev]
+type = custom/script
+exec = ~/polybar-scripts/system-usb-udev.sh
+tail = true
+click-left = ~/polybar-scripts/system-usb-udev.sh --mount
+click-right = ~/polybar-scripts/system-usb-udev.sh --unmount
+; Available exec commands:
+;   menu-open-LEVEL
+;   menu-close
+; Other commands will be executed using "/usr/bin/env sh -c $COMMAND"
+
+[settings]
+screenchange-reload = true
+;compositing-background = xor
+;compositing-background = screen
+;compositing-foreground = source
+;compositing-border = over
+
+[global/wm]
+margin-top = 2
+margin-bottom = 2
+
+; vim:ft=dosini

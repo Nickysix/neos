@@ -1,0 +1,46 @@
+#!/bin/sh
+
+DOMAIN=github.com
+USER=ambrevar
+
+usage () {
+	cat <<EOF>&2
+Usage: ${0##*/} [OPTIONS] REPOS
+
+Clone git repo(s) from $DOMAIN:$USER.
+
+Options:
+
+  -d DOMAIN: Set domain.
+  -u USER:   Set repository owner.
+
+EOF
+}
+
+while getopts ":d:u:" opt; do
+	case $opt in
+	d)
+		DOMAIN=$OPTARG ;;
+	u)
+		USER=$OPTARG ;;
+	\?)
+		usage
+		exit 1 ;;
+	esac
+done
+
+shift $((OPTIND - 1))
+
+if [ $# -eq 0 ]; then
+	usage
+	exit 1
+fi
+
+if ! command -v git >/dev/null 2>&1; then
+	echo >&2 "'git' not found"
+	exit 1
+fi
+
+for i; do
+	git clone "git@$DOMAIN:/$USER/$i" || git clone "https://$DOMAIN/$USER/$i"
+done

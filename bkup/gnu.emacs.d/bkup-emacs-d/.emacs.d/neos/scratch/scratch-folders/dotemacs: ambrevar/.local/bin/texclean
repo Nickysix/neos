@@ -1,0 +1,39 @@
+#!/bin/sh
+
+usage () {
+	cat <<EOF>&2
+Usage: ${0##*/} FILES.tex|FILES.texi
+
+Clean TeX/LaTeX/Texinfo projects of temp files.
+
+Argument must have a '.tex' or '.texi' extension so that we do not acccidentally
+remove files matching these extensions if they are not related to a TeX file.
+
+EOF
+}
+
+[ $# -eq 0 ] && usage && exit 1
+[ "$1" = "-h" ] && usage && exit
+[ "$1" = "--" ] && shift
+
+for i ; do
+	case "$i" in
+	*/*) ;;
+	*)
+		i="./$i" ;;
+	esac
+	dirname="${i%/*}"
+	basename="${i##*/}"
+	ext=$(echo "${basename##*.}" | awk '{print tolower($0)}')
+	basename="${basename%.*}"
+	[ "$ext" != "tex" ] && [ "$ext" != "texi" ] && continue
+	## Reset arg list (big performance boost).
+	set --
+	for j in aux bbl blg cp cps fn glg glo gls idx ilg ind ky lof log maf mt mtc nav out pg snm synctex.gz synctex tns toc tp vr vrs xdy
+	do
+		set -- "$@" "$dirname/$basename.$j"
+	done
+	## Do the file check last to minimize race conditions.
+	[ -f "$i" ] || continue
+	rm -v "$@" 2>/dev/null
+done

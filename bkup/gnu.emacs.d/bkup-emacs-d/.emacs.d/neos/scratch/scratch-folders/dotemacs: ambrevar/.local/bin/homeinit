@@ -1,0 +1,182 @@
+#!/bin/sh
+## Initialize and update user profile.
+
+if [ "$1" = "-h" ]; then
+	cat <<EOF>&2
+Usage: ${0##*/}
+
+Initialize home folder.
+
+Options:
+
+  -u: Skip large updates (packages, etc.)
+
+EOF
+	exit
+fi
+
+OPT_UPDATE=true
+if [ "$1" = "-u" ]; then
+	OPT_UPDATE=false
+	shift
+fi
+
+SOURCEDIR="$HOME/personal"
+[ -z "$XDG_CONFIG_HOME" ] && XDG_CONFIG_HOME="$HOME/.config"
+[ -z "$XDG_DATA_HOME" ] && XDG_DATA_HOME="$HOME/.local/share"
+
+## ln no-clobber
+lnn() {
+	if [ -d "$2" ]; then
+		set -- "$1" "$2/$(basename "$1")"
+	fi
+	if [ ! -e "$2" ] || [ -h "$2" ]; then
+		ln -svnf "$1" "$2"
+	fi
+}
+
+echo "==> Initial packages"
+if command -v pacman >/dev/null 2>&1; then
+	sudo pacman --noconfirm -S --needed gnupg git stow
+elif command -v guix >/dev/null 2>&1; then
+	guix package --install gnupg git stow
+fi
+
+echo "==> GPG"
+if [ -d ~/.gnupg ]; then
+	chmod go-rwx ~/.gnupg ~/.gnupg/*
+	if [ -e "$SOURCEDIR" ]; then
+		git -C "$SOURCEDIR" pull
+	else
+		git clone git@gitlab.com:Ambrevar/personal
+	fi
+	if [ -e ~/.password-store ]; then
+		git -C ~/.password-store pull
+	else
+		git clone git@gitlab.com:Ambrevar/password-store ~/.password-store
+	fi
+else
+	echo "~/.gnupg not found."
+fi
+
+echo "==> Persistent folders"
+for i in .emacs.d .local/share projects temp; do
+	mkdir -pv "$HOME/$i"
+done
+
+## TODO: Remove .bash_profile?
+echo "==> dotfiles"
+if [ -e ~/dotfiles ]; then
+	git -C ~/dotfiles remote set-url origin git@github.com:Ambrevar/dotfiles
+	git -C ~/dotfiles pull
+else
+	git clone git@github.com:Ambrevar/dotfiles
+fi
+pushd ~/dotfiles
+stow -v .
+popd
+
+echo "==> System packages"
+if command -v pacman >/dev/null 2>&1; then
+	pacman_list=""
+	if [ -f ~/.pkglists/arch-official ]; then
+		pacman_list="$(cat ~/.pkglists/arch-official)"
+	fi
+	sudo pacman --noconfirm -S --needed base base-devel $pacman_list
+	if ! command -v cower >/dev/null 2>&1; then
+		mkdir -p /tmp/cower
+		pushd /tmp/cower
+		curl https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=cower > PKGBUILD
+		makepkg --noconfirm -si
+		popd
+	fi
+	if ! command -v pacaur >/dev/null 2>&1; then
+		mkdir -p /tmp
+		cower -d pacaur
+		pushd /tmp/pacaur
+		makepkg --noconfirm -si
+		popd
+	fi
+	if $OPT_UPDATE && [ -f ~/.pkglists/arch-aur ]; then
+		pacaur --noconfirm --noedit -y --needed "$(cat ~/.pkglists/arch-aur)"
+	fi
+	pacman_list=$(pacman -Qdtq)
+	if [ -n "$pacman_list" ]; then
+		sudo pacman --noconfirm -Rs "$pacman_list"
+	fi
+elif command -v guix >/dev/null 2>&1; then
+	## TODO: The manifest will uninstall other unspecified packages.  Is this
+	## really what we want?
+	guix package --manifest=~/.pkglists/guix
+fi
+
+echo "==> Bookmarks"
+mkdir -pv "$XDG_CONFIG_HOME/qutebrowser/bookmarks"
+lnn "$SOURCEDIR/bookmarks/bookmarks" "$XDG_CONFIG_HOME/qutebrowser/bookmarks/urls"
+lnn "$SOURCEDIR/bookmarks/quickmarks" "$XDG_CONFIG_HOME/qutebrowser/"
+
+if ! command -v emacs >/dev/null 2>&1 || \
+		 [ $(emacs --quick --batch --eval '(message "%s" emacs-major-version)' 2>&1) -lt 26 ]; then
+	pushd "$HOME/projects"
+	[ -e emacs ] || git clone https://git.savannah.gnu.org/git/emacs.git
+	if command -v guix >/dev/null 2>&1; then
+		guix package --install emacs-dev
+	else
+		mkdir -p ../emacs-build
+		cd ../emacs-build
+		../emacs/configure \
+			--disable-gtk-deprecation-warnings \
+			--without-pop \
+			--without-kerberos \
+			--without-kerberos5 \
+			--with-x-toolkit=gtk3 \
+			--with-jpeg \
+			--with-tiff \
+			--with-gif \
+			--with-png \
+			--with-rsvg \
+			--with-xml2 \
+			--with-imagemagick \
+			--with-xft \
+			--with-libotf \
+			--without-gsettings \
+			--without-gconf \
+			--with-gnutls \
+			--with-modules \
+			--with-threads
+		popd
+		sudo make install
+	fi
+fi
+
+if command -v emacs >/dev/null 2>&1; then
+	mkdir -pv "$HOME/.cache/emacs/"
+	if ! command -v guix >/dev/null 2>&1; then
+		if $OPT_UPDATE; then
+			echo "==> Emacs ELPA packages"
+			yes | emacs --batch -l ~/.emacs.d/init.el --eval '(progn (package-refresh-contents) (package-install-selected-packages))'
+		fi
+	fi
+	echo "==> Emacs extra packages"
+	mkdir -pv ~/.local/share/emacs/site-lisp
+	for i in ~/.local/share/emacs/site-lisp/*; do
+		echo "$i"
+		git -C "$i" pull
+	done
+fi
+
+echo "==> Mail"
+lnn "$SOURCEDIR/mail/mbsyncrc" "$HOME/.mbsyncrc"
+lnn "$SOURCEDIR/mail/authinfo.gpg" "$HOME/.authinfo.gpg"
+mkdir -pv "$HOME/.cache/mail/"
+while IFS= read -r i; do
+	## We get a shell command, so we need to evaluate it to expand "~".
+	eval "$i"
+done <<EOF
+$(awk '/^Path/ {$1="mkdir -pv"; print}' ~/.mbsyncrc)
+EOF
+
+if $OPT_UPDATE; then
+	mbsync -aV
+	mu index --maildir=~/.cache/mail
+fi

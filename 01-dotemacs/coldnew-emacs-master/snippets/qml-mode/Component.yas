@@ -1,0 +1,12 @@
+# -*- mode: snippet -*-
+# name: Component
+# key: Component
+# --
+Component {
+$0
+}
+
+
+
+
+

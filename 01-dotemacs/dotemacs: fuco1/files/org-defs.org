@@ -1,0 +1,1196 @@
+#+PROPERTY: header-args:elisp :tangle org-defs-tangled.el
+
+Enable lexical binding by default.
+
+* Frontmatter
+:PROPERTIES:
+:ID:       d756e067-7421-4b86-acbe-8cf46de3d4d8
+:END:
+
+#+BEGIN_SRC elisp
+;; -*- lexical-binding: t -*-
+#+END_SRC
+
+* Org mode init
+:PROPERTIES:
+:ID:       7acd8001-c210-4a63-86c7-73a48ecf4426
+:END:
+
+To keep things properly aligned call =org-align-all-tags= every time
+before we save an org buffer.
+
+#+BEGIN_SRC elisp
+(add-hook
+ 'org-mode-hook
+ (lambda ()
+   (add-hook 'before-save-hook 'org-align-all-tags nil 'local)))
+#+END_SRC
+
+* Setup magic-mode-alist for org mode
+:PROPERTIES:
+:ID:       bf1fa521-7730-4d63-9f79-b8c141c6ef2e
+:END:
+
+If we are looking at something resembling an org-table assume we are
+getting an an =org-mode= file.
+
+#+BEGIN_SRC elisp
+(add-to-list 'magic-mode-alist `(,(rx (* white)
+                                      "|"
+                                      (or (and (* white) (+ alpha))
+                                          "-"))
+                                 . org-mode))
+#+END_SRC
+
+* Refiling workflows
+** Replace refile target picking with a sallet
+:PROPERTIES:
+:ID:       4b5484fb-0fcb-4ae9-89cc-19bccad8fc40
+:END:
+  :CLOCK:
+  CLOCK: [2017-06-08 Thu 19:40]--[2017-06-08 Thu 20:06] =>  0:26
+  :END:
+
+#+BEGIN_SRC elisp
+(require 'sallet)
+
+(defvar my-org-refile-collection nil
+  "Dynamically bound collection to be used as candidates.
+
+This is a hack: sallet can't take an argument on creation.")
+
+(sallet-defsource org-refile ()
+  (candidates (lambda () my-org-refile-collection))
+  (header "Refile target")
+  (renderer
+   (lambda (candidate _ user-data)
+     (sallet-fontify-regexp-matches
+      (plist-get user-data :regexp-matches)
+      (car candidate))))
+  ;; (matcher sallet-matcher-flx-then-substring)
+  (action (lambda (_ c) (car c))))
+
+(defun org-refile-sallet-completing-read (prompt collection &rest args)
+  "Read an outline path like a file name."
+  (let ((my-org-refile-collection collection))
+    (sallet (list 'sallet-source-org-refile))))
+
+(defun my-org-refile-get-location-use-sallet (orig-fun &optional prompt default-buffer new-nodes)
+  (let ((completing-read-function 'org-refile-sallet-completing-read))
+    (funcall orig-fun prompt default-buffer new-nodes)))
+
+(advice-add 'org-refile-get-location
+            :around #'my-org-refile-get-location-use-sallet)
+
+
+#+END_SRC
+** Automatically remove inherited tags from tasks after refiling     :published:
+  CLOSED: [2017-05-09 Tue 19:12]
+  :PROPERTIES:
+  :BLOG_FILENAME: 2017-05-09-Automatically-remove-inherited-tags-from-tasks-after-refiling
+  :PUBDATE:  [2017-05-09 Tue 19:12]
+  :ID:       bf0b4a00-5b6e-4b63-9146-0fd0431818f6
+  :END:
+  :LOGBOOK:
+  - State "DONE"       from "TODO"       [2017-05-09 Tue 19:12]
+  :END:
+  :CLOCK:
+  CLOCK: [2017-05-09 Tue 18:44]--[2017-05-09 Tue 19:35] =>  0:51
+  :END:
+
+I have a pretty standard =org-capture= workflow: during the day when an idea comes to mind or I stumble upon a task I can't solve right now or I find an article I would want to read later I use one of the several [[https://github.com/Fuco1/.emacs.d/blob/master/files/org-defs.el#L1142][capture templates I set up]] to quickly file a note and continue with minimal distraction with what I was doing at the time.
+
+*************** TODO change the link to templates to actual headline in the config when published :noexport:
+
+When I add these tasks I try to tag them with appropriate tags.  So
+
+- for articles I add tags according to the area the article relates to (=:math:=, =:programming:=...)
+- for tasks in projects I add the project tags (=:emacs:=, =:smartparens:=...)
+- for chores I add tags about where to do the given task (=:home:=, =:garden:=...)
+
+Well, the point is, I tag the entries to-be-refiled.
+
+When I get to my daily or weekly review and refiling I had to manually go to the refiled entry and remove the painstakingly added tags.  That is because the tags are already present on the parent headlines most of the time and so get inherited... and I hate to have them duplicitly.  On the other hand, not adding the tags also proved painful because sometimes I leave (non-urgent) tasks sitting in the refile log for a couple days and by the time I get to process them there can be quite a few; the tags help me better remember what is going on.
+
+Of course, the same issue comes up with regular refiling between different hierarchies.
+
+So there is the problem, fortunately nothing a little bit of hacking can't solve.  Org mode conveniently provides =org-after-refile-insert-hook= where we can add the little function below to do the work.
+
+#+BEGIN_SRC elisp
+(defun my-org-remove-inherited-local-tags ()
+  "Remove local tags that can be inherited instead."
+  (let* ((target-tags-local (org-get-tags-at nil 'local))
+         ;; We have to remove the local tags otherwise they would not
+         ;; show up as being inherited if they are present on
+         ;; parents---the local tag would "override" the parent
+         (target-tags-inherited
+          (unwind-protect
+              (progn
+                (org-set-tags-to nil)
+                (org-get-tags-at))
+            (org-set-tags-to target-tags-local))))
+    (-each target-tags-local
+      (lambda (tag)
+        (when (member tag target-tags-inherited)
+          (org-toggle-tag tag 'off))))))
+
+(add-hook 'org-after-refile-insert-hook 'my-org-remove-inherited-local-tags)
+#+END_SRC
+
+The function also showcases work with the org tag API which I personally find rather confusing (the naming seems to have been invented on the fly because it doesn't make sense half the time).
+
+I also wanted to add the functionality to preserve the inherited tags from the original position so that refiling would be tag-neutral operation.  But that actually proved rather annoying because the point of refiling under a differnet hierarchy is to /not/ have the same tags... otherwise why would you refile at all.
+** Refiling hydra with pre-defined targets                           :published:
+:PROPERTIES:
+:BLOG_FILENAME: 2019-02-10-Refiling-hydra-with-pre-defined-targets
+:PUBDATE:  [2019-02-10 Sun 13:52]
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2019-02-10 Sun 13:52]
+:END:
+:CLOCK:
+CLOCK: [2019-02-10 Sun 13:17]--[2019-02-10 Sun 14:06] =>  0:49
+:END:
+
+I'm a heavy =org-capture= user and I use about 10 templates to save the
+ideas/tasks to appropriate places (work / life / emacs / other
+projects / reading...).  Sometimes, however, it is quite difficult to
+determine at the time of capture where to put the note, or it would
+take a lot of time to categorize properly... or sometimes I'm just
+lazy.  For these situations I use a general =refile.org= file.  Anything
+I don't want to deal with right now goes there.
+
+Then I often end up with 200+ notes in this file and I have to deal
+with it somehow during my weekly reviews.  Many items I simply delete,
+but some I refine and then refile away to where they belong.
+
+I use about 10 huge org files to store my data and simply calling
+=org-refile= is very slow and the number of targets grows into tens of
+thousands which makes the experience sub-optimal.
+
+I've written a simple Elisp =defmacro= to generate specialized versions
+of =org-refile= where I can limit the targets to one file or a subset of
+files.  This is done by =let=-binding =org-refine-targets= variable and
+then calling =org-refile=---it will pick up the new setting.  I also
+automatically clear the cache because during this process I often add
+or move headlines around and the cache is most of the time stale.  In
+practice it's not a problem because refiling to just one file is
+fast-enough to rebuild the cache on-the-go.
+
+#+begin_src elisp
+(defmacro my-org-make-refile-command (fn-suffix refile-targets)
+  "Generate a command to call `org-refile' with modified targets."
+  `(defun ,(intern (concat "my-org-refile-" (symbol-name fn-suffix))) ()
+     ,(format "`org-refile' to %S" refile-targets)
+     (interactive)
+     (org-refile-cache-clear)
+     (let ((org-refile-target-verify-function nil)
+           (org-refile-targets ,refile-targets))
+       (call-interactively 'org-refile))))
+#+end_src
+
+It's quite straight-forward, we have a =defun= skeleton and we splice
+the name and the target there.  The expansion looks like this
+
+#+begin_src elisp :tangle no
+(my-org-make-refile-command kb '(("~/data/documents/kb.org" :maxlevel . 9)))
+
+;; expands to
+
+(defun my-org-refile-kb nil
+  "`org-refile' to (quote ((\"~/data/documents/kb.org\" :maxlevel . 9)))"
+  (interactive)
+  (org-refile-cache-clear)
+  (let
+      ((org-refile-target-verify-function nil)
+       (org-refile-targets
+        '(("~/data/documents/kb.org" :maxlevel . 9))))
+    (call-interactively 'org-refile)))
+#+end_src
+
+Throw in a cool [[https://github.com/abo-abo/hydra][hydra]] and you're all set!
+
+#+begin_src elisp
+(my-org-make-refile-command kb '(("~/data/documents/kb.org" :maxlevel . 9)))
+(my-org-make-refile-command reading '(("~/org/reading.org" :maxlevel . 9)))
+(my-org-make-refile-command this-file `((,(buffer-file-name) :maxlevel . 9)))
+
+(defhydra my-org-refile-hydra (:color blue :hint nil)
+  "
+_t_his file
+
+Special files:
+---------------------
+_k_b.org    _r_eading.org"
+  ("k" my-org-refile-kb)
+  ("r" my-org-refile-reading)
+  ("t" my-org-refile-this-file))
+
+(bind-key "C-c r" #'my-org-refile-hydra/body org-mode-map)
+#+end_src
+
+* font-lock hacks and improvements
+** Fontify done checkbox items in org-mode                           :published:
+  CLOSED: [2017-05-25 Thu 00:10]
+  :PROPERTIES:
+  :BLOG_FILENAME: 2017-05-25-Fontify-done-checkbox-items-in-org-mode
+  :ID:       0bf880d4-8975-40e4-aa19-8789bfe73ddd
+  :END:
+  :CLOCK:
+  CLOCK: [2017-05-24 Wed 23:58]--[2017-05-25 Thu 00:25] =>  0:27
+  :END:
+  :LOGBOOK:
+  - State "DONE"       from              [2017-05-25 Thu 00:10]
+  :END:
+
+My computer crashed over the weekend and during the re-installation I started migrating my install scripts to puppet (I had roughly 60% covered by puppet prior to that already), so I made a check list in org with all the things to not forget to include.  The list grew quite large and hard to process visually.
+
+There is a somewhat nice feature of org mode which you can turn on using =org-fontify-done-headline= flag; if set to =t=, =DONE= headlines will be highlighted in =org-headline-done= face.  I let this face inherit from =shadow= which effectively removes these lines from my attention.
+
+So to solve my problem naturally I would like to extend this behaviour to checkbox lists.  I don't always do them in sequence and so the gradual change from "normal" to "hidden" lines nicely illustrates the progress and makes the todo items stand out.
+
+Just throw the following somewhere and reload the org buffers (close and reopen or toggle =fundamental-mode= then =org-mode= again).
+
+#+BEGIN_SRC elisp
+(font-lock-add-keywords
+ 'org-mode
+ `(("^[ \t]*\\(?:[-+*]\\|[0-9]+[).]\\)[ \t]+\\(\\(?:\\[@\\(?:start:\\)?[0-9]+\\][ \t]*\\)?\\[\\(?:X\\|\\([0-9]+\\)/\\2\\)\\][^\n]*\\(?:\n\\|\\'\\)\\)" 1 'org-headline-done prepend))
+ 'append)
+#+END_SRC
+
+Here's how it looks (list shortened for clarity):
+
+#+BEGIN_SRC org
+,*** TODO Puppet
+    :CLOCK:
+    CLOCK: [2017-05-21 Sun 18:00]--[2017-05-21 Sun 21:55] =>  3:55
+    :END:
+- [ ] cli :: Add youtube-dl
+- [ ] org :: Add plantuml.jar
+- [X] emacs :: Add Cask
+- [ ] haskell :: Add Cabal sandbox support and build everything in sandboxes
+- [ ] php :: Add Composer
+- [ ] emacs :: Add EVM
+- [ ] ruby :: Add RVM
+- [ ] node :: Add NVM
+- [ ] node :: Add NPM
+- [X] linux :: Add Wine + Winetricks
+- [ ] latin :: Add whitakers-words
+- [ ] puppet :: Add support to install "docker" apps
+- [X] setup :: Ensure download-local directory
+- [ ] prog :: Install global (6.5 at least)
+- [ ] linux :: Install pasystray (git)
+- [ ] prog :: Install ag (0.31.0+)
+- [X] cli :: Install tmux (2.0+)
+- [ ] linux :: Install twmn
+- [X] desktop :: Install slack (from .deb)
+- [ ] cli :: Install fisher
+- [X] cli ::Install ledger (from package + elisp mode from source?)
+- [ ] mail :: Install isync
+#+END_SRC
+
+(Also note that the above is /not/ a screenshot, it is an embedded =org-mode= snippet in =org-mode='s =#+BEG_SRC= block.  Inception.)
+
+I stole the regexp from [[https://github.com/hlissner/.emacs.d/blob/master/modules/lang/org/config.el][hlissner's emacs.d]] who apparently came to the same conclusion.  It's a rather nice collection of stuff so check it out, but be warned, it is /super/ idiosyncratic... which in Emacs translation basically means awesome :)
+
+** Multiline fontification with org-emphasis-alist                   :published:
+CLOSED: [2018-12-23 Sun 18:24]
+:PROPERTIES:
+:ID:       cce8be67-e8d8-45ab-9d02-8a8ddfdcfb40
+:BLOG_FILENAME: 2018-12-23-Multiline-fontification-with-org-emphasis-alist
+:PUBDATE:  [2018-12-23 Sun 18:24]
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2018-12-23 Sun 18:24]
+:END:
+:CLOCK:
+CLOCK: [2018-12-23 Sun 18:15]--[2018-12-23 Sun 18:24] =>  0:09
+:END:
+
+By default org mode only fontifies spans of text wrapped in emphasis
+markers (customized with =org-emphasis-alist=) if they extend through at
+most one newline.  This is probably a performance optimization, one
+wholly unnecessary on modern hardware.
+
+As per this [[https://emacs.stackexchange.com/questions/18101/org-mode-multi-line-emphasis-and-bold][stack overflow]] post I re-set the constant to 10 lines and
+can probably even increase it if necessary.
+
+#+BEGIN_SRC elisp
+(setcar (nthcdr 4 org-emphasis-regexp-components) 10)
+#+END_SRC
+
+Before this starts to work you need to re-save =org-emphasis-alist=
+through the customize interface because it is using a custom setter
+=org-set-emph-re= to compute the regexpses (or, /*gulp*/, restart Emacs).
+
+#+begin_src elisp
+;; This function is the customize setter so it calls (set var val)
+;; using the first and second argument.  We don't want to set anything
+;; here, only run the update function (which for some strange reason
+;; isn't using the passed-in values).  Since keywords can be safely
+;; assigned to themselves, we just use a placeholder ¯\_(ツ)_/¯
+(org-set-emph-re :ignored :ignored)
+#+end_src
+
+Here I quote the answer in case it ever gets lost:
+
+#+BEGIN_SRC markdown
+By default, org-mode allows a single newline. So if you want to be
+able to add markup to text that spans more than two consecutive lines,
+you'll need to modify this entry.
+
+    (setcar (nthcdr 4 org-emphasis-regexp-components) N)
+
+... where N is the number of newlines you want to allow.
+#+END_SRC
+
+* Use org-radiobutton to select an option from a list                :published:
+CLOSED: [2018-03-11 Sun 15:50]
+:PROPERTIES:
+:BLOG_FILENAME: 2018-03-11-Use-org-radiobutton-to-select-an-option-from-a-list
+:PUBDATE:  [2018-03-11 Sun 15:50]
+:ID:       de293a52-8c9c-464c-8fb7-e847ca40694e
+:END:
+:LOGBOOK:
+- State "DONE"       from              [2018-03-11 Sun 15:50]
+:END:
+:CLOCK:
+CLOCK: [2018-03-11 Sun 15:20]--[2018-03-11 Sun 15:50] =>  0:30
+:END:
+
+#+BEGIN_SRC elisp :exports none
+(use-package org-radiobutton
+  :config
+  (global-org-radiobutton-mode 1))
+#+END_SRC
+
+Ever since I've come across the [[http://howardism.org/Technical/Emacs/literate-devops.html][Literate DevOps]] article I was hooked
+and immediately started writing down "org notebooks" every time an
+incident occured along with all the code and steps on how to fix it in
+case it might happen in the future (protip: it /will/ happen again).
+
+Recently we had some problems with webhook requests behaving weird and
+so I created a little notebook to query the mongo database where we
+store all the requests and some more functions (ranging from elisp to
+jq to ruby) to process the results.  As you sure know, threading data
+between code blocks in different languages is painless with =org-mode=
+and babel.
+
+So imagine a block like this (using [[https://github.com/krisajenkins/ob-mongo][ob-mongo]]):
+
+#+BEGIN_SRC org
+,#+NAME: query
+,#+BEGIN_SRC mongo :db logs :host localhost :port 27017
+db.webhookLogs.find({endpoint: "AddCustomer"}).sort({_id: -1}).limit(1)
+,#+END_SRC
+#+END_SRC
+
+This gives me the most recent request to the =AddCustomer= endpoint.
+The results of this block are then piped into other code blocks to
+process the request, you can imagine how that looks.
+
+Usually I run the entire app stack locally but we also have separate
+staging and production environments.  So after I run the notebook on
+my own local stack I want to try it out in staging.
+
+I use [[https://github.com/rejeep/prodigy.el][prodigy]] to manage my ssh tunnels and so all I need to do is
+change the port to one pointing to staging and re-run the notebook.
+The problem is that I have multiple query blocks and so I have to go
+and change all of the =:port= arguments.
+
+I have solved this by creating a block that would work as a source for
+the port and then reference it dynamically in the header line:
+
+#+BEGIN_SRC org
+,#+NAME: port
+,#+BEGIN_SRC elisp
+27017
+,#+END_SRC
+
+,#+NAME: query
+,#+BEGIN_SRC mongo :db logs :host localhost :port (org-babel-ref-resolve "port")
+db.webhookLogs.find({endpoint: "AddCustomer"}).sort({_id: -1}).limit(1)
+,#+END_SRC
+#+END_SRC
+
+Since we can call elisp in the header I use =org-babel-ref-resolve= and
+give it the name of the source block and babel will automatically
+replace it with the value of the block.
+
+This solves the problem of changing the constant at one place but as I
+got to work with more environments I tended to forget what port was
+what.  So I created a list above the block to remind me of the
+available values:
+
+#+BEGIN_SRC org
+Use one of the following ports to operate on the given environment:
+
+- localhost :: 27017
+- staging :: 27004
+- production :: 27005
+
+,#+NAME: port
+,#+BEGIN_SRC elisp
+27017
+,#+END_SRC
+
+,#+NAME: query
+,#+BEGIN_SRC mongo :db logs :host localhost :port (org-babel-ref-resolve "port")
+db.webhookLogs.find({endpoint: "AddCustomer"}).sort({_id: -1}).limit(1)
+,#+END_SRC
+#+END_SRC
+
+We can use the org mode list description syntax =foo ::= to attach a
+label to each item and leave the number as the "value".
+
+This is starting to look an awful lot like a list of choices I could
+pick from.  So my thinking goes like this: let's make it a checkbox
+list and then select the option by checking the option.  The trouble
+there is that toggling the input would require me to un-toggle the
+current one and then toggle the desired option.  Ideally, toggling one
+checkbox would uncheck the other so that there is always exactly one
+option selected: in other words, I wanted a radiobutton list.
+
+After a quick google session I've found (via [[http://irreal.org/blog/?p=4644][Irreal]]) that [[http://kitchingroup.cheme.cmu.edu/blog/2015/10/05/A-checkbox-list-in-org-mode-with-one-value/][John Kitchin]]
+already figured this out.  I took his code and cleaned it up a bit to
+work with "modern" org mode (the post is three years old) and packaged
+it as [[https://github.com/Fuco1/org-radiobutton][org-radiobutton]].
+
+Now I have a nice menu I can go to and with a single =C-c C-c= on the
+option I want I can select the environment where to run the notebook.
+Org mode is so cool!
+
+#+BEGIN_SRC org
+Check one of the following ports to operate on the given environment:
+
+,#+attr_org: :radio
+,#+NAME: port
+- [ ] localhost :: 27017
+- [X] staging :: 27004
+- [ ] production :: 27005
+
+,#+NAME: query
+,#+BEGIN_SRC mongo :db logs :host localhost :port (org-radiobutton-value "port")
+db.webhookLogs.find({endpoint: "AddCustomer"}).sort({_id: -1}).limit(1)
+,#+END_SRC
+#+END_SRC
+
+I'm going over all of my notebooks converting all the ugly option
+hacks to this setup and it is so damn pleasing! :D
+
+* Org protocol
+** Maximize the org-capture buffer                                   :published:
+  CLOSED: [2017-09-02 Sat 22:02]
+  :PROPERTIES:
+  :BLOG_FILENAME: 2017-09-02-Maximize-the-org-capture-buffer
+  :PUBDATE:  [2017-09-02 Sat 22:02]
+  :END:
+  :LOGBOOK:
+  - State "DONE"       from              [2017-09-02 Sat 22:02]
+  :END:
+  :CLOCK:
+  CLOCK: [2017-09-02 Sat 21:00]--[2017-09-02 Sat 22:02] =>  1:02
+  :END:
+I'm a heavy user of =org-capture= and one behaviour of it always annoyed me:  instead of having the capture popup take the whole screen, it opens a new window.  This window is often small and somewhat inconvenient.  I like to do one thing at a time and so when I'm filing a note or capturing an idea I want to see only the capture buffer and no other distractions.  As we all know distractions kill flow and so we should always find ways to get all the nonsense out of the way.
+
+Recently I've started using [[https://github.com/sprig/org-capture-extension][this awesome extension]] to capture web content from firefox (works with chrome too).  I've tweaked the protocol handler to not only invoke =emacsclient "%u"= but also set some frame properties for later.
+
+Here's the bash script I use as the handler
+
+#+BEGIN_SRC sh
+#!/bin/bash
+emacsclient -c -F '((name . "org-protocol-capture"))' "$@"
+#+END_SRC
+
+The =-F= option sets the frame parameters with the specified alist.  Here I only set the name to ="org-protocol-capture"= I make sure to open new frame with =-c=.
+
+Org capture provides several hooks we can use to tweak the default behaviour.
+
+First, we make sure the capture buffer window takes the whole frame.  To do this, we first save the current window configuration and then delete all other windows on entering the =org-capture-mode=.  Unfortunately there is no "before anything happens" hook so we use a before advice instead.
+
+
+#+NAME: org-protocol-before
+#+BEGIN_SRC elisp :tangle no
+(defvar my-org-capture-before-config nil
+  "Window configuration before `org-capture'.")
+
+(defadvice org-capture (before save-config activate)
+  "Save the window configuration before `org-capture'."
+  (setq my-org-capture-before-config (current-window-configuration)))
+
+(add-hook 'org-capture-mode-hook 'delete-other-windows)
+#+END_SRC
+
+Next, after we finish the capture work flow (either with success or cancellation) we restore the window configuration saved previously.
+
+Finally, let's make sure that after we refile the captured content the frame which was possibly created (if capture was invoked with =org-protocol=) closes itself automatically.  This keeps us in the flow and keeps the distraction of killing the frame manually away.  We use the frame name to decide if we wish to kill the frame or not (this is the =-F= argument from above).
+
+
+#+NAME: org-protocol-capture-cleanup
+#+BEGIN_SRC elisp :tangle no
+(defun my-org-capture-cleanup ()
+  "Clean up the frame created while capturing via org-protocol."
+  ;; In case we run capture from emacs itself and not an external app,
+  ;; we want to restore the old window config
+  (when my-org-capture-before-config
+    (set-window-configuration my-org-capture-before-config))
+  (-when-let ((&alist 'name name) (frame-parameters))
+    (when (equal name "org-protocol-capture")
+      (delete-frame))))
+
+(add-hook 'org-capture-after-finalize-hook 'my-org-capture-cleanup)
+#+END_SRC
+
+With these tweaks the whole capture experience is much more streamlined for me.  When I invoke capture from anywhere (Emacs or via =org-protocol=), I get a full screen frame/window where I can quickly jot my thoughts.  After I'm finished everything restores itself to the previous state and I can continue with whatever task I was consumed prior to the capture process.
+
+** Final code
+:PROPERTIES:
+:ID:       3d284389-7790-4f31-9af7-309cda1de09c
+:END:
+
+#+BEGIN_SRC elisp :noweb yes
+(use-package org-protocol
+  :config
+  (progn
+
+    <<org-protocol-before>>
+
+    <<org-protocol-capture-cleanup>>
+
+    (use-package async)
+    (defun my-org-protocol-save-youtube (info)
+      (let* ((parts (org-protocol-split-data info t org-protocol-data-separator))
+             (link (car parts)))
+        (save-window-excursion
+          (async-start-process "ydown" "ydown" nil link)
+          (message "Youtube download started: %s" link)
+          nil)))
+
+    (push '("save-youtube"
+            :protocol "save-youtube"
+            :function my-org-protocol-save-youtube
+            :kill-client nil)
+          org-protocol-protocol-alist)))
+#+END_SRC
+
+* Logging
+** Use the input method from original org buffer in log note buffer  :published:
+CLOSED: [2019-01-23 Wed 08:46]
+:PROPERTIES:
+:BLOG_FILENAME: 2019-01-23-Use-the-input-method-from-original-org-buffer-in-log-note-buffer
+:PUBDATE:  [2019-01-23 Wed 08:46]
+:END:
+:LOGBOOK:
+- State "DONE"       from              [2019-01-23 Wed 08:46]
+:END:
+:CLOCK:
+CLOCK: [2019-01-23 Wed 08:26]--[2019-01-23 Wed 08:45] =>  0:19
+:END:
+
+On switching various TODO states I've set up org mode to pop a buffer
+for [[https://orgmode.org/manual/Tracking-TODO-state-changes.html][attaching a quick note or explanation]].  You can do this also for
+refiling, clocking in or out, rescheduling and so on.
+
+I don't use these logs very often in a review or retrospective but it
+helped me a bunch of times to figure out the circumstances of my past
+actions (e.g. rescheduling, postponing work etc.) so I find it worth
+to spend 30 seconds jotting down a simple note as opposed to then
+trying to figure out everything from scratch for hours.
+
+Especially useful for when you are not meeting client's
+deadlines. Papertrail is good!
+
+Also being a daily journalist and somewhat obsessive about tracking my
+life my settings here are pretty aggressive.
+
+One thing that buggs me is, being not a native English speaker, is
+that when =org-mode= pops the note buffer its input method resets to
+English.  Given the fact that the past and current org maintainers
+also don't speak English as a first language kind of led me to expect
+there to be some setting to inherit the input method of the original
+buffer[fn:26c3f46c2efdf:And really, 99% of the time, when you say "I'm
+going to write an org-extension", it already is in core.].  Sadly, I
+couldn't find it, so I decided to "roll my own".
+
+Now here comes the part that blew my mind... I've realized I wrote the
+whole code in under 2 minutes... where simply trying to read the
+manual and search the code would easily take more
+time[fn:142441a39bad1e6a:This is not the greatest engineering and you
+should almost always prefer a well-tested lib over your own... on the
+other hand, being a pragmatic professional, I value my time over code
+purity].  This is the nice feature of being an Emacs power-user.  I
+wrote the code on the first try, registered it in a hook which name
+I've guessed and it all worked flawlessly.  Nice!
+
+#+BEGIN_SRC elisp
+(defun my-org-inherit-input-method ()
+  "Set the input method of this buffer to that of original's buffer."
+  (let* ((note-buffer (marker-buffer org-log-note-marker))
+         (im (with-current-buffer note-buffer
+               current-input-method)))
+    (set-input-method im)))
+
+(add-hook 'org-log-buffer-setup-hook 'my-org-inherit-input-method)
+#+END_SRC
+
+Of course, I've spent thousands of hours learning Elisp, so I'm not
+sure where or when the time/productivity curves actually crossed.
+
+* TODO Goals, journaling and progress tracking with org-mode
+:PROPERTIES:
+:ID:       ce89e3ef-dddb-4f31-8f11-f3cc0f89d64a
+:END:
+
+This is a very long post and it probably won't make sense to every one
+at first read.  I will appreciate any feedback to make it more
+understandable.  This is something I've been thinking about for a long
+time and I feel it might help people so I want to make sure things
+make sense.
+
+Ok, now let's get to it!
+
+Org mode is a fantastic tool for making notes, writing journals,
+keeping goals and habits in check, tracking progress.  I am very
+impressed with what can be done out of the box but as usual my
+workflows are a bit more idiosyncratic and since Emacs and org mode
+are so easy to extend I have added a bunch of arguably cool features
+to make my life easier.
+
+I keep a daily journal and one of the things I try to do there is to
+keep track of my activities, habits and progress.  I also have a
+review every week, month and year to summarize the progress on a
+higher level to make the long-term changes more apparent and to enable
+me to orient myself properly in where I am in relation to where I want
+to be (which is very hard to do on a daily basis).
+
+When I started things were a bit unstructured and quickly the "free
+form" tracking became chaotic and difficult to review.  I'm a
+scientist and I need hard data!
+
+These days I still track my progress through my journal entries and
+reviews but they now have more structure.  All my goals are kept in a
+separate file, let's call it =goals.org=.  This file contains four
+top-level headlines:
+
+- Daily
+- Monthly
+- Quarterly
+- Yearly
+
+The Monthly, Quarterly and Yearly headlines contain the respective
+time intervals as subtrees.  So the /Monthly/ heading would have a
+structure like this:
+
+#+BEGIN_SRC org
+,* Monthly
+,** 2018
+,*** DONE January
+,*** DONE February
+,*** DONE March
+,*** TODO April
+#+END_SRC
+
+The yearly would contain just the years and the quarterly years and
+quarters. Each /interval/ (month/quarter/year) then contains the
+specific goals for that period of time.
+
+The /Daily/ goals are just random things I like to do for a specific
+period of time or to be reminded and tracked daily forever.  There is
+no substructure and every task or habit or property has its own
+heading.
+
+Let's say my goal for April 2018 is to read three books.  I would
+create an entry like this:
+
+#+BEGIN_SRC org
+,* Monthly
+,** 2018
+,*** TODO April
+,**** TODO Read three books
+:PROPERTIES:
+:GOAL_NUMBER_OF_BOOKS: 3
+:END:
+- goal :: read three books
+- how :: read the first one, then the second one, then third one
+- measure :: number of books
+
+Here I can include more detailed description of how to do it and why
+and what is the benefit and so on.
+#+END_SRC
+
+Every goal has these three item lists at the top of it: /goal/, /how/ and
+/measure/ which are short summaries of:
+
+- goal :: what to do
+- how ::  how to do it
+- measure ::  what is the measurable quality of the goal that I will track and how
+
+Further, these goals can have any number of properties prefixed with
+=GOAL_= with any value.  These serve as reminders of where I want to get
+and also to enable long term tracking via [[id:43ab2860-7df5-4e3b-ba92-8cab877b90d1][org tables]] which I
+auto-generate from this metadata.
+
+** Tracking daily progress
+
+I like to have a bit of a structure in my journaling and for some time
+I used a template that I copied into the entry every day from another
+file.  This quickly got annoying so I created an automated mechanism
+for creating, updating and gathering templates directly from the goals
+themselves.
+
+First, define the file where the templates will be stored.  Since I
+store them along the goals I specify my goal file.
+
+#+BEGIN_SRC elisp
+;; TODO: allow more than one file?
+(defvar my-org-goal-templates-file "~/data/documents/goals.org.gpg"
+  "File where we keep track of goals and the templates.")
+#+END_SRC
+
+The next configuration variable specifies the intervals for which we
+would like to insert the templates.  I use these four but you can add
+any number of others.  The words have no significance and are simply a
+convention.
+
+#+BEGIN_SRC elisp
+;; TODO: gather these from the buffer dynamically?
+(defvar my-org-goal-templates-intervals '(
+                                          "daily"
+                                          "weekly"
+                                          "monthly"
+                                          "yearly"
+                                          )
+  "Intervals used in templates.")
+#+END_SRC
+
+Every time I add a goal and I want to keep track of it in my journal
+entries I also add a template to its entry which can then be
+automatically inserted to the journal entries.  If there are multiple
+templates for a given interval they are all concatenated and inserted
+at the same time.  This way I can keep the templates at the tasks
+where they make sense in context and collect them all with a bit of
+elisp before I want to insert them.
+
+A template is simply an org src block with a =#+NAME= marker starting
+with =template-= followed by one of the intervals from
+=my-org-goal-templates-intervals= optionally followed by anything.  The
+labels do not have to be unique.
+
+Let's say I want to keep track of one cool thing I did every day.  I
+would create a task under the /Daily/ goals like this:
+
+#+NAME: tracking-cool-thing
+#+BEGIN_SRC org
+,* Daily
+,** Keep track of one cool thing
+
+Every day I do so many awesome things that it's hard to pick just one.
+Let's try to pick one anyway.
+
+,#+NAME: template-daily-track-cool-thing
+,#+BEGIN_SRC org
+- cool thing :: I did this cool thing today:
+  - <fill>
+,#+END_SRC
+#+END_SRC
+
+The templates are only gathered from tasks which are not marked with
+any =done= keyword.  You can put a =TODO= or nothing there and they will
+be considered.  It works this way because when I want to stop tracking
+something I can simply mark it as done or failed or stopped and the
+template will no longer be considered when we collect them.
+
+#+BEGIN_SRC elisp
+(defun my-org-get-goal-templates (interval)
+  "Find all the templates for the INTERVAL and insert at point.
+
+Only collect the templates from tasks marked with a todo keyword
+or nothing, but not from done tasks."
+  (interactive (list (completing-read "Type: " my-org-goal-templates-intervals)))
+  (let (templates)
+    (with-current-buffer (find-file-noselect my-org-goal-templates-file)
+      (org-element-map (org-element-parse-buffer) 'src-block
+        (lambda (template)
+          (-when-let (name (org-element-property :name template))
+            (when (and (string-prefix-p (concat "template-" interval) name)
+                       (save-excursion
+                         (goto-char (org-element-property :begin template))
+                         (or (org-entry-is-todo-p)
+                             (not (org-get-todo-state)))))
+              (push template templates))))))
+    (insert
+     ":PROGRESS:\n"
+     (mapconcat (lambda (template)
+                  (org-element-property :value template))
+                (nreverse templates) "")
+     ":END:")))
+#+END_SRC
+
+When I'm adding a daily journal entry I call =my-org-get-goal-templates=
+with the interval =daily=.  This gathers all the daily templates from
+all the goals and inserts them concatenated at point.  The templates
+can contain any org markup not just list items or checkboxes but
+that's what I use most.  I then follow the instructions in the
+templates and fill in the appropriate data.
+
+There is nothing stopping us from adding daily templates to monthly or
+yearly goals.  It actually does not matter where the template is in
+the file.  The position of the template is irrelevant.  Also each task
+can have as many templates as you want and even have templates with
+different intervals.
+
+** Monthly reviews and summarizing daily progress.
+
+During the monthly reviews I like to summarize everything that
+happened in the previous month on several fronts: financially, at
+work, cool events I attended, progress towards my goals and so on.
+
+To facilitate this I pull data from the daily review and quickly skim
+them before writing a summary.
+
+Let's get back to the daily tracking of a cool thing I did.  I might
+want to highlight the coolest one in my monthly review.  I can add a
+monthly interval template for the monthly review:
+
+#+BEGIN_SRC org :noweb yes
+<<tracking-cool-thing>>
+
+At the end of the month, I would like to highlight the coolest thing I
+did in the entire month.
+
+,#+NAME: template-monthly-track-cool-thing
+,#+BEGIN_SRC org
+- cool thing :: This is the coolest thing I did in the last month:
+  - <date>: <fill>
+,#+END_SRC
+#+END_SRC
+
+Now I can go back to all the daily entries and look at each one, pick
+the coolest and put it in the monthly review entry.  But that's going
+to be a lot of work!  Wouldn't it be easier if I could extract just
+the cool thing items and view them aggregated in a separate buffer?
+
+That's what I can do with the function =my-org-get-items-summary=.  As
+you might have noticed I prefix every item with a tag (that is the
+part separated from the body by =::=).  I can then ask for all the items
+with this tag and gather them in a separate buffer for review.
+
+#+BEGIN_SRC elisp
+(defun my-org-get-items-summary (tag)
+  "Find all list items with TAG and aggregate them into a review buffer."
+  ;; TODO: gather the tags dynamically?
+  (interactive (list (read-from-minibuffer "tag: ")))
+  (let (items)
+    (org-element-map (org-element-parse-buffer) 'item
+      (lambda (item)
+        (-when-let (item-name (car (org-element-property :tag item)))
+          (when (equal (downcase tag) (downcase item-name))
+            (push item items)))))
+    (let ((original-buffer (current-buffer)))
+      (with-current-buffer (get-buffer-create "*org journal task summary*")
+        (erase-buffer)
+        (-each items
+          (lambda (item)
+            (insert
+             (with-current-buffer original-buffer
+               (buffer-substring
+                (org-element-property :begin item)
+                (org-element-property :end item))))))
+        (org-mode)
+        (pop-to-buffer-same-window (current-buffer))))))
+#+END_SRC
+
+By default this pulls all the items with that given tag from the
+entire buffer.  But because I keep the journal as a date tree, meaning
+a hierarchy of years, months and days I can narrow to the specific
+subtree I want to review and then the function will only work on this
+interval.  So for the monthly review I will narrow to subtree (with
+=C-x n S=) of that particular month and then call
+=my-org-get-items-summary.=
+
+A side note: this is also one of the reasons I usually keep everything
+in just one org file: it allows for all these cool tricks which would
+be just a lot more difficult if I kept things in separate files.  Many
+people do that but I have never found an advantage and only see
+disadvantages.  With all the search and filtering and querying
+capabilities of org mode navigating a single file seems to me very
+painless and convenient. Now, to be fair, I do split my files somewhat
+because having a 220000 line buffer (that's roughly the extend of all
+my =org-mode= notes) is not something Emacs can handle yet.  But I only
+do this because Emacs limits me so and not on any philosophical
+grounds.
+
+The resulting buffer might look something like this:
+
+#+BEGIN_SRC org
+- cool thing :: I did this cool thing today:
+  - I rescued a cat from a burning building
+- cool thing :: I did this cool thing today:
+  - I run into an old friend and grabbed a beer with him
+...
+#+END_SRC
+
+All the noise is removed and only the single thing remains.  It's
+important to keep the tags unique otherwise entries might get mixed
+up.  I haven't found this to be very limiting as it's not that
+difficult coming up with unique labels for things I am tracking.
+
+** Track long term progress with an org table
+:PROPERTIES:
+:ID:       43ab2860-7df5-4e3b-ba92-8cab877b90d1
+:END:
+
+#+BEGIN_SRC elisp
+(defun my-org-goal-progress-table ()
+  "Make a goal table for the current headline.
+
+Collect all the properties prefixed with GOAL_ in a table for
+periodical tracking."
+  (interactive)
+  (let ((goal-props (--filter
+                     (string-prefix-p "GOAL_" (car it))
+                     (org-entry-properties))))
+    (insert (format
+             "| Date | %s |
+|-
+|
+|-
+| | %s |
+"
+             (mapconcat (lambda (goal)
+                          (mapconcat 's-capitalize
+                                     (cdr (split-string (car goal) "_"))
+                                     " "))
+                        goal-props
+                        " | ")
+             (mapconcat 'cdr goal-props " | ")))))
+#+END_SRC
+
+You can update the table daily, weekly or monthly (or in any interval
+really).  You can use babel and a bit of =R= magic to generate graphs
+and plots and all sorts of other useful things.  Remember kids, data
+is awesome!
+
+* TODO Continous clocking
+
+*************** TODO Write some description about the workflow here
+*************** END
+
+
+#+BEGIN_SRC elisp
+(defvar my-org-keep-clock-running nil
+  "If non-nil, we are punched-in.
+
+This is not a setting but a state tracking variable.
+
+While punched-in, any idle time is automatically collected on
+`my-org-idle-task'.  In other words, after clocking out the idle
+task is automatically clocked-in.")
+
+(defun my-org-punch-in ()
+  "Start continuous clocking and set the default task to the
+selected task.  If no task is selected set the Organization task
+as the default task."
+  (interactive)
+  (setq my-org-keep-clock-running t)
+  (my-org-clock-in-idle-task))
+
+(defun my-org-punch-out ()
+  (interactive)
+  (setq my-org-keep-clock-running nil)
+  (when (org-clock-is-active)
+    (org-clock-out)))
+
+(defcustom my-org-idle-task nil
+  "Id of the idle task."
+  :type 'string)
+
+(defun my-org-clock-in-idle-task ()
+  (interactive)
+  (org-with-point-at (org-id-find my-org-idle-task 'marker)
+    (org-clock-in)))
+
+(defun my-org-clock-out-maybe ()
+  (when (and my-org-keep-clock-running
+             (not org-clock-clocking-in)
+             (not org-clock-resolving-clocks-due-to-idleness))
+    (my-org-clock-in-idle-task)))
+
+(add-hook 'org-clock-out-hook 'my-org-clock-out-maybe 'append)
+#+END_SRC
+
+* Org mode and google calendar sync                                  :published:
+:PROPERTIES:
+:BLOG_FILENAME: 2019-02-02-Org-mode-and-google-calendar-sync
+:PUBDATE:  [2019-02-02 Sat 13:54]
+:ID:       44b75f55-7830-4338-8a40-446a2646eda7
+:END:
+:LOGBOOK:
+- State "DONE"       from              [2019-02-02 Sat 13:54]
+:END:
+:CLOCK:
+CLOCK: [2019-02-02 Sat 13:38]--[2019-02-02 Sat 13:53] =>  0:15
+:END:
+
+As a contractor working for multiple clients I juggle many projects
+and meetings all the time.  Fortunately for me, there is [[https://orgmode.org/][orgmode]].
+Unfortunately, my clients have not yet learned to appreciate its
+merits.  Fortunately though, they all use the GSuite platform from
+Google, which means agendas are planned in Google Calendars.
+
+So I finally bit the bullet and decided to integrate Google Calendar
+into my org agenda.  I didn't have to go a long way before finding
+[[https://github.com/kidd/org-gcal.el][org-gcal.el]].
+
+My setup is taken mostly from [[https://cestlaz.github.io/posts/using-emacs-26-gcal/][Using Emacs - 26 - Google Calendar, Org
+Agenda]] by the amazing Mike Zamansky.  One difference from Mike's setup
+is that I'm using a single-way sync only, that is I only fetch from
+google calendar and do not publish anything.
+
+The reason is that I use multiple calendars (I basically have a google
+account at every company I work for plus a personal calendar) and the
+workflow with events and inviting myself from one calendar to another
+as attendees is too complex and fragile to trust some automated tool.
+And I can not afford my calendars to break.
+
+#+NAME: gcal-secret
+#+BEGIN_SRC text :exports none
+U5Bt-J2y7Vm69dEcRNkBLapE
+#+END_SRC
+
+#+BEGIN_SRC elisp :noweb no-export
+(use-package org-gcal
+  :straight t
+  :after org
+  :config
+  (setq org-gcal-client-id "781554523097-ocjovnfpqgtpoc4qv7ubr8c679t96bv7.apps.googleusercontent.com"
+        org-gcal-client-secret "<<gcal-secret>>"
+        org-gcal-file-alist
+        '(
+          ("matus.goljer@gmail.com" . "~/org/gcal-p.org")
+          ("goljer@logio.cz" . "~/org/gcal-l.org")
+          ("matus@saleschamp.nl" . "~/org/gcal-s.org")
+          )
+        org-gcal-header-alist
+        '(
+          ("matus.goljer@gmail.com" . "#+PROPERTY: TIMELINE_FACE \"#729fcf\"\n")
+          ("goljer@logio.cz" . "#+PROPERTY: TIMELINE_FACE \"#8ae234\"\n")
+          ("matus@saleschamp.nl" . "#+PROPERTY: TIMELINE_FACE \"#ff4b4b\"\n")
+          )
+        org-gcal-auto-archive nil
+        org-gcal-notify-p nil)
+
+  (defun my-org-gcal-fetch ()
+    (ignore-errors (org-gcal-fetch)))
+
+  (add-hook 'org-agenda-mode-hook 'my-org-gcal-fetch)
+  (add-hook 'org-capture-after-finalize-hook 'my-org-gcal-fetch))
+
+
+#+END_SRC
+
+I'm also using [[https://github.com/Fuco1/org-timeline][org-timeline]] so I add some extra header arguments to
+the generated file to add a different color to the Google Calendar
+entries.
+
+* Org agenda
+** TODO Fontify agenda items based on category
+#+begin_src elisp
+(defun my-org-agenda-shadow-gcal ()
+  (save-excursion
+    (goto-char (point-min))
+    (while (re-search-forward "^  gcal-p:.*$" nil t)
+      (add-face-text-property
+       (match-beginning 0) (match-end 0) '(:foreground "#729fcf"))))
+  (save-excursion
+    (goto-char (point-min))
+    (while (re-search-forward "^  gcal-l:.*$" nil t)
+      (add-face-text-property
+       (match-beginning 0) (match-end 0) '(:foreground "#8ae234"))))
+  (save-excursion
+    (goto-char (point-min))
+    (while (re-search-forward "^  gcal-s:.*$" nil t)
+      (add-face-text-property
+       (match-beginning 0) (match-end 0) '(:foreground "#ff4b4b")))))
+
+(add-hook 'org-agenda-finalize-hook #'my-org-agenda-shadow-gcal 'append)
+#+end_src
+** Make agenda clockreport respect =org-extend-today-until=            :published:
+CLOSED: [2019-01-03 Thu 20:49]
+:PROPERTIES:
+:BLOG_FILENAME: 2019-01-03-Make-agenda-clockreport-respect-=org-extend-today-until=
+:PUBDATE:  [2019-01-03 Thu 20:49]
+:END:
+:LOGBOOK:
+- State "DONE"       from              [2019-01-03 Thu 20:49]
+:END:
+:CLOCK:
+CLOCK: [2019-01-03 Thu 20:36]--[2019-01-03 Thu 20:49] =>  0:13
+:END:
+
+There's a cool but little known [[https://orgmode.org/][org-mode]] setting for all the the night
+owls out there called =org-extend-today-until=.  It does quite what you
+would expect: you can tell org-mode when your "logical" midnight is.
+For me, I rarely go to sleep before 12 pm so I set it to 4 am just to
+be sure.  This way even if it's already 0:15 and I refresh the agenda
+view it still displays "yesterday".
+
+The trouble is that not a lot of org mode actually respects this
+setting, so far the only things mentioned in the docstring are the
+agenda day switch and something related to reading dates from the user
+(I think through =C-c .=) but I can't see any difference in that.  If
+you are using the org modeline and summary clock for today's time
+spent on a task this will also only count contributions from the
+specified hour which is nice.  There is probably more but I haven't
+noticed yet.
+
+Since I'm an =org-agenda-clockreport-mode= I want to have that
+consistent with the modeline information.  However it goes through
+entirely different machinery and so the easiest extension point is
+simply put an advice on the function which collects the data
+(=org-clock-get-table-data=) and in case we are working in the agenda
+scope adjust the =:tstart= and =:tend= properties to respect
+=org-extend-today-until=.
+
+#+BEGIN_SRC elisp
+(defun my-convert-org-today-to-timestamp (ts)
+  "Convert TS to timestamp.
+
+TS is an absolute number of days since 0001-12-31bce
+
+The timestamp returned is in the format YYYY-MM-DD hh:mm.  The
+hour is adjusted according to `org-extend-today-until'."
+  (let ((ts-greg (calendar-gregorian-from-absolute ts)))
+    (format "%4d-%02d-%02d %02d:00"
+            (nth 2 ts-greg)
+            (car ts-greg)
+            (nth 1 ts-greg)
+            org-extend-today-until)))
+
+(defun my-org-clock-get-table-data-adjust-start (origfun file params)
+  "Adjust the start and end arguments to respect `org-extend-today-until'."
+  (when (and (eq (plist-get params :scope) 'agenda)
+             (integerp (plist-get params :tstart)))
+    (let ((ts (my-convert-org-today-to-timestamp (plist-get params :tstart)))
+          (te (my-convert-org-today-to-timestamp (plist-get params :tend))))
+      (setq params (plist-put params :tstart ts))
+      (setq params (plist-put params :tend te))))
+  (funcall origfun file params))
+
+(advice-add 'org-clock-get-table-data :around #'my-org-clock-get-table-data-adjust-start)
+#+END_SRC
+
+Recently I've been adding some nice improvements to my [[https://github.com/Fuco1/org-timeline][org-timeline]]
+package which draws a visual representation of all the
+scheduled/clocked items (see README for visuals).  I'll make sure it
+respects this setting as well.  So far I've instinctively set it to
+start drawing at 5:00.
+
+* Backmatter
+:PROPERTIES:
+:ID:       3a57a7e4-9c02-415b-be4c-3a55b907d0f1
+:END:
+
+#+BEGIN_SRC elisp
+(provide 'org-defs-tangled)
+#+END_SRC

@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+set -eou pipefail
+
+URL=$1
+
+streamlink -p mpv $1 best

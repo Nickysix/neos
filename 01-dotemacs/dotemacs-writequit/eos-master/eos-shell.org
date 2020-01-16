@@ -1,0 +1,856 @@
+#+TITLE: EOS: Shell Module
+#+AUTHOR: Lee Hinman
+#+EMAIL: lee@writequit.org
+#+SETUPFILE: ~/eos/setupfiles/eos.setup
+
+#+BEGIN_SRC emacs-lisp
+(provide 'eos-shell)
+#+END_SRC
+
+* Setup up Shell and Eshell Environment
+:PROPERTIES:
+:CUSTOM_ID: shell-setup
+:END:
+Things for running shells inside of emacs
+
+This allows a GUI emacs to inherit =$PATH= and other things from the shell when
+run. I use it for the path on OSX and JAVA_HOME everywhere else.
+
+#+BEGIN_SRC emacs-lisp
+(use-package exec-path-from-shell
+  :ensure t
+  :defer t
+  :init
+  (setq exec-path-from-shell-variables '("JAVA_HOME"
+                                         "JAVA7_HOME"
+                                         "JAVA8_HOME"
+                                         "JAVA9_HOME"
+                                         "JAVA10_HOME"
+                                         "JAVA11_HOME"
+                                         "RUNTIME_JAVA_HOME"
+                                         "ES_JAVA_OPTS"
+                                         "PATH"
+                                         "NVM_PATH"
+                                         "WORKON_HOME"
+                                         "RUST_SRC_PATH"
+                                         "GPG_AGENT_INFO"
+                                         "MEGHANADA_GRADLE_VERSION"
+                                         "MANPATH"))
+  (exec-path-from-shell-initialize))
+#+END_SRC
+
+Sets up the =with-editor= package so things that invoke =$EDITOR= will use the
+current emacs if I'm already inside of emacs
+
+#+BEGIN_SRC emacs-lisp
+(use-package with-editor
+  :ensure t
+  :commands with-editor-export-editor
+  :init
+  (progn
+    (add-hook 'shell-mode-hook  'with-editor-export-editor)
+    (add-hook 'eshell-mode-hook 'with-editor-export-editor)))
+#+END_SRC
+
+Also, let's set up any SSH or GPG keychains that the [[http://www.funtoo.org/Keychain][Keychain]] tool has set up
+for us (which I use at the shell)
+
+#+BEGIN_SRC emacs-lisp
+(use-package keychain-environment
+  :ensure t
+  :init
+  (add-hook 'after-init-hook #'keychain-refresh-environment))
+#+END_SRC
+
+First, Emacs doesn't handle =less= well, so use =cat= instead for the shell
+pager:
+
+#+BEGIN_SRC emacs-lisp
+(setenv "PAGER" "cat")
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+(setq comint-scroll-to-bottom-on-input t ;; always insert at the bottom
+      ;; always add output at the bottom
+      comint-scroll-to-bottom-on-output nil
+      ;; scroll to show max possible output
+      comint-scroll-show-maximum-output t
+      ;; no duplicates in command history
+      comint-input-ignoredups t
+      ;; insert space/slash after file completion
+      comint-completion-addsuffix t
+      ;; if this is t, it breaks shell-command
+      comint-prompt-read-only nil)
+
+(defun eos/shell-kill-buffer-sentinel (process event)
+  (when (memq (process-status process) '(exit signal))
+    (kill-buffer)))
+
+(defun eos/kill-process-buffer-on-exit ()
+  (set-process-sentinel (get-buffer-process (current-buffer))
+                        #'eos/shell-kill-buffer-sentinel))
+
+(dolist (hook '(ielm-mode-hook term-exec-hook comint-exec-hook))
+  (add-hook hook 'eos/kill-process-buffer-on-exit))
+
+(defun set-scroll-conservatively ()
+  "Add to shell-mode-hook to prevent jump-scrolling on newlines in shell buffers."
+  (set (make-local-variable 'scroll-conservatively) 10))
+
+(defadvice comint-previous-matching-input
+    (around suppress-history-item-messages activate)
+  "Suppress the annoying 'History item : NNN' messages from shell history isearch.
+If this isn't enough, try the same thing with
+comint-replace-by-expanded-history-before-point."
+  (let ((old-message (symbol-function 'message)))
+    (unwind-protect
+        (progn (fset 'message 'ignore) ad-do-it)
+      (fset 'message old-message))))
+
+(add-hook 'shell-mode-hook #'set-scroll-conservatively)
+;; truncate buffers continuously
+(add-hook 'comint-output-filter-functions #'comint-truncate-buffer)
+;; interpret and use ansi color codes in shell output windows
+(add-hook 'shell-mode-hook #'ansi-color-for-comint-mode-on)
+#+END_SRC
+
+* Eshell
+:PROPERTIES:
+:CUSTOM_ID: eshell
+:END:
+Eshell is great for most shell things. It's a great ZSH replacement. Regardless,
+it needs some tweaks in order to be fully useful.
+
+First, a function to be called when eshell-mode is entered
+
+#+BEGIN_SRC emacs-lisp
+(defun eos/setup-eshell ()
+  (interactive)
+  ;; turn off semantic-mode in eshell buffers
+  (semantic-mode -1)
+  ;; turn on subword mode
+  (subword-mode 1)
+  ;; turn off hl-line-mode
+  (when (fboundp 'eos/turn-off-hl-line)
+    (eos/turn-off-hl-line))
+  (local-set-key (kbd "M-P") 'eshell-previous-prompt)
+  (local-set-key (kbd "M-N") 'eshell-next-prompt)
+  (local-set-key (kbd "M-R") 'eshell-previous-matching-input)
+  (local-set-key (kbd "M-r") 'helm-eshell-history))
+#+END_SRC
+
+Add a nice helper to sudo-edit a file
+
+#+BEGIN_SRC emacs-lisp
+(defun sudoec (file)
+  (interactive)
+  (find-file (concat "/sudo::" (expand-file-name file))))
+#+END_SRC
+
+Also, after eshell has loaded its options, let's load some other niceties like
+completion, prompt and term settings:
+
+#+BEGIN_SRC emacs-lisp
+;; See: https://github.com/kaihaosw/eshell-prompt-extras
+(use-package eshell-prompt-extras
+  :ensure t
+  :commands epe-theme-dakrone
+  :init
+  (progn
+    (setq eshell-highlight-prompt nil
+          epe-git-dirty-char " Ϟ"
+          ;; epe-git-dirty-char "*"
+          eshell-prompt-function 'epe-theme-dakrone)))
+
+(use-package eshell
+  :commands (eshell eshell-command)
+  :bind ("C-c m" . eshell)
+  :init
+  (require 'em-smart)
+  (setq eshell-glob-case-insensitive nil
+        eshell-error-if-no-glob nil
+        eshell-scroll-to-bottom-on-input nil
+        eshell-where-to-jump 'begin
+        eshell-review-quick-commands nil
+        eshell-smart-space-goes-to-end t)
+  ;; Initialize "smart" mode
+  ;;(add-hook 'eshell-mode-hook #'eshell-smart-initialize)
+  :config
+  (defalias 'emacs 'find-file)
+  (defalias 'hff 'hexl-find-file)
+  (defalias 'sec 'sudoec)
+  (setenv "PAGER" "cat")
+  (use-package esh-opt
+    :config
+    (use-package em-cmpl)
+    (use-package em-prompt
+      :init
+      ;; Taken from https://www.reddit.com/r/emacs/comments/772b3h/what_are_you_using_eshell_for/
+      ;;; Reported at https://debbugs.gnu.org/cgi/bugreport.cgi?bug=27405.
+      (with-eval-after-load 'em-prompt
+        (defun eshell-next-prompt (n)
+          "Move to end of Nth next prompt in the buffer.
+See `eshell-prompt-regexp'."
+          (interactive "p")
+          (re-search-forward eshell-prompt-regexp nil t n)
+          (when eshell-highlight-prompt
+            (while (not (get-text-property (line-beginning-position) 'read-only) )
+              (re-search-forward eshell-prompt-regexp nil t n)))
+          (eshell-skip-prompt))
+
+        (defun eshell-previous-prompt (n)
+          "Move to end of Nth previous prompt in the buffer.
+See `eshell-prompt-regexp'."
+          (interactive "p")
+          (backward-char)
+          (eshell-next-prompt (- n)))))
+    (use-package em-term)
+
+    ;; Shared history.
+    (defvar eshell-history-global-ring nil
+      "The history ring shared across Eshell sessions.")
+
+    (defun eshell-hist-use-global-history ()
+      "Make Eshell history shared across different sessions."
+      (unless eshell-history-global-ring
+        (let (eshell-history-ring)
+          (when eshell-history-file-name
+            (eshell-read-history nil t))
+          (setq eshell-history-global-ring eshell-history-ring))
+        (unless eshell-history-ring (setq eshell-history-global-ring (make-ring eshell-history-size))))
+      (setq eshell-history-ring eshell-history-global-ring))
+    ;; (add-hook 'eshell-mode-hook 'eshell-hist-use-global-history)
+
+    (setq eshell-cmpl-cycle-completions nil
+          ;; auto truncate after 12k lines
+          eshell-buffer-maximum-lines 12000
+          ;; history size
+          eshell-history-size 500
+          ;; buffer shorthand -> echo foo > #'buffer
+          eshell-buffer-shorthand t
+          ;; my prompt is easy enough to see
+          eshell-highlight-prompt nil
+          ;; treat 'echo' like shell echo
+          eshell-plain-echo-behavior t
+          ;; add -lh to the `ls' flags
+          eshell-ls-initial-args "-lh")
+
+    ;; Visual commands
+    (setq eshell-visual-commands '("vi" "screen" "top" "less" "more" "lynx"
+                                   "ncftp" "pine" "tin" "trn" "elm" "vim"
+                                   "nmtui" "alsamixer" "htop" "el" "elinks"
+                                   "ssh" "nethack" "dtop" "dstat"))
+    (setq eshell-visual-subcommands '(("git" "log" "diff" "show")
+                                      ("vagrant" "ssh")))
+
+    (defun eos/truncate-eshell-buffers ()
+      "Truncates all eshell buffers"
+      (interactive)
+      (save-current-buffer
+        (dolist (buffer (buffer-list t))
+          (set-buffer buffer)
+          (when (eq major-mode 'eshell-mode)
+            (eshell-truncate-buffer)))))
+
+    ;; After being idle for 5 seconds, truncate all the eshell-buffers if
+    ;; needed. If this needs to be canceled, you can run `(cancel-timer
+    ;; eos/eshell-truncate-timer)'
+    (setq eos/eshell-truncate-timer
+          (run-with-idle-timer 5 t #'eos/truncate-eshell-buffers))
+
+    (defun eshell/cds ()
+      "Change directory to the project's root."
+      (eshell/cd (locate-dominating-file default-directory ".git")))
+
+    (defalias 'eshell/l 'eshell/ls)
+    (defalias 'eshell/ll 'eshell/ls)
+
+    (defun eshell/ec (pattern)
+      (if (stringp pattern)
+          (find-file pattern)
+        (mapc #'find-file (mapcar #'expand-file-name pattern))))
+    (defalias 'e 'eshell/ec)
+    (defalias 'ee 'find-file-other-window)
+
+    (defun eshell/d (&rest args)
+      (dired (pop args) "."))
+
+    (defun eshell/clear ()
+      "Clear the eshell buffer"
+      (interactive)
+      (let ((eshell-buffer-maximum-lines 0))
+        (eshell-truncate-buffer)
+        (let ((inhibit-read-only t))
+          (erase-buffer)
+          (eshell-send-input)))))
+
+  (defun eshell/icat (&rest args)
+    "Display image(s)."
+    (let ((elems (eshell-flatten-list args)))
+      (while elems
+        (eshell-printn
+         (propertize " "
+                     'display (create-image (expand-file-name (car elems)))))
+        (setq elems (cdr elems))))
+    nil)
+
+  (add-hook 'eshell-mode-hook #'eos/setup-eshell)
+
+  ;; See eshell-prompt-function below
+  (setq eshell-prompt-regexp "^[^#$\n]* [#$] ")
+
+  ;; So the history vars are defined
+  (require 'em-hist)
+  (if (boundp 'eshell-save-history-on-exit)
+      ;; Don't ask, just save
+      (setq eshell-save-history-on-exit t))
+
+  (defun eshell/magit ()
+    "Function to open magit-status for the current directory"
+    (interactive)
+    (magit-status default-directory)
+    nil))
+
+(use-package esh-autosuggest
+  :ensure t
+  :hook (eshell-mode . esh-autosuggest-mode))
+#+END_SRC
+
+I use a dedicated buffer for connection to my desktop, with a binding of =C-x
+d=, if the buffer doesn't exist it is created.
+
+#+BEGIN_SRC emacs-lisp
+(defun eos/create-or-switch-to-delta-buffer ()
+  "Switch to the *eshell delta* buffer, or create it"
+  (interactive)
+  (if (get-buffer "*eshell-delta*")
+      (switch-to-buffer "*eshell-delta*")
+    (let ((eshell-buffer-name "*eshell-delta*"))
+      (eshell))))
+
+(global-set-key (kbd "C-x d") 'eos/create-or-switch-to-delta-buffer)
+
+(defun eos/create-or-switch-to-eshell-1 ()
+  "Switch to the *eshell* buffer, or create it"
+  (interactive)
+  (if (get-buffer "*eshell*")
+      (switch-to-buffer "*eshell*")
+    (let ((eshell-buffer-name "*eshell*"))
+      (eshell))))
+
+(defun eos/create-or-switch-to-eshell-2 ()
+  "Switch to the *eshell*<2> buffer, or create it"
+  (interactive)
+  (if (get-buffer "*eshell*<2>")
+      (switch-to-buffer "*eshell*<2>")
+    (let ((eshell-buffer-name "*eshell*<2>"))
+      (eshell))))
+
+(defun eos/create-or-switch-to-eshell-3 ()
+  "Switch to the *eshell*<3> buffer, or create it"
+  (interactive)
+  (if (get-buffer "*eshell*<3>")
+      (switch-to-buffer "*eshell*<3>")
+    (let ((eshell-buffer-name "*eshell*<3>"))
+      (eshell))))
+
+(defun eos/create-or-switch-to-eshell-4 ()
+  "Switch to the *eshell*<4> buffer, or create it"
+  (interactive)
+  (if (get-buffer "*eshell*<4>")
+      (switch-to-buffer "*eshell*<4>")
+    (let ((eshell-buffer-name "*eshell*<4>"))
+      (eshell))))
+
+(defun eos/create-all-eshell-buffers ()
+  "Create all my normal eshell buffers"
+  (interactive)
+  (let ((eshell-buffer-name "*eshell*")
+        (default-directory "~/"))
+    (eshell))
+  (let ((eshell-buffer-name "*eshell*<2>")
+        (default-directory "~/")) (eshell))
+  (let ((eshell-buffer-name "*eshell*<3>")
+        (default-directory "~/es/elasticsearch"))
+    (eshell))
+  (let ((eshell-buffer-name "*eshell*<4>")
+        (default-directory "~/es/elasticsearch-extra/x-pack-elasticsearch"))
+    (eshell))
+  (let ((eshell-buffer-name "*eshell-delta*")
+        (default-directory "~/eos"))
+    (eshell))
+  (let ((eshell-buffer-name "*eshell downloads*")
+        (default-directory "~/Downloads/videos"))
+    (eshell)))
+
+(global-set-key (kbd "M-@") #'eos/create-all-eshell-buffers)
+
+(global-set-key (kbd "H-1") 'eos/create-or-switch-to-eshell-1)
+(global-set-key (kbd "H-2") 'eos/create-or-switch-to-eshell-2)
+(global-set-key (kbd "H-3") 'eos/create-or-switch-to-eshell-3)
+(global-set-key (kbd "H-4") 'eos/create-or-switch-to-eshell-4)
+(global-set-key (kbd "s-1") 'eos/create-or-switch-to-eshell-1)
+(global-set-key (kbd "s-2") 'eos/create-or-switch-to-eshell-2)
+(global-set-key (kbd "s-3") 'eos/create-or-switch-to-eshell-3)
+(global-set-key (kbd "s-4") 'eos/create-or-switch-to-eshell-4)
+(global-set-key (kbd "M-1") 'eos/create-or-switch-to-eshell-1)
+(global-set-key (kbd "M-2") 'eos/create-or-switch-to-eshell-2)
+(global-set-key (kbd "M-3") 'eos/create-or-switch-to-eshell-3)
+(global-set-key (kbd "M-4") 'eos/create-or-switch-to-eshell-4)
+#+END_SRC
+
+Also, add the buffer stack option to eshell
+
+#+BEGIN_SRC emacs-lisp
+(use-package esh-buf-stack
+  :ensure t
+  :commands eshell-push-command
+  :config
+  (setup-eshell-buf-stack)
+  (define-key eshell-mode-map (kbd "M-q") 'eshell-push-command))
+#+END_SRC
+
+Indicate the exit status of the previous command using the eshell-fringe-status
+package. Eh, disabled this for now, not sure I actually like it.
+
+#+BEGIN_SRC emacs-lisp
+(use-package eshell-fringe-status
+  :disabled t
+  :ensure t
+  :init
+  (add-hook 'eshell-mode-hook 'eshell-fringe-status-mode))
+#+END_SRC
+
+** Eshell aliases
+:PROPERTIES:
+:CUSTOM_ID: eshell-aliases
+:END:
+Like zsh, I use a lot of aliases in eshell, so I need to set those up here:
+
+#+BEGIN_SRC emacs-lisp :tangle out/eshell-alias
+alias aria2c aria2c -c -x5 -s10 -m0 $*
+alias bdt gdate "+%Y%m%dT%H%M%S.%3N%z"
+alias delete curl -s -XDELETE $*
+alias dt gdate "+%Y-%m-%dT%H:%M:%S.%3N%zZ"
+alias epoch date +%s
+alias ga git annex $*
+alias get curl -s -XGET $*
+alias ivalice2org rsync -azP --delete ivalice-local:~/org/ ~/org
+alias org2ivalice rsync -azP --delete ~/org/ ivalice-local:~/org
+alias org2xanadu rsync -azP --delete ~/org/ xanadu:~/org
+alias post curl -s -XPOST $*
+alias put curl -s -XPUT $*
+alias se tar zxvf $*
+alias xanadu2org rsync -azP --delete xanadu:~/org/ ~/org
+alias xp cd ~/es/elasticsearch-extra/x-pack-elasticsearch
+alias es cd ~/es/elasticsearch
+alias dtop dstat -cdnpmgs --top-bio --top-cpu --top-mem
+alias resttest ./gradlew :distribution:integ-test-zip:integTest -Dtests.class="org.elasticsearch.test.rest.*Yaml*IT"
+alias buildes ./gradlew -p distribution/archives/tar assemble --parallel && find . -name "elasticsearch-*.zip"
+alias gg gw
+#+END_SRC
+
+And we need something to install them
+
+#+BEGIN_SRC sh :tangle sh/eos-shell.sh
+mkdir -p ~/.emacs.d/eshell
+ln -sfv $PWD/out/eshell-alias ~/.emacs.d/eshell/alias
+#+END_SRC
+
+** Open an eshell window here
+:PROPERTIES:
+:CUSTOM_ID: h:27886c4c-b283-496d-ac41-1fe2bdcaf977
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(defun eshell-here ()
+  "Opens up a new shell in the directory associated with the
+current buffer's file. The eshell is renamed to match that
+directory to make multiple eshell windows easier."
+  (interactive)
+  (let* ((parent (if (buffer-file-name)
+                     (file-name-directory (buffer-file-name))
+                   default-directory))
+         (height (/ (window-total-height) 3))
+         (name   (car (last (split-string parent "/" t)))))
+    (split-window-vertically (- height))
+    (other-window 1)
+    (eshell "new")
+    (rename-buffer (concat "*eshell: " name "*"))
+
+    (insert (concat "ls"))
+    (eshell-send-input)))
+
+(global-set-key (kbd "C-!") #'eshell-here)
+#+END_SRC
+
+And some nice glue for quickly closing eshell windows
+
+#+BEGIN_SRC emacs-lisp
+(defun eshell/x ()
+  "Closes the EShell session and gets rid of the EShell window."
+  (delete-window)
+  (eshell/exit))
+#+END_SRC
+
+** Open an eshell window there
+:PROPERTIES:
+:CUSTOM_ID: h:321c7f37-a36f-4482-9727-88b651a452d1
+:END:
+
+Like opening one here, but for remote hosts
+
+#+BEGIN_SRC emacs-lisp
+(defun eshell-there (host)
+  (interactive "sHost: ")
+  (let ((default-directory (format "/%s:" host)))
+    (eshell host)))
+#+END_SRC
+
+* Nested Tmux for SSH sessions
+:PROPERTIES:
+:CUSTOM_ID: nested-tmux
+:END:
+
+I couldn't live without [[https://tmux.github.io/][tmux]], so much of my work is done on remote machines
+where I need to be able to disconnect running work and re-attach later.
+
+To go even more insane, I have an interesting setup with I nest tmux inside of
+itself to act like terminal tabs, because, well, it's better than terminal tabs.
+In order to do this, I do some fancy work with multiple configuration files, so
+it works out like this:
+
+On Linux, the =tmux= command reads =~/.tmux.conf=. On OSX, the =tmux= command is
+aliased to read =~/.tmux.osx.conf=, which, after setting a couple of
+OSX-specific settings, sources =~/.tmux.conf=.
+
+When I am running a
+
+So, starting with the most specific
+
+** .tmux.osx.conf
+:PROPERTIES:
+:CUSTOM_ID: tmux-osx
+:END:
+
+#+BEGIN_SRC conf :tangle out/tmux.osx.conf
+# OSX tmux config that uses the wrapper from
+# https://github.com/ChrisJohnsen/tmux-MacOSX-pasteboard
+
+set-option -g default-command "reattach-to-user-namespace -l zsh"
+
+source-file ~/.tmux.conf
+
+bind-key > run-shell "tmux saveb -| pbcopy"
+#+END_SRC
+
+And make sure it's installed
+
+#+BEGIN_SRC sh :tangle sh/link-osx-tmux.sh
+ln -sfv $PWD/out/tmux.osx.conf ~/.tmux.osx.conf
+#+END_SRC
+
+** .tmux.conf
+:PROPERTIES:
+:CUSTOM_ID: tmux-conf
+:END:
+I set the =bind-key= to =C-z= (control-z) here and not in =~/.tmux.shared.conf=
+because I use a different bind-key for the master tmux, so I only want it in
+certain cases.
+
+#+BEGIN_SRC conf :tangle out/tmux.conf
+source-file ~/.tmux.shared.conf
+
+# Set the prefix to ^z
+#unbind-key C-b
+set-option -g prefix C-z
+bind-key C-z send-prefix
+
+# keybindings to make resizing easier
+bind -r C-h resize-pane -L
+bind -r C-j resize-pane -D
+bind -r C-k resize-pane -U
+bind -r C-l resize-pane -R
+
+# make it so that I can hold down prefix key for these
+bind-key C-d detach
+bind-key C-n next-window
+bind-key C-p previous-window
+
+# number windows from 0
+set -g base-index 0
+#+END_SRC
+
+** .tmux.master.conf
+:PROPERTIES:
+:CUSTOM_ID: tmux-master
+:END:
+The master-specific configuration. This config only gets run if tmux is invoked
+using the =tmaster= alias.
+
+The =bind-key= in this case gets changed to =M-C-z= (control-alt-z) instead of
+my regular =C-z= bind-key, which allows nesting to work.
+
+#+BEGIN_SRC conf :tangle out/tmux.master.conf
+# master client conf
+
+source-file ~/.tmux.shared.conf
+
+# change bind key to M-C-z
+set-option -g prefix M-C-z
+
+# prefix again goes to last window
+bind-key M-C-z last-window
+
+# reload
+bind r source-file ~/.tmux.master
+
+# keybindings to make resizing easier
+bind -r M-C-h resize-pane -L
+bind -r M-C-j resize-pane -D
+bind -r M-C-k resize-pane -U
+bind -r M-C-l resize-pane -R
+
+# make it so that I can hold down prefix key for these
+bind-key M-C-d detach
+bind-key M-C-n next-window
+bind-key M-C-p previous-window
+
+# window navigation
+#bind-key -n M-C-h prev
+#bind-key -n M-C-l next
+bind-key -n M-C-n select-pane -t :.-
+bind-key -n M-C-p select-pane -t :.+
+
+# number windows from 1
+set -g base-index 1
+
+# Alt-# window nav
+bind-key -n M-1 select-window -t 1
+bind-key -n M-2 select-window -t 2
+bind-key -n M-3 select-window -t 3
+bind-key -n M-4 select-window -t 4
+bind-key -n M-5 select-window -t 5
+bind-key -n M-6 select-window -t 6
+bind-key -n M-7 select-window -t 7
+bind-key -n M-8 select-window -t 8
+
+bind-key -n s-1 select-window -t 1
+bind-key -n s-2 select-window -t 2
+bind-key -n s-3 select-window -t 3
+bind-key -n s-4 select-window -t 4
+bind-key -n s-5 select-window -t 5
+bind-key -n s-6 select-window -t 6
+bind-key -n s-7 select-window -t 7
+bind-key -n s-8 select-window -t 8
+
+## Custom status bar, via https://github.com/myusuf3/dotfiles
+## Powerline symbols: ⮂ ⮃ ⮀ ⮁ ⭤
+## If you do not have a patched font (see: https://github.com/Lokaltog/vim-powerline/tree/develop/fontpatcher)
+## comment out the lines below to get a "regular" statusbar without special symbols
+set-option -g status-bg colour234
+set-option -g message-fg colour16
+set-option -g message-bg colour221
+set-option -g status-left-length 40
+set-option -g status-right-length 40
+set-option -g status-interval 5
+set-option -g pane-border-fg colour245
+set-option -g pane-active-border-fg colour39
+set-option -g status-justify left
+
+set-option -g status-left '#[fg=colour16,bg=colour254,bold] #S #[fg=colour254,bg=colour238,nobold]#[fg=colour15,bg=colour238,bold] #(up) #[fg=colour238,bg=colour234,nobold]'
+
+set-option -g status-right '#[fg=colour245]%R %d %b #[fg=colour254,bg=colour234,nobold]#[fg=colour16,bg=colour254,bold] #h '
+
+set-option -g window-status-format "#[fg=white,bg=colour234] #I #W "
+set-option -g window-status-current-format "#[fg=colour234,bg=colour39]#[fg=colour16,bg=colour39,noreverse,bold] #I #W #[fg=colour39,bg=colour234,nobold]"
+
+set-option -g default-terminal "screen-256color"
+#+END_SRC
+
+** .tmux.shared.conf
+:PROPERTIES:
+:CUSTOM_ID: tmux-shared
+:END:
+Finally, all the tmux configuration that gets shared between all tmux instances,
+regardless or where or how they're invoked.
+
+TODO: document all of this.
+
+#+BEGIN_SRC conf :tangle out/tmux.shared.conf
+# Emacs mode keys
+setw -g mode-keys emacs
+
+# reload
+bind r source-file ~/.tmux.conf \; display-message "Config reloaded..."
+bind R source-file ~/.tmux.conf \; display-message "Config reloaded..."
+
+# make it easy to grab a pane and put it into the current window
+bind-key @ command-prompt -p "create pane from:"  "join-pane -s ':%%'"
+
+# and to break the current pane into a new window thing
+bind-key B break-pane
+
+# easily toggle synchronization (mnemonic: e is for echo)
+bind e setw synchronize-panes on
+bind E setw synchronize-panes off
+
+# " windowlist -b
+unbind-key '"'
+bind-key '"' choose-window
+
+# don't wait after escape
+set -s escape-time 0
+
+# UTF-8 everywhere
+# set-option -g status-utf8 on
+
+# monitor activity
+setw -g monitor-activity on
+set -g visual-activity off
+bind m setw monitor-activity off
+bind M setw monitor-activity on
+
+############
+
+# screen ^C c
+unbind-key ^C
+bind-key ^C new-window
+unbind-key C-M-c
+bind-key C-M-c new-window
+unbind-key c
+bind-key c new-window
+
+# detach ^D d
+unbind-key ^D
+bind-key ^D detach
+
+# displays *
+unbind-key *
+bind-key * list-clients
+
+# next ^@ ^N sp n
+unbind-key ^@
+bind-key ^@ next-window
+unbind-key ^N
+bind-key ^N next-window
+unbind-key " "
+bind-key " " next-window
+unbind-key n
+bind-key n next-window
+
+# title A
+unbind-key A
+bind-key A command-prompt "rename-window %%"
+
+# prev ^H ^P p ^?
+unbind-key ^H
+bind-key ^H previous-window
+unbind-key ^P
+bind-key ^P previous-window
+unbind-key p
+bind-key p previous-window
+# unbind-key BSpace
+# bind-key BSpace previous-window
+
+# windows ^W w
+unbind-key ^W
+bind-key ^W list-windows
+unbind-key w
+bind-key w list-windows
+
+# redisplay ^L l
+unbind-key ^L
+bind-key ^L refresh-client
+unbind-key l
+bind-key l refresh-client
+
+# " windowlist -b
+unbind-key '"'
+bind-key '"' choose-window
+
+# Copy mode
+bind-key ^[ copy-mode
+bind-key Escape copy-mode
+
+# Paste mode
+bind-key ] choose-buffer
+bind-key ^] choose-buffer
+# bind-key ] paste-buffer
+# bind-key ^] paste-buffer
+set-window-option -g mode-keys emacs
+# Make mouse useful in copy mode
+#set-window-option -g mode-mouse on
+
+# termbin paste
+bind-key P run-shell 'tmux saveb -| nc termbin.com 9999'
+# x clipboard
+bind-key > run-shell "tmux saveb -| xclip -selection clipboard -i"
+
+# More straight forward key bindings for splitting
+#unbind-key %
+bind-key | split-window -h
+bind-key h split-window -h
+#unbind-key '"'
+bind-key - split-window -v
+bind-key v split-window -v
+
+# History
+set-option -g history-limit 15000
+
+# Notifying if other windows has activities
+set-window-option -g monitor-activity off
+set-option -g visual-activity off
+
+# Highlighting the active window in status bar
+#set-window-option -g window-status-current-bg cyan
+set-window-option -g window-status-current-fg cyan
+
+# Clock
+set-window-option -g clock-mode-colour green
+set-window-option -g clock-mode-style 24
+
+# don't clobber ssh agent
+set-option -g update-environment "DISPLAY WINDOWID GPG_AGENT_INFO"
+
+# term
+set-option -g default-terminal "screen-256color"
+
+## Custom status bar, via https://github.com/myusuf3/dotfiles
+## Powerline symbols: ⮂ ⮃ ⮀ ⮁ ⭤
+## If you do not have a patched font (see: https://github.com/Lokaltog/vim-powerline/tree/develop/fontpatcher)
+## comment out the lines below to get a "regular" statusbar without special symbols
+set-option -g status-bg colour234
+set-option -g message-fg colour16
+set-option -g message-bg colour221
+set-option -g status-left-length 40
+set-option -g status-right-length 40
+set-option -g status-interval 5
+set-option -g pane-border-fg colour245
+set-option -g pane-active-border-fg colour39
+set-option -g status-justify left
+
+set-option -g status-left '#[fg=colour16,bg=colour254,bold] #S #[fg=colour254,bg=colour238,nobold]#[fg=colour15,bg=colour238,bold] #(up) #[fg=colour238,bg=colour234,nobold]'
+
+set-option -g status-right '#[fg=colour245]%R %d %b #[fg=colour254,bg=colour234,nobold]#[fg=colour16,bg=colour254,bold] #h '
+
+set-option -g window-status-format "#[fg=white,bg=colour234] #I #W "
+set-option -g window-status-current-format "#[fg=colour234,bg=colour39]#[fg=colour16,bg=colour39,noreverse,bold] #I #W #[fg=colour39,bg=colour234,nobold]"
+
+set-option -g default-terminal "screen-256color"
+
+#+END_SRC
+
+** Installing generated TMUX configurations
+:PROPERTIES:
+:CUSTOM_ID: tmux-install
+:END:
+
+And make sure the generated tmux files are installed
+
+#+BEGIN_SRC sh :tangle sh/link-tmux.sh
+ln -sfv $PWD/out/tmux.osx.conf ~/.tmux.osx.conf
+ln -sfv $PWD/out/tmux.master.conf ~/.tmux.master.conf
+ln -sfv $PWD/out/tmux.shared.conf ~/.tmux.shared.conf
+ln -sfv $PWD/out/tmux.conf ~/.tmux.conf
+#+END_SRC

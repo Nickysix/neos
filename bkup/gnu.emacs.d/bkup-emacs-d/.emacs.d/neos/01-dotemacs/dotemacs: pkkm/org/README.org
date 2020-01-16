@@ -1,0 +1,9 @@
+* Org-mode setup files
+
+  Example usage:
+
+  #+BEGIN_SRC org-mode
+  #+SETUPFILE: ~/.emacs.d/org/readtheorg.setup
+  #+END_SRC
+
+  Files in the `org-html-themes` directory are taken from [[https://github.com/fniessen/org-html-themes][GitHub: fniessen/org-html-themes]].

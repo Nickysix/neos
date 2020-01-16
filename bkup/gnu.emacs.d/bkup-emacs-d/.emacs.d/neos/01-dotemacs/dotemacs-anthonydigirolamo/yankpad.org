@@ -1,0 +1,30 @@
+* org-mode
+** ce: code-emacs-lisp
+   #+BEGIN_SRC emacs-lisp
+   $0
+   #+END_SRC
+** table: org-mode table
+   | $0 |   |
+   |----+---|
+   |    |   |
+
+* python-mode
+** file.readlines boilerplate
+   #!/usr/bin/env python3
+   # coding=utf-8
+
+   import pprint
+   import re
+   import sys
+   from datetime import datetime, date, time
+   pp = pprint.PrettyPrinter(indent=4).pprint
+
+   def main():
+     some_regex = re.compile(r'\n\n')
+
+     with open(sys.argv[1], "r") as somefile:
+       for index, line in enumerate(somefile.readlines()):
+         pass
+
+   if __name__ == '__main__':
+     main()

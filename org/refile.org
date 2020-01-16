@@ -1,0 +1,114 @@
+# -*- mode: org; coding: utf-8; -*-
+
+#+TITLE: refile.org
+#+STARTUP: showall
+
+* TASKS
+
+* NOTES:
+
+
+* LINUX:
+** Linux-Tasks [0/0]
+
+
+
+* EMACS:
+
+** EMACS: NOTES
+
+ - use isearch to find answers in help documentation.
+ - comint command interpreter.
+ - emacs registers howto use them.
+ - engine-mode read programming concepts from wikipedia in w3m/eww.
+ - beautiful racket book only online very good learning tool.
+ - biblio org-ref interleave ivy-bibtex for all my research.
+ - image side by side with org notes of image zodiac wheel example.
+
+ - info docs texinfo pinfo for color.
+
+ - keybindings and minor-mode setup.
+
+ - selectric-mode creates typewriter sound.
+
+** EMACS: TASKS [1/20]
+
+- [X] learn art-mode + ditta
+
+- [ ] setup emmet-mode impatient-mode skewer-mode html-mode web-mode css-mode js2-mode
+
+- [ ] setup nodejs npm to work with emacs
+
+- [ ] setup and learn to use w3m to search web cut paste code
+
+- [ ] make a list of websites for learning emacs
+
+- [ ] make list of pkgs in my configuration
+
+- [ ] make list of people with good configurations
+
+- [ ] setup org-protocol + org-capture
+
+- [ ] put emacs manuals on tablet for study
+
+- [ ] use downloaded github projects for emacs practice
+
+- [ ] use google chrome save webpage as to save webpage for future tutorials
+
+- [ ] use httrack to copy the best sites for learning emacs for offline use
+
+- [ ] use saved images/screenshots for future learning tutorials
+
+- [ ] download organize emacs howto youtube videos
+
+- [ ] practice touchtyping + vim cmds using online programs and vim games
+
+- [ ] setup xampp/mediawiki start emacs/linux knowledge howto and skills building wiki
+
+- [ ] read all emacs documentation
+
+- [ ] learn dired inside out by using instead thunar when can
+
+- [ ] while using spacemacs configure vanilla emacs with orgbabel
+
+- [ ] setup orgmobile/orgzly + syncthing or dropbox
+
+
+** EMACS: NEOS 
+
+*** NEOS: NOTES
+
+*** NEOS: DIRECTORY-STRUCTURE
+
+
+** EMACS: ORG-MODE
+
+*** LIST: ORG-PACKAGES
+
+  - org-brain
+  - org-protocol
+  - org-protocol-capture-html
+  - org-download (drag images to org buffer)
+  - org-journal
+  - org-wiki
+  - evil-org or org-evil
+
+
+
+** EMACS: KEYBINDINGS
+
+
+* SOFTWARE:
+
+** LINUX-APPLICATIONS:
+
+
+
+
+
+
+
+
+
+
+
